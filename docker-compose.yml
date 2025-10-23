@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: genaulingua_db
+    environment:
+      POSTGRES_USER: genau_user
+      POSTGRES_PASSWORD: genau_password
+      POSTGRES_DB: genaulingua_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

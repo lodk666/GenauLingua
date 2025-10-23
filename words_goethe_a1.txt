@@ -1,0 +1,510 @@
+| ab                   | с (завтра и т. д.) *(нет артикля — наречие)* |
+| aber                 | но *(союз)*                                  |
+| abfahren             | отправляться                                 |
+| abgeben              | сдавать                                      |
+| abholen              | забирать                                     |
+| die Achtung          | внимание                                     |
+| die Adresse          | адрес                                        |
+| die Ahnung           | понятие, представление                       |
+| alle                 | все *(местоимение)*                          |
+| allein               | один *(наречие)*                             |
+| also                 | значит, итак *(союз)*                        |
+| alt                  | старый *(прилагательное)*                    |
+| das Alter            | возраст                                      |
+| an                   | на / у / к *(предлог)*                       |
+| andere               | другой *(прилагательное)*                    |
+| der Anfang           | начало                                       |
+| anfangen             | начинать                                     |
+| die Angst            | страх                                        |
+| ankommen             | прибывать                                    |
+| anrufen              | звонить                                      |
+| der Anruf            | звонок                                       |
+| der Anrufbeantworter | автоответчик                                 |
+| die Antwort          | ответ                                        |
+| antworten            | отвечать                                     |
+| die Anzeige          | объявление                                   |
+| der Apfel            | яблоко                                       |
+| die Apotheke         | аптека                                       |
+| der Appetit          | аппетит                                      |
+| die Arbeit           | работа                                       |
+| arbeiten             | работать                                     |
+| arbeitslos           | безработный *(прилагательное)*               |
+| der Arm              | рука                                         |
+| der Artikel          | артикль / статья                             |
+| der Arzt             | врач                                         |
+| auch                 | тоже *(наречие)*                             |
+| auf                  | на / в *(предлог)*                           |
+| aufmachen            | открывать                                    |
+| aufpassen            | быть внимательным                            |
+| aufräumen            | убирать                                      |
+| auf sein             | быть открытым                                |
+| aufstehen            | вставать                                     |
+| das Auge             | глаз                                         |
+| aus                  | из / с *(предлог)*                           |
+| der Ausflug          | экскурсия, поездка                           |
+| das Ausland          | заграница                                    |
+| aussehen             | выглядеть                                    |
+| aus sein             | быть закончено                               |
+| aussteigen           | выходить (из транспорта)                     |
+| das Auto             | машина                                       |
+| der Automat          | автомат (устройство)                         |
+| das Baby             | младенец                                     |
+| das Bad               | ванная комната                      |
+| der Bahnhof           | вокзал                              |
+| der Bahnsteig         | перрон                              |
+| bald                  | скоро *(наречие)*                   |
+| der Ball              | мяч                                 |
+| die Banane            | банан                               |
+| die Band              | группа (музыкальная)                |
+| der Basketball        | баскетбол                           |
+| basteln               | мастерить                           |
+| der Bauch             | живот                               |
+| der Baum              | дерево                              |
+| bedeuten              | означать                            |
+| bei                   | у / при *(предлог)*                 |
+| beide                 | оба *(местоимение)*                 |
+| bekommen              | получать                            |
+| der Beruf             | профессия                           |
+| besetzt               | занято *(прил./прич.)*              |
+| besonders             | особенно *(наречие)*                |
+| besser                | лучше *(сравн. степень)*            |
+| der / die / das beste | лучший                              |
+| besuchen              | навещать, посещать                  |
+| das Bett              | кровать                             |
+| bezahlen              | платить                             |
+| die Bibliothek        | библиотека                          |
+| billig                | дешёвый                             |
+| bis                   | до *(предлог)*                      |
+| bisschen              | немного *(разг.)*                   |
+| bitte                 | пожалуйста *(междометие)*           |
+| bleiben               | оставаться                          |
+| der Bleistift         | карандаш                            |
+| blöd                  | глупый                              |
+| die Blume             | цветок                              |
+| die Bluse             | блузка                              |
+| brauchen              | нуждаться                           |
+| der Brief             | письмо                              |
+| bringen               | приносить                           |
+| das Brot              | хлеб                                |
+| das Brötchen          | булочка                             |
+| das Buch              | книга                               |
+| der Bus               | автобус                             |
+| die CD                | компакт-диск                        |
+| der Comic             | комикс                              |
+| der Computer          | компьютер                           |
+| da                    | там *(наречие)*                     |
+| der Dank              | благодарность                       |
+| danken                | благодарить                         |
+| dann                  | потом *(наречие)*                   |
+| dein / deine          | твой / твоя *(притяж. местоимение)* |
+| denken                | думать                              |
+| der / die / das       | определённый артикль                |
+| deshalb               | поэтому *(союз)*                    |
+| dick                  | толстый                             |
+| die Disco *(auch: Diskothek)* | дискотека                     |
+| doch                          | однако, всё же *(союз)*       |
+| dort                          | там *(наречие)*               |
+| du                            | ты *(местоимение)*            |
+| dumm                          | глупый                        |
+| durch                         | через *(предлог)*             |
+| der Durst                     | жажда                         |
+| duschen                       | принимать душ                 |
+| das Ei                        | яйцо                          |
+| ein / eine                    | один, одна *(неопр. артикль)* |
+| einfach                       | просто                        |
+| einkaufen                     | делать покупки                |
+| einladen                      | приглашать                    |
+| die Einladung                 | приглашение                   |
+| einmal                        | один раз                      |
+| die Eins                      | оценка «1»                    |
+| einsteigen                    | входить (в транспорт)         |
+| einverstanden sein            | быть согласным                |
+| das Eis                       | мороженое                     |
+| die Eltern *(Pl.)*            | родители                      |
+| das Ende                      | конец                         |
+| endlich                       | наконец                       |
+| entschuldigen                 | извинять                      |
+| die Entschuldigung            | извинение                     |
+| er                            | он *(местоимение)*            |
+| erklären                      | объяснять                     |
+| der / die Erwachsene          | взрослый (м/ж)                |
+| erzählen                      | рассказывать                  |
+| es                            | оно *(местоимение)*           |
+| essen                         | есть                          |
+| das Essen                     | еда                           |
+| etwas                         | что-то                        |
+| euer / eure                   | ваш / ваша *(притяж. мест.)*  |
+| das Fach           | предмет (в школе)       |
+| fahren             | ехать                   |
+| die Fahrkarte      | билет (на транспорт)    |
+| der Fahrplan       | расписание              |
+| das Fahrrad        | велосипед               |
+| die Familie        | семья                   |
+| der Familienname   | фамилия                 |
+| der Fehler         | ошибка                  |
+| das Fenster        | окно                    |
+| die Ferien *(Pl.)* | каникулы                |
+| fernsehen          | смотреть телевизор      |
+| das Fernsehen      | телевидение             |
+| fertig sein        | быть готовым            |
+| der Film           | фильм                   |
+| finden             | находить                |
+| der Fisch          | рыба                    |
+| die Flasche        | бутылка                 |
+| das Fleisch        | мясо                    |
+| fliegen            | лететь                  |
+| der Flughafen      | аэропорт                |
+| das Flugzeug       | самолёт                 |
+| der Fluss          | река                    |
+| das Foto           | фотография              |
+| der Fotoapparat    | фотоаппарат             |
+| fragen             | спрашивать              |
+| die Frage          | вопрос                  |
+| die Frau           | женщина                 |
+| frei               | свободный               |
+| der Freund         | друг                    |
+| die Freundin       | подруга                 |
+| freundlich         | дружелюбный             |
+| froh               | радостный               |
+| früh               | рано                    |
+| das Frühstück      | завтрак                 |
+| frühstücken        | завтракать              |
+| für                | для *(предлог)*         |
+| der Fuß            | нога (ступня)           |
+| der Fußball        | футбол                  |
+| der Garten         | сад                     |
+| geben              | давать                  |
+| geboren            | рождённый *(Part. II)*  |
+| der Geburtstag     | день рождения           |
+| gefallen           | нравиться               |
+| gehen              | идти                    |
+| das Geld           | деньги                  |
+| das Gemüse         | овощи                   |
+| gemütlich          | уютный                  |
+| genug              | достаточно              |
+| das Gepäck         | багаж                   |
+| gerade             | прямо / как раз         |
+| geradeaus          | прямо (напрямую)        |
+| gern               | охотно, с удовольствием |
+| das Geschäft           | магазин                   |
+| das Geschenk           | подарок                   |
+| die Geschichte         | история / рассказ         |
+| geschlossen sein       | быть закрытым             |
+| gestern                | вчера                     |
+| gewinnen               | выигрывать                |
+| das Glas               | стакан                    |
+| glauben                | верить / думать           |
+| gleich                 | сейчас / одинаково        |
+| das Gleis              | путь (на вокзале)         |
+| das Glück              | удача, счастье            |
+| glücklich              | счастливый                |
+| der Glückwunsch        | поздравление              |
+| groß                   | большой                   |
+| die Großeltern *(Pl.)* | бабушка и дедушка         |
+| der Gruß               | привет, пожелание         |
+| gut                    | хороший                   |
+| das Haar               | волос                     |
+| haben                  | иметь                     |
+| hallo                  | привет                    |
+| der Hals               | горло, шея                |
+| halten                 | останавливаться / держать |
+| die Haltestelle        | остановка                 |
+| das Handy              | мобильный телефон         |
+| das Haus               | дом                       |
+| die Hausaufgabe        | домашнее задание          |
+| das Heft               | тетрадь                   |
+| heiraten               | жениться / выходить замуж |
+| heißen                 | называться                |
+| helfen                 | помогать                  |
+| der Herr               | господин                  |
+| herzlich               | сердечный, сердечно       |
+| heute                  | сегодня                   |
+| hier                   | здесь                     |
+| das Hobby              | хобби                     |
+| die Hochzeit           | свадьба                   |
+| hoffen                 | надеяться                 |
+| hoffentlich            | надеюсь                   |
+| hören                  | слушать                   |
+| hübsch                 | симпатичный               |
+| der Hund               | собака                    |
+| der Hunger             | голод                     |
+| ich                   | я *(местоимение)*            |
+| die Idee              | идея                         |
+| Ihr / Ihre            | Ваш / Ваша *(притяж. мест.)* |
+| immer                 | всегда                       |
+| in                    | в *(предлог)*                |
+| die Information       | информация                   |
+| die Insel             | остров                       |
+| interessant           | интересный                   |
+| das Internet          | интернет                     |
+| ja                    | да                           |
+| die Jacke             | куртка                       |
+| die Jeans *(Pl.)*     | джинсы                       |
+| jeder / jede / jedes  | каждый                       |
+| jetzt                 | сейчас                       |
+| der / die Jugendliche | подросток                    |
+| jung                  | молодой                      |
+| der Junge             | мальчик                      |
+| der Kaffee            | кофе                         |
+| der Kakao             | какао                        |
+| die Kamera            | камера                       |
+| kalt                  | холодный                     |
+| kaputt                | сломанный                    |
+| die Karte             | открытка / карта             |
+| die Kartoffel         | картошка                     |
+| der Käse              | сыр                          |
+| die Katze             | кошка                        |
+| kaufen                | покупать                     |
+| kein / keine          | никакой / никакая            |
+| kennen                | знать (кого-то)              |
+| kennenlernen          | знакомиться                  |
+| das Kind              | ребёнок                      |
+| das Kino              | кинотеатр                    |
+| der Kiosk             | киоск                        |
+| klar                  | ясно, конечно                |
+| die Klasse            | класс                        |
+| die Klassenarbeit     | контрольная работа           |
+| das Klavier           | пианино                      |
+| das Kleid             | платье                       |
+| klein                 | маленький                    |
+| kochen                | готовить                     |
+| kommen                | приходить / приезжать        |
+| können                | мочь, уметь                  |
+| der Kopf              | голова                       |
+| kosten                | стоить                       |
+| krank                 | больной                      |
+| das Krankenhaus       | больница                     |
+| der Kuchen            | пирог, торт                  |
+| die Küche             | кухня                        |
+| der Kühlschrank       | холодильник                  |
+| der Kugelschreiber    | ручка                        |
+| der Kurs              | курс                         |
+| kurz                  | короткий                     |
+| lachen            | смеяться                    |
+| die Lampe         | лампа                       |
+| das Land          | страна                      |
+| lang              | длинный                     |
+| lange             | долго                       |
+| langsam           | медленно                    |
+| langweilig        | скучный                     |
+| lassen            | оставлять / позволять       |
+| laufen            | бегать / идти пешком        |
+| leben             | жить                        |
+| leicht            | лёгкий                      |
+| (es) tut mir leid | мне жаль                    |
+| leider            | к сожалению                 |
+| lernen            | учить(ся)                   |
+| lesen             | читать                      |
+| die Leute *(Pl.)* | люди                        |
+| lieb              | милый, дорогой              |
+| lieben            | любить                      |
+| lieber            | охотнее / лучше             |
+| Lieblings-        | любимый (в сложных словах)  |
+| links             | слева                       |
+| die Lust          | желание                     |
+| lustig            | весёлый                     |
+| machen            | делать                      |
+| das Mädchen       | девочка                     |
+| die Mail          | письмо (электронное)        |
+| das Mal           | раз                         |
+| man               | безличное «кто-то» / «люди» |
+| manchmal          | иногда                      |
+| der Mann          | мужчина                     |
+| der Mantel        | пальто                      |
+| der Markt         | рынок                       |
+| der Marktplatz    | рыночная площадь            |
+| die Marmelade     | варенье                     |
+| mehr              | больше                      |
+| mein / meine      | мой / моя                   |
+| die Milch         | молоко                      |
+| mindestens        | как минимум                 |
+| das Mineralwasser | минеральная вода            |
+| mit               | с *(предлог)*               |
+| mitbringen        | приносить с собой           |
+| mitkommen         | идти вместе                 |
+| mitmachen         | участвовать                 |
+| mitnehmen         | брать с собой               |
+| mögen             | любить / нравиться          |
+| möglich           | возможный                   |
+| morgen            | завтра                      |
+| müde              | уставший                    |
+| die Musik         | музыка                      |
+| müssen            | должен / нужно              |
+| nach                    | в / после *(предлог)* |
+| die Nachricht           | сообщение, новость    |
+| der / die / das nächste | следующий             |
+| der Name                | имя                   |
+| nehmen                  | брать                 |
+| nein                    | нет                   |
+| nett                    | милый                 |
+| neu                     | новый                 |
+| nicht                   | не                    |
+| nichts                  | ничего                |
+| nie                     | никогда               |
+| niemand                 | никто                 |
+| noch                    | ещё                   |
+| normal                  | нормальный            |
+| die Note                | оценка                |
+| die Nummer              | номер                 |
+| nur                     | только                |
+| das Obst                | фрукты                |
+| oder                    | или                   |
+| offen                   | открытый              |
+| oft                     | часто                 |
+| ohne                    | без                   |
+| der Ohrring             | серьга                |
+| die Ordnung             | порядок               |
+| das Paket                 | посылка               |
+| der Park                  | парк                  |
+| passieren                 | происходить           |
+| die Pause                 | пауза, перерыв        |
+| das Pferd                 | лошадь                |
+| die Pizza                 | пицца                 |
+| der Platz                 | место                 |
+| die Post                  | почта                 |
+| das Poster                | постер                |
+| die Postkarte             | открытка              |
+| das Problem               | проблема              |
+| der Pullover              | свитер                |
+| pünktlich                 | пунктуальный, вовремя |
+| der Quatsch               | ерунда, чушь          |
+| das Quiz                  | викторина             |
+| das Rad *(= das Fahrrad)* | велосипед             |
+| der Radiergummi           | ластик                |
+| das Radio                 | радио                 |
+| raten                     | угадывать, советовать |
+| das Rätsel                | загадка               |
+| recht haben               | быть правым           |
+| rechts                    | справа                |
+| der Regen                 | дождь                 |
+| regnen                    | идти (о дожде)        |
+| die Reise                 | поездка               |
+| reiten                    | ездить верхом         |
+| reparieren                | чинить                |
+| das Restaurant            | ресторан              |
+| richtig                   | правильный            |
+| der Ring                  | кольцо                |
+| der Rucksack              | рюкзак                |
+| ruhig                     | тихо, спокойно        |
+| Немецкое слово          | Перевод                   |
+| die Sache               | вещь, дело                |
+| der Saft                | сок                       |
+| sagen                   | говорить                  |
+| der Salat               | салат                     |
+| schade                  | жаль                      |
+| schenken                | дарить                    |
+| das Schiff              | корабль                   |
+| schlafen                | спать                     |
+| schlecht                | плохой                    |
+| schmecken               | быть на вкус              |
+| der Schmerz             | боль                      |
+| schnell                 | быстро                    |
+| die Schokolade          | шоколад                   |
+| schon                   | уже                       |
+| schön                   | красивый                  |
+| schreiben               | писать                    |
+| schwer                  | тяжёлый / сложный         |
+| das Schwimmbad          | бассейн                   |
+| schwimmen               | плавать                   |
+| der See                 | озеро                     |
+| sehen                   | видеть                    |
+| sehr                    | очень                     |
+| sein                    | быть                      |
+| sein / seine            | его *(притяж. мест.)*     |
+| die Seite               | страница                  |
+| sicher                  | уверенный                 |
+| sie                     | она / они *(местоимение)* |
+| Sie                     | Вы *(вежл.)*              |
+| so                      | так                       |
+| sofort                  | сразу                     |
+| der Spaß                | удовольствие              |
+| spät                    | поздно                    |
+| später                  | позже                     |
+| spazieren gehen         | гулять                    |
+| das Spiel               | игра                      |
+| spielen                 | играть                    |
+| der Spielplatz          | игровая площадка          |
+| der Sport               | спорт                     |
+| die Sprache             | язык                      |
+| sprechen                | говорить                  |
+| die Stadt               | город                     |
+| der Strand              | пляж                      |
+| die Straße              | улица                     |
+| das Stück               | кусок                     |
+| suchen                  | искать                    |
+| der Supermarkt          | супермаркет               |
+| die Suppe               | суп                       |
+| süß                     | сладкий                   |
+| die Süßigkeiten *(Pl.)* | сладости                  |
+| sympathisch             | симпатичный               |
+| die U-Bahn           | метро                        |
+| üben                 | упражняться, тренироваться   |
+| über                 | над / через *(предлог)*      |
+| überall              | везде                        |
+| die Uhr              | часы                         |
+| um                   | в (о времени)                |
+| und                  | и                            |
+| und so weiter (usw.) | и так далее                  |
+| unser / unsere       | наш / наша *(притяж. мест.)* |
+| der Unterricht       | урок, занятия                |
+| verdienen            | зарабатывать                 |
+| vergessen            | забывать                     |
+| verrückt             | сумасшедший                  |
+| verstehen            | понимать                     |
+| viel / viele         | много                        |
+| vielleicht           | может быть                   |
+| von                  | от / с *(предлог)*           |
+| vor                  | перед *(предлог)*            |
+| der Vorname          | имя                          |
+| (sich) vorstellen    | представляться               |
+| Немецкое слово             | Перевод                |
+| wahr                       | верный, настоящий      |
+| der Wald                   | лес                    |
+| wandern                    | ходить в поход, гулять |
+| wann                       | когда                  |
+| warm                       | тёплый                 |
+| warten                     | ждать                  |
+| warum                      | почему                 |
+| was                        | что                    |
+| waschen                    | мыть                   |
+| das Wasser                 | вода                   |
+| wecken                     | будить                 |
+| weh tun                    | болеть, причинять боль |
+| weit                       | далеко                 |
+| weiter                     | дальше                 |
+| welcher / welche / welches | какой                  |
+| wenig / wenige             | мало                   |
+| wer                        | кто                    |
+| werden                     | становиться            |
+| wichtig                    | важный                 |
+| wie                        | как                    |
+| wieder                     | снова                  |
+| wiederholen                | повторять              |
+| das Wiedersehen            | встреча, «до свидания» |
+| wie viel                   | сколько                |
+| willkommen                 | добро пожаловать       |
+| wir                        | мы                     |
+| wirklich                   | действительно          |
+| wissen                     | знать                  |
+| wo                         | где                    |
+| woher                      | откуда                 |
+| wohin                      | куда                   |
+| wohnen                     | жить                   |
+| die Wohnung                | квартира               |
+| das Wohnzimmer             | гостиная               |
+| wollen                     | хотеть                 |
+| das Wort                   | слово                  |
+| wunderbar                  | замечательный          |
+| wünschen                   | желать                 |
+| die Wurst                  | колбаса                |
+| der Zahn                   | зуб                    |
+| zeigen                     | показывать             |
+| die Zeit                   | время                  |
+| die Zeitung                | газета                 |
+| das Zimmer                 | комната                |
+| zu                         | к / в / на *(предлог)* |
+| zuerst                     | сначала                |
+| der Zug                    | поезд                  |
+| zumachen                   | закрывать              |
+| zusammen                   | вместе                 |
+| zu sein                    | быть закрытым          |
