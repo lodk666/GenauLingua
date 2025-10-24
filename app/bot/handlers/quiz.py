@@ -6,11 +6,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.states import QuizStates
 from app.bot.keyboards import get_answer_keyboard, get_results_keyboard
-from app.database.models import User, Session, SessionItem
+from app.database.models import User, Session, SessionItem, MasterWord
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from app.services.quiz_service import generate_question
 
 router = Router()
 
+def get_next_question_keyboard() -> InlineKeyboardMarkup:
+    """Кнопка 'Дальше' для перехода к следующему вопросу"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="Дальше →", callback_data="next_question")]
+        ]
+    )
 
 @router.message(F.text == "📚 Учить слова")
 async def start_quiz(message: Message, state: FSMContext, session: AsyncSession):
@@ -55,7 +63,8 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
         total_questions=25,
         correct_answers=0,
         errors=[],  # Список ID неправильных слов для повтора
-        correct_word_id=question['correct_word'].id
+        correct_word_id=question['correct_word'].id,
+        used_word_ids = [question['correct_word'].id]
     )
 
     # Формируем текст вопроса
@@ -94,6 +103,10 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
     total_questions = data['total_questions']
     correct_answers = data['correct_answers']
     errors = data['errors']
+    used_word_ids = data.get('used_word_ids', [])  # Список уже использованных слов
+
+    # Получаем правильное слово из БД
+    correct_word = await session.get(MasterWord, correct_word_id)
 
     # Проверяем правильность ответа
     is_correct = (selected_word_id == correct_word_id)
@@ -107,16 +120,35 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
     )
     session.add(session_item)
 
+    # Формируем правильный ответ для показа
+    word_display = correct_word.lemma
+    if correct_word.article and correct_word.article.value != '-':
+        word_display = f"{correct_word.article.value} {correct_word.lemma}"
+
     # Обновляем счётчик правильных ответов
     if is_correct:
         correct_answers += 1
-        response_text = "✅ Правильно!"
+        response_text = (
+            f"✅ <b>Правильно!</b>\n\n"
+            f"🇩🇪 {word_display} = {correct_word.translation_ru}"
+        )
     else:
-        response_text = "❌ Неправильно!"
+        response_text = (
+            f"❌ <b>Неправильно!</b>\n\n"
+            f"Правильный ответ:\n"
+            f"🇩🇪 {word_display} = <b>{correct_word.translation_ru}</b>"
+        )
         errors.append(correct_word_id)
 
     await callback.message.edit_text(
-        f"{callback.message.text}\n\n{response_text}"
+        response_text,
+        reply_markup=get_next_question_keyboard()
+    )
+
+    # Обновляем state с новыми значениями
+    await state.update_data(
+        correct_answers=correct_answers,
+        errors=errors
     )
 
     # Проверяем, закончились ли вопросы
@@ -130,7 +162,7 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
         # Показываем результаты
         percentage = (correct_answers / total_questions) * 100
         result_text = (
-            f"🎉 Викторина завершена!\n\n"
+            f"🎉 <b>Викторина завершена!</b>\n\n"
             f"📊 Результаты:\n"
             f"✅ Правильно: {correct_answers}/{total_questions}\n"
             f"📈 Процент: {percentage:.1f}%\n"
@@ -145,24 +177,48 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
         )
 
         await state.clear()
-        return
+
+    await callback.answer()
+
+
+@router.callback_query(F.data == "next_question", QuizStates.answering)
+async def show_next_question(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    """Показ следующего вопроса"""
+    # Получаем данные из state
+    data = await state.get_data()
+    current_question = data['current_question']
+    total_questions = data['total_questions']
+    used_word_ids = data.get('used_word_ids', [])
 
     # Генерируем следующий вопрос
     current_question += 1
     user = await session.get(User, callback.from_user.id)
-    question = await generate_question(user.selected_level, session)
+
+    # Генерируем вопрос, исключая уже использованные слова
+    question = None
+    attempts = 0
+    max_attempts = 10
+
+    while attempts < max_attempts:
+        question = await generate_question(user.selected_level, session, exclude_ids=used_word_ids)
+        if question:
+            break
+        attempts += 1
 
     if not question:
         await callback.message.answer("❌ Не удалось сгенерировать следующий вопрос.")
         await state.clear()
+        await callback.answer()
         return
+
+    # Добавляем слово в список использованных
+    used_word_ids.append(question['correct_word'].id)
 
     # Обновляем state
     await state.update_data(
         current_question=current_question,
-        correct_answers=correct_answers,
-        errors=errors,
-        correct_word_id=question['correct_word'].id
+        correct_word_id=question['correct_word'].id,
+        used_word_ids=used_word_ids
     )
 
     # Формируем текст следующего вопроса
@@ -173,11 +229,15 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
         word_display = f"{word.article.value} {word.lemma}"
 
     question_text = (
-        f"📝 Вопрос {current_question}/{total_questions}\n\n"
+        f"📝 <b>Вопрос {current_question}/{total_questions}</b>\n\n"
         f"🇩🇪 <b>{word_display}</b>\n\n"
         f"Выбери правильный перевод:"
     )
 
+    # Удаляем сообщение с ответом и кнопкой "Дальше"
+    await callback.message.delete()
+
+    # Показываем новый вопрос
     await callback.message.answer(
         question_text,
         reply_markup=get_answer_keyboard(question['options'])

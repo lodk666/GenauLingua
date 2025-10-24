@@ -4,11 +4,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models import MasterWord, CEFRLevel, PartOfSpeech
 
 
-async def generate_question(level: str, session: AsyncSession) -> dict | None:
+async def generate_question(level: str, session: AsyncSession, exclude_ids: list[int] = None) -> dict | None:
     """Генерирует вопрос для викторины"""
-    result = await session.execute(
-        select(MasterWord).where(MasterWord.cefr == level)
-    )
+    if exclude_ids is None:
+        exclude_ids = []
+
+    # Получаем слова, исключая уже использованные
+    query = select(MasterWord).where(MasterWord.cefr == level)
+
+    if exclude_ids:
+        query = query.where(MasterWord.id.not_in(exclude_ids))
+
+    result = await session.execute(query)
     words = result.scalars().all()
 
     if not words:
@@ -19,7 +26,9 @@ async def generate_question(level: str, session: AsyncSession) -> dict | None:
 
     if len(distractors) < 3:
         all_other = [w for w in words if w.id != correct_word.id and w not in distractors]
-        distractors.extend(random.sample(all_other, min(3 - len(distractors), len(all_other))))
+        if all_other:
+            needed = min(3 - len(distractors), len(all_other))
+            distractors.extend(random.sample(all_other, needed))
 
     options = [(correct_word.id, correct_word.translation_ru)]
     options.extend([(d.id, d.translation_ru) for d in distractors[:3]])
@@ -32,7 +41,6 @@ async def generate_question(level: str, session: AsyncSession) -> dict | None:
         'options': options,
         'correct_answer_index': correct_answer_index
     }
-
 
 async def get_distractors(word: MasterWord, session: AsyncSession) -> list[MasterWord]:
     """Подбирает дистракторы для слова"""
