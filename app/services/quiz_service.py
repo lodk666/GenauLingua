@@ -30,8 +30,8 @@ async def generate_question(level: str, session: AsyncSession, exclude_ids: list
             needed = min(3 - len(distractors), len(all_other))
             distractors.extend(random.sample(all_other, needed))
 
-    options = [(correct_word.id, correct_word.translation_ru)]
-    options.extend([(d.id, d.translation_ru) for d in distractors[:3]])
+    options = [(correct_word.id, correct_word.translation_ru.capitalize())]
+    options.extend([(d.id, d.translation_ru.capitalize()) for d in distractors[:3]])
     random.shuffle(options)
 
     correct_answer_index = next(i for i, (word_id, _) in enumerate(options) if word_id == correct_word.id)

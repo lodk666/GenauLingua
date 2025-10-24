@@ -15,6 +15,7 @@ router = Router()
 async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
     """Обработчик команды /start"""
     user_id = message.from_user.id
+    await message.delete()
 
     # Проверяем, есть ли пользователь в БД
     user = await session.get(User, user_id)
@@ -50,14 +51,13 @@ async def select_level(callback: CallbackQuery, state: FSMContext, session: Asyn
     user.selected_level = level
     await session.commit()
 
-    await callback.message.edit_text(
-        f"✅ Отлично! Уровень {level} выбран.\n\n"
-        f"Используй меню для начала обучения:",
-        reply_markup=None
-    )
+    # Удаляем сообщение с выбором уровня
+    await callback.message.delete()
 
+    # Отправляем только меню
     await callback.message.answer(
-        "Выбери действие:",
+        f"✅ Отлично! Уровень {level} выбран.\n\n"
+        f"Выбери действие:",
         reply_markup=get_main_menu_keyboard()
     )
 

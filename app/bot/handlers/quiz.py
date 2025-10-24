@@ -3,6 +3,7 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.bot.states import QuizStates
 from app.bot.keyboards import get_answer_keyboard, get_results_keyboard
@@ -45,6 +46,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
 
     session.add(quiz_session)
     await session.flush()
+    await session.commit()
 
     # Генерируем первый вопрос
     question = await generate_question(user.selected_level, session)
@@ -80,6 +82,32 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
         f"🇩🇪 <b>{word_display}</b>\n\n"
         f"Выбери правильный перевод:"
     )
+
+    try:
+        await message.delete()
+    except:
+        pass  # Если не удалось удалить - не критично
+
+        # Удаляем все предыдущие сообщения бота (меню, приветствия)
+        # Telegram позволяет удалять только последние сообщения
+    try:
+        # Пытаемся удалить последние 10 сообщений
+        for i in range(1, 11):
+            try:
+                await message.bot.delete_message(
+                    chat_id=message.chat.id,
+                    message_id=message.message_id - i
+                )
+            except:
+                pass  # Если сообщение уже удалено или нельзя удалить - пропускаем
+    except:
+        pass
+
+        # Удаляем сообщение пользователя
+    try:
+        await message.delete()
+    except:
+        pass  # Если сообщение уже удалено или нельзя удалить - пропускаем
 
     await message.answer(
         question_text,
@@ -119,6 +147,7 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
         answered_at=datetime.utcnow()
     )
     session.add(session_item)
+    await session.commit()
 
     # Формируем правильный ответ для показа
     word_display = correct_word.lemma
@@ -130,13 +159,13 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
         correct_answers += 1
         response_text = (
             f"✅ <b>Правильно!</b>\n\n"
-            f"🇩🇪 {word_display} = {correct_word.translation_ru}"
+            f"🇩🇪 {word_display} = {correct_word.translation_ru.capitalize()}"
         )
     else:
         response_text = (
-            f"❌ <b>Неправильно!</b>\n\n"
+            f"❌ <b>Нeправильно!</b>\n\n"
             f"Правильный ответ:\n"
-            f"🇩🇪 {word_display} = <b>{correct_word.translation_ru}</b>"
+            f"🇩🇪 {word_display} = <b>{correct_word.translation_ru.capitalize()}</b>"
         )
         errors.append(correct_word_id)
 
@@ -161,20 +190,45 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
 
         # Показываем результаты
         percentage = (correct_answers / total_questions) * 100
+        # Получаем детальную статистику
+        result_items = await session.execute(
+            select(SessionItem, MasterWord)
+            .join(MasterWord, SessionItem.word_id == MasterWord.id)
+            .where(SessionItem.session_id == session_id)
+            .order_by(SessionItem.answered_at)
+        )
+        items = result_items.all()
+
+        # Формируем список правильных/неправильных
+        details = []
+        for item, word in items:
+            word_display = word.lemma
+            if word.article and word.article.value != '-':
+                word_display = f"{word.article.value} {word.lemma}"
+
+            icon = "✅" if item.is_correct else "❌"
+            details.append(f"{icon} {word_display} — {word.translation_ru.capitalize()}")
+
         result_text = (
-            f"🎉 <b>Викторина завершена!</b>\n\n"
-            f"📊 Результаты:\n"
-            f"✅ Правильно: {correct_answers}/{total_questions}\n"
-            f"📈 Процент: {percentage:.1f}%\n"
+                f"🎉 <b>Викторина завершена!</b>\n\n"
+                f"📊 <b>Результаты:</b>\n"
+                f"✅ Правильно: <b>{correct_answers}/{total_questions}</b>\n"
+                f"📈 Процент: <b>{percentage:.1f}%</b>\n\n"
+                f"📝 <b>Детали:</b>\n" + "\n".join(details)
         )
 
         if errors:
             result_text += f"\n❌ Ошибок: {len(errors)}"
 
-        await callback.message.answer(
-            result_text,
-            reply_markup=get_results_keyboard(has_errors=bool(errors))
-        )
+            # Удаляем сообщение с ответом на последний вопрос
+            await callback.message.delete()
+
+            # Показываем результаты
+            await callback.bot.send_message(
+                chat_id=callback.message.chat.id,
+                text=result_text,
+                reply_markup=get_results_keyboard(has_errors=bool(errors))
+            )
 
         await state.clear()
 
@@ -192,6 +246,12 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
 
     # Генерируем следующий вопрос
     current_question += 1
+
+    # Проверяем, не закончилась ли викторина
+    if current_question > total_questions:
+        # ... (весь блок завершения остаётся как есть)
+        return
+
     user = await session.get(User, callback.from_user.id)
 
     # Генерируем вопрос, исключая уже использованные слова
@@ -234,11 +294,8 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         f"Выбери правильный перевод:"
     )
 
-    # Удаляем сообщение с ответом и кнопкой "Дальше"
-    await callback.message.delete()
-
-    # Показываем новый вопрос
-    await callback.message.answer(
+    # Редактируем сообщение с ответом, заменяя его на новый вопрос
+    await callback.message.edit_text(
         question_text,
         reply_markup=get_answer_keyboard(question['options'])
     )
