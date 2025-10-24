@@ -85,4 +85,4 @@ Thumbs.db
 *.sqlite3
 *.db
 *.bak
-
+!example.env

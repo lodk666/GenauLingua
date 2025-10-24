@@ -1,3 +1,9 @@
+import sys
+from pathlib import Path
+
+# Добавляем корневую папку проекта в sys.path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 import asyncio
 import logging
 from aiogram import Bot, Dispatcher
@@ -7,6 +13,7 @@ from aiogram.enums import ParseMode
 
 from app.config import settings
 from app.bot.handlers.start import router as start_router
+from app.bot.handlers.quiz import router as quiz_router
 from app.database.session import engine, AsyncSessionLocal
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -26,6 +33,7 @@ async def main():
 
     # Регистрация роутеров
     dp.include_router(start_router)
+    dp.include_router(quiz_router)
 
     # Middleware для передачи сессии БД в хэндлеры
     @dp.update.middleware()
