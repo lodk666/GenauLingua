@@ -54,3 +54,24 @@ def get_main_menu_keyboard() -> ReplyKeyboardMarkup:
         resize_keyboard=True,
         is_persistent=True  # ← Меню всегда видно
     )
+
+def get_translation_mode_keyboard(current_mode: str) -> InlineKeyboardMarkup:
+    """Клавиатура выбора режима перевода"""
+    buttons = [
+        [
+            InlineKeyboardButton(
+                text="🇩🇪→🇷🇺 DE-RU" + (" ✓" if current_mode == "DE-RU" else ""),
+                callback_data="mode_DE-RU"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🇷🇺→🇩🇪 RU-DE" + (" ✓" if current_mode == "RU-DE" else ""),
+                callback_data="mode_RU-DE"
+            )
+        ],
+        [
+            InlineKeyboardButton(text="◀️ Назад", callback_data="back_to_settings")
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)

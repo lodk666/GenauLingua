@@ -4,7 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models import MasterWord, CEFRLevel, PartOfSpeech
 
 
-async def generate_question(level: str, session: AsyncSession, exclude_ids: list[int] = None) -> dict | None:
+async def generate_question(level: str, session: AsyncSession, exclude_ids: list[int] = None,
+                            mode: str = "DE-RU") -> dict | None:
     """Генерирует вопрос для викторины"""
     if exclude_ids is None:
         exclude_ids = []
@@ -30,8 +31,26 @@ async def generate_question(level: str, session: AsyncSession, exclude_ids: list
             needed = min(3 - len(distractors), len(all_other))
             distractors.extend(random.sample(all_other, needed))
 
-    options = [(correct_word.id, correct_word.translation_ru.capitalize())]
-    options.extend([(d.id, d.translation_ru.capitalize()) for d in distractors[:3]])
+    # Формируем варианты ответов в зависимости от режима
+    if mode == "RU-DE":
+        # RU→DE: показываем немецкие слова как варианты
+        options = []
+        correct_display = correct_word.lemma
+        if correct_word.article and correct_word.article.value != '-':
+            correct_display = f"{correct_word.article.value} {correct_word.lemma}"
+
+        options.append((correct_word.id, correct_display))
+
+        for d in distractors[:3]:
+            distractor_display = d.lemma
+            if d.article and d.article.value != '-':
+                distractor_display = f"{d.article.value} {d.lemma}"
+            options.append((d.id, distractor_display))
+    else:
+        # DE→RU: показываем русские переводы как варианты
+        options = [(correct_word.id, correct_word.translation_ru.capitalize())]
+        options.extend([(d.id, d.translation_ru.capitalize()) for d in distractors[:3]])
+
     random.shuffle(options)
 
     correct_answer_index = next(i for i, (word_id, _) in enumerate(options) if word_id == correct_word.id)

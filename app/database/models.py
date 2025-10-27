@@ -41,6 +41,7 @@ class User(Base):
     username: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     first_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     selected_level: Mapped[Optional[str]] = mapped_column(Enum(CEFRLevel), nullable=True)
+    translation_mode: Mapped[str] = mapped_column(String(10), default="DE-RU", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     sessions: Mapped[list["Session"]] = relationship(back_populates="user")

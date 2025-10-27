@@ -7,9 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from aiogram.filters import Command
 
-
 from app.bot.states import QuizStates
-from app.bot.keyboards import get_answer_keyboard, get_results_keyboard, get_main_menu_keyboard, get_level_keyboard
+from app.bot.keyboards import get_answer_keyboard, get_results_keyboard, get_main_menu_keyboard, get_level_keyboard, get_translation_mode_keyboard
 from app.database.models import User, Session, SessionItem, MasterWord
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from app.services.quiz_service import generate_question
@@ -52,7 +51,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
     await session.commit()
 
     # Генерируем первый вопрос
-    question = await generate_question(user.selected_level, session)
+    question = await generate_question(user.selected_level, session, mode=user.translation_mode)
 
     if not question:
         await message.answer(
@@ -73,18 +72,28 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
     )
 
     # Формируем текст вопроса
+    # Формируем текст вопроса в зависимости от режима
     word = question['correct_word']
-    word_display = word.lemma
+    mode = user.translation_mode
 
-    # Для существительных показываем артикль
-    if word.article and word.article.value != '-':
-        word_display = f"{word.article.value} {word.lemma}"
+    if mode == "RU-DE":
+        # Режим RU→DE: показываем русский перевод
+        question_text = (
+            f"📝 Вопрос 1/25\n\n"
+            f"🇷🇺 <b>{word.translation_ru.capitalize()}</b>\n\n"
+            f"Выбери правильное слово:"
+        )
+    else:
+        # Режим DE→RU: показываем немецкое слово
+        word_display = word.lemma
+        if word.article and word.article.value != '-':
+            word_display = f"{word.article.value} {word.lemma}"
 
-    question_text = (
-        f"📝 Вопрос 1/25\n\n"
-        f"🇩🇪 <b>{word_display}</b>\n\n"
-        f"Выбери правильный перевод:"
-    )
+        question_text = (
+            f"📝 Вопрос 1/25\n\n"
+            f"🇩🇪 <b>{word_display}</b>\n\n"
+            f"Выбери правильный перевод:"
+        )
 
     try:
         await message.delete()
@@ -157,20 +166,37 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
     if correct_word.article and correct_word.article.value != '-':
         word_display = f"{correct_word.article.value} {correct_word.lemma}"
 
+    # Получаем режим пользователя
+    user = await session.get(User, callback.from_user.id)
+    mode = user.translation_mode
+
     # Обновляем счётчик правильных ответов
     if is_correct:
         correct_answers += 1
-        response_text = (
-            f"✅ <b>Правильно!</b>\n\n"
-            f"🇩🇪 {word_display} = {correct_word.translation_ru.capitalize()}"
-        )
+        if mode == "RU-DE":
+            response_text = (
+                f"✅ <b>Правильно!</b>\n\n"
+                f"🇷🇺 {correct_word.translation_ru.capitalize()} = 🇩🇪 {word_display}"
+            )
+        else:
+            response_text = (
+                f"✅ <b>Правильно!</b>\n\n"
+                f"🇩🇪 {word_display} = 🇷🇺 {correct_word.translation_ru.capitalize()}"
+            )
     else:
-        response_text = (
-            f"❌ <b>Нeправильно!</b>\n\n"
-            f"Правильный ответ:\n"
-            f"🇩🇪 {word_display} = <b>{correct_word.translation_ru.capitalize()}</b>"
-        )
-        errors.append(correct_word_id)
+        if mode == "RU-DE":
+            response_text = (
+                f"❌ <b>Неправильно!</b>\n\n"
+                f"Правильный ответ:\n"
+                f"🇷🇺 {correct_word.translation_ru.capitalize()} = <b>🇩🇪 {word_display}</b>"
+            )
+        else:
+            response_text = (
+                f"❌ <b>Неправильно!</b>\n\n"
+                f"Правильный ответ:\n"
+                f"🇩🇪 {word_display} = <b>🇷🇺 {correct_word.translation_ru.capitalize()}</b>"
+            )
+        errors.append(correct_word_id)  # ← ТОЛЬКО здесь!
 
     await callback.message.edit_text(
         response_text,
@@ -212,11 +238,11 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
 
         percentage = (correct_answers / total_questions) * 100
         result_text = (
-                f"🎉 <b>Викторина завершена!</b>\n\n"
-                f"📊 <b>Результаты:</b>\n"
-                f"✅ Правильно: <b>{correct_answers}/{total_questions}</b>\n"
-                f"📈 Процент: <b>{percentage:.1f}%</b>\n\n"
-                f"📝 <b>Детали:</b>\n" + "\n".join(details)
+            f"🎉 <b>Викторина завершена!</b>\n\n"
+            f"📊 <b>Результаты:</b>\n"
+            f"✅ Правильно: <b>{correct_answers}/{total_questions}</b>\n"
+            f"📈 Процент: <b>{percentage:.1f}%</b>\n\n"
+            f"📝 <b>Детали:</b>\n" + "\n".join(details)
         )
 
         if errors:
@@ -240,7 +266,6 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
         await state.update_data(saved_errors=saved_errors)
 
     await callback.answer()
-
 
 @router.callback_query(F.data == "next_question", QuizStates.answering)
 async def show_next_question(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
@@ -296,10 +321,29 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
                 needed = min(3 - len(distractors), len(all_words))
                 distractors.extend(random.sample(all_words, needed))
 
-        # Формируем варианты ответов
-        options = [(next_word.id, next_word.translation_ru.capitalize())]
-        options.extend([(d.id, d.translation_ru.capitalize()) for d in distractors[:3]])
-        random.shuffle(options)
+            # Формируем варианты ответов в зависимости от режима
+            user = await session.get(User, callback.from_user.id)
+            mode = user.translation_mode
+
+            if mode == "RU-DE":
+                # RU→DE: показываем немецкие слова
+                options = []
+                word_display = next_word.lemma
+                if next_word.article and next_word.article.value != '-':
+                    word_display = f"{next_word.article.value} {next_word.lemma}"
+                options.append((next_word.id, word_display))
+
+                for d in distractors[:3]:
+                    distractor_display = d.lemma
+                    if d.article and d.article.value != '-':
+                        distractor_display = f"{d.article.value} {d.lemma}"
+                    options.append((d.id, distractor_display))
+            else:
+                # DE→RU: показываем русские переводы
+                options = [(next_word.id, next_word.translation_ru.capitalize())]
+                options.extend([(d.id, d.translation_ru.capitalize()) for d in distractors[:3]])
+
+            random.shuffle(options)
 
         question = {
             'correct_word': next_word,
@@ -315,7 +359,7 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         max_attempts = 10
 
         while attempts < max_attempts:
-            question = await generate_question(user.selected_level, session, exclude_ids=used_word_ids)
+            question = await generate_question(user.selected_level, session, exclude_ids=used_word_ids, mode=user.translation_mode)
             if question:
                 break
             attempts += 1
@@ -345,17 +389,29 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
     )
 
     # Формируем текст следующего вопроса
+    # Формируем текст следующего вопроса в зависимости от режима
     word = question['correct_word']
-    word_display = word.lemma
+    user = await session.get(User, callback.from_user.id)
+    mode = user.translation_mode
 
-    if word.article and word.article.value != '-':
-        word_display = f"{word.article.value} {word.lemma}"
+    if mode == "RU-DE":
+        # Режим RU→DE: показываем русский перевод
+        question_text = (
+            f"📝 <b>Вопрос {current_question}/{total_questions}</b>\n\n"
+            f"🇷🇺 <b>{word.translation_ru.capitalize()}</b>\n\n"
+            f"Выбери правильное слово:"
+        )
+    else:
+        # Режим DE→RU: показываем немецкое слово
+        word_display = word.lemma
+        if word.article and word.article.value != '-':
+            word_display = f"{word.article.value} {word.lemma}"
 
-    question_text = (
-        f"📝 <b>Вопрос {current_question}/{total_questions}</b>\n\n"
-        f"🇩🇪 <b>{word_display}</b>\n\n"
-        f"Выбери правильный перевод:"
-    )
+        question_text = (
+            f"📝 <b>Вопрос {current_question}/{total_questions}</b>\n\n"
+            f"🇩🇪 <b>{word_display}</b>\n\n"
+            f"Выбери правильный перевод:"
+        )
 
     # Редактируем сообщение с ответом, заменяя его на новый вопрос
     await callback.message.edit_text(
@@ -416,10 +472,28 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
             needed = min(3 - len(distractors), len(all_words))
             distractors.extend(random.sample(all_words, needed))
 
-    # Формируем варианты ответов
-    options = [(first_word.id, first_word.translation_ru.capitalize())]
-    options.extend([(d.id, d.translation_ru.capitalize()) for d in distractors[:3]])
-    random.shuffle(options)
+        # Формируем варианты ответов в зависимости от режима
+        mode = user.translation_mode
+
+        if mode == "RU-DE":
+            # RU→DE: показываем немецкие слова
+            options = []
+            word_display = first_word.lemma
+            if first_word.article and first_word.article.value != '-':
+                word_display = f"{first_word.article.value} {first_word.lemma}"
+            options.append((first_word.id, word_display))
+
+            for d in distractors[:3]:
+                distractor_display = d.lemma
+                if d.article and d.article.value != '-':
+                    distractor_display = f"{d.article.value} {d.lemma}"
+                options.append((d.id, distractor_display))
+        else:
+            # DE→RU: показываем русские переводы
+            options = [(first_word.id, first_word.translation_ru.capitalize())]
+            options.extend([(d.id, d.translation_ru.capitalize()) for d in distractors[:3]])
+
+        random.shuffle(options)
 
     # Сохраняем данные в state
     await state.update_data(
@@ -434,16 +508,29 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
     )
 
     # Формируем текст вопроса
-    word_display = first_word.lemma
-    if first_word.article and first_word.article.value != '-':
-        word_display = f"{first_word.article.value} {first_word.lemma}"
+    # Формируем текст вопроса в зависимости от режима
+    mode = user.translation_mode
 
-    question_text = (
-        f"🔄 <b>Повтор ошибок</b>\n"
-        f"📝 Вопрос 1/{len(errors)}\n\n"
-        f"🇩🇪 <b>{word_display}</b>\n\n"
-        f"Выбери правильный перевод:"
-    )
+    if mode == "RU-DE":
+        # Режим RU→DE: показываем русский перевод
+        question_text = (
+            f"🔄 <b>Повтор ошибок</b>\n"
+            f"📝 Вопрос 1/{len(errors)}\n\n"
+            f"🇷🇺 <b>{first_word.translation_ru.capitalize()}</b>\n\n"
+            f"Выбери правильное слово:"
+        )
+    else:
+        # Режим DE→RU: показываем немецкое слово
+        word_display = first_word.lemma
+        if first_word.article and first_word.article.value != '-':
+            word_display = f"{first_word.article.value} {first_word.lemma}"
+
+        question_text = (
+            f"🔄 <b>Повтор ошибок</b>\n"
+            f"📝 Вопрос 1/{len(errors)}\n\n"
+            f"🇩🇪 <b>{word_display}</b>\n\n"
+            f"Выбери правильный перевод:"
+        )
 
     # Удаляем сообщение со статистикой
     await callback.message.delete()
@@ -549,6 +636,7 @@ async def show_statistics(message: Message, state: FSMContext, session: AsyncSes
 
     await message.answer(stats_text)
 
+
 @router.message(Command("settings"))
 @router.message(F.text == "⚙️ Настройки")
 async def show_settings(message: Message, state: FSMContext, session: AsyncSession):
@@ -557,12 +645,23 @@ async def show_settings(message: Message, state: FSMContext, session: AsyncSessi
     user = await session.get(User, user_id)
 
     current_level = user.selected_level.value if user and user.selected_level else "не выбран"
+    current_mode = user.translation_mode if user else "DE-RU"
+
+    mode_text = "🇩🇪→🇷🇺 Немецкий → Русский" if current_mode == "DE-RU" else "🇷🇺→🇩🇪 Русский → Немецкий"
 
     settings_text = (
         f"⚙️ <b>Настройки</b>\n\n"
-        f"Текущий уровень: <b>{current_level}</b>\n\n"
-        f"Выбери новый уровень:"
+        f"📚 Уровень: <b>{current_level}</b>\n"
+        f"🔄 Режим перевода: <b>{mode_text}</b>\n\n"
+        f"Что хочешь изменить?"
     )
+
+    # Кнопки настроек
+    buttons = [
+        [InlineKeyboardButton(text="📚 Изменить уровень", callback_data="change_level")],
+        [InlineKeyboardButton(text="🔄 Изменить режим перевода", callback_data="change_mode")]
+    ]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
 
     # Удаляем сообщение пользователя
     try:
@@ -570,12 +669,83 @@ async def show_settings(message: Message, state: FSMContext, session: AsyncSessi
     except:
         pass
 
-    await message.answer(
-        settings_text,
+    await message.answer(settings_text, reply_markup=keyboard)
+
+
+@router.callback_query(F.data == "change_level")
+async def settings_change_level(callback: CallbackQuery, state: FSMContext):
+    """Переход к выбору уровня из настроек"""
+    await callback.message.edit_text(
+        "📚 <b>Выбери новый уровень:</b>",
         reply_markup=get_level_keyboard()
     )
-
     await state.set_state(QuizStates.choosing_level)
+    await callback.answer()
+
+
+@router.callback_query(F.data == "change_mode")
+async def settings_change_mode(callback: CallbackQuery, session: AsyncSession):
+    """Переход к выбору режима перевода"""
+    user_id = callback.from_user.id
+    user = await session.get(User, user_id)
+    current_mode = user.translation_mode if user else "DE-RU"
+
+    await callback.message.edit_text(
+        "🔄 <b>Выбери режим перевода:</b>\n\n"
+        "🇩🇪→🇷🇺 <b>DE-RU</b> — Немецкое слово → Русский перевод\n"
+        "🇷🇺→🇩🇪 <b>RU-DE</b> — Русский перевод → Немецкое слово",
+        reply_markup=get_translation_mode_keyboard(current_mode)
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("mode_"))
+async def set_translation_mode(callback: CallbackQuery, session: AsyncSession):
+    """Установка режима перевода"""
+    mode = callback.data.split("_")[1]
+    user_id = callback.from_user.id
+
+    # Обновляем режим
+    user = await session.get(User, user_id)
+    user.translation_mode = mode
+    await session.commit()
+
+    mode_text = "🇩🇪→🇷🇺 Немецкий → Русский" if mode == "DE-RU" else "🇷🇺→🇩🇪 Русский → Немецкий"
+
+    await callback.message.edit_text(
+        f"✅ Режим перевода изменён!\n\n"
+        f"Новый режим: <b>{mode_text}</b>"
+    )
+
+    await callback.answer()
+
+
+@router.callback_query(F.data == "back_to_settings")
+async def back_to_settings(callback: CallbackQuery, session: AsyncSession):
+    """Возврат в меню настроек"""
+    user_id = callback.from_user.id
+    user = await session.get(User, user_id)
+
+    current_level = user.selected_level.value if user and user.selected_level else "не выбран"
+    current_mode = user.translation_mode if user else "DE-RU"
+
+    mode_text = "🇩🇪→🇷🇺 Немецкий → Русский" if current_mode == "DE-RU" else "🇷🇺→🇩🇪 Русский → Немецкий"
+
+    settings_text = (
+        f"⚙️ <b>Настройки</b>\n\n"
+        f"📚 Уровень: <b>{current_level}</b>\n"
+        f"🔄 Режим перевода: <b>{mode_text}</b>\n\n"
+        f"Что хочешь изменить?"
+    )
+
+    buttons = [
+        [InlineKeyboardButton(text="📚 Изменить уровень", callback_data="change_level")],
+        [InlineKeyboardButton(text="🔄 Изменить режим перевода", callback_data="change_mode")]
+    ]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+
+    await callback.message.edit_text(settings_text, reply_markup=keyboard)
+    await callback.answer()
 
 
 @router.callback_query(F.data.startswith("level_"), QuizStates.choosing_level)
