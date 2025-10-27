@@ -8,7 +8,7 @@ from sqlalchemy import select
 
 
 from app.bot.states import QuizStates
-from app.bot.keyboards import get_answer_keyboard, get_results_keyboard, get_main_menu_keyboard
+from app.bot.keyboards import get_answer_keyboard, get_results_keyboard, get_main_menu_keyboard, get_level_keyboard
 from app.database.models import User, Session, SessionItem, MasterWord
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from app.services.quiz_service import generate_question
@@ -547,3 +547,56 @@ async def show_statistics(message: Message, state: FSMContext, session: AsyncSes
         pass
 
     await message.answer(stats_text)
+
+
+@router.message(F.text == "⚙️ Настройки")
+async def show_settings(message: Message, state: FSMContext, session: AsyncSession):
+    """Показ настроек"""
+    user_id = message.from_user.id
+    user = await session.get(User, user_id)
+
+    current_level = user.selected_level.value if user and user.selected_level else "не выбран"
+
+    settings_text = (
+        f"⚙️ <b>Настройки</b>\n\n"
+        f"Текущий уровень: <b>{current_level}</b>\n\n"
+        f"Выбери новый уровень:"
+    )
+
+    # Удаляем сообщение пользователя
+    try:
+        await message.delete()
+    except:
+        pass
+
+    await message.answer(
+        settings_text,
+        reply_markup=get_level_keyboard()
+    )
+
+    await state.set_state(QuizStates.choosing_level)
+
+
+@router.callback_query(F.data.startswith("level_"), QuizStates.choosing_level)
+async def change_level(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    """Смена уровня в настройках"""
+    level = callback.data.split("_")[1]
+    user_id = callback.from_user.id
+
+    # Обновляем уровень пользователя
+    user = await session.get(User, user_id)
+    user.selected_level = level
+    await session.commit()
+
+    # Удаляем сообщение с выбором уровня
+    await callback.message.delete()
+
+    # Показываем подтверждение и меню
+    await callback.bot.send_message(
+        chat_id=callback.message.chat.id,
+        text=f"✅ Уровень изменён на <b>{level}</b>!\n\nВыбери действие:",
+        reply_markup=get_main_menu_keyboard()
+    )
+
+    await state.clear()
+    await callback.answer()
