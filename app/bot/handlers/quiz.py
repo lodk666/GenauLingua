@@ -1,9 +1,11 @@
+import random
 from datetime import datetime
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+
 
 from app.bot.states import QuizStates
 from app.bot.keyboards import get_answer_keyboard, get_results_keyboard
@@ -131,7 +133,7 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
     total_questions = data['total_questions']
     correct_answers = data['correct_answers']
     errors = data['errors']
-    used_word_ids = data.get('used_word_ids', [])  # Список уже использованных слов
+    used_word_ids = data.get('used_word_ids', [])
 
     # Получаем правильное слово из БД
     correct_word = await session.get(MasterWord, correct_word_id)
@@ -188,8 +190,6 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
         quiz_session.finished_at = datetime.utcnow()
         await session.commit()
 
-        # Показываем результаты
-        percentage = (correct_answers / total_questions) * 100
         # Получаем детальную статистику
         result_items = await session.execute(
             select(SessionItem, MasterWord)
@@ -209,6 +209,7 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
             icon = "✅" if item.is_correct else "❌"
             details.append(f"{icon} {word_display} — {word.translation_ru.capitalize()}")
 
+        percentage = (correct_answers / total_questions) * 100
         result_text = (
                 f"🎉 <b>Викторина завершена!</b>\n\n"
                 f"📊 <b>Результаты:</b>\n"
@@ -218,19 +219,24 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
         )
 
         if errors:
-            result_text += f"\n❌ Ошибок: {len(errors)}"
+            result_text += f"\n\n❌ Ошибок: {len(errors)}"
 
-            # Удаляем сообщение с ответом на последний вопрос
-            await callback.message.delete()
+        # Удаляем сообщение с ответом на последний вопрос
+        await callback.message.delete()
 
-            # Показываем результаты
-            await callback.bot.send_message(
-                chat_id=callback.message.chat.id,
-                text=result_text,
-                reply_markup=get_results_keyboard(has_errors=bool(errors))
-            )
+        # Показываем результаты
+        await callback.bot.send_message(
+            chat_id=callback.message.chat.id,
+            text=result_text,
+            reply_markup=get_results_keyboard(has_errors=bool(errors))
+        )
 
+        # Сохраняем ошибки перед очисткой state
+        saved_errors = errors.copy()
         await state.clear()
+
+        # Возвращаем сохранённые ошибки для кнопки "Повторить"
+        await state.update_data(saved_errors=saved_errors)
 
     await callback.answer()
 
@@ -254,16 +260,72 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
 
     user = await session.get(User, callback.from_user.id)
 
-    # Генерируем вопрос, исключая уже использованные слова
-    question = None
-    attempts = 0
-    max_attempts = 10
+    # Проверяем, это повтор ошибок или обычная викторина
+    error_words = data.get('error_words', [])
 
-    while attempts < max_attempts:
-        question = await generate_question(user.selected_level, session, exclude_ids=used_word_ids)
-        if question:
-            break
-        attempts += 1
+    if error_words:
+        # Режим повтора ошибок - берём следующее слово из списка
+        current_error_index = data.get('current_error_index', 0) + 1
+
+        if current_error_index >= len(error_words):
+            # Ошибки закончились (не должно произойти, но на всякий случай)
+            await callback.message.answer("❌ Не удалось загрузить следующий вопрос.")
+            await state.clear()
+            await callback.answer()
+            return
+
+        # Получаем слово из списка ошибок
+        next_word_id = error_words[current_error_index]
+        next_word = await session.get(MasterWord, next_word_id)
+
+        # Генерируем дистракторы
+        from app.services.quiz_service import get_distractors
+        distractors = await get_distractors(next_word, session)
+
+        if len(distractors) < 3:
+            result = await session.execute(
+                select(MasterWord).where(
+                    MasterWord.cefr == user.selected_level,
+                    MasterWord.id != next_word_id,
+                    MasterWord.id.not_in([d.id for d in distractors])
+                )
+            )
+            all_words = result.scalars().all()
+            if all_words:
+                needed = min(3 - len(distractors), len(all_words))
+                distractors.extend(random.sample(all_words, needed))
+
+        # Формируем варианты ответов
+        options = [(next_word.id, next_word.translation_ru.capitalize())]
+        options.extend([(d.id, d.translation_ru.capitalize()) for d in distractors[:3]])
+        random.shuffle(options)
+
+        question = {
+            'correct_word': next_word,
+            'options': options
+        }
+
+        # Обновляем индекс
+        await state.update_data(current_error_index=current_error_index)
+    else:
+        # Обычная викторина - генерируем случайный вопрос
+        question = None
+        attempts = 0
+        max_attempts = 10
+
+        while attempts < max_attempts:
+            question = await generate_question(user.selected_level, session, exclude_ids=used_word_ids)
+            if question:
+                break
+            attempts += 1
+
+        if not question:
+            await callback.message.answer("❌ Не удалось сгенерировать следующий вопрос.")
+            await state.clear()
+            await callback.answer()
+            return
+
+    # Дальше код остаётся как был (добавляем в used_word_ids и т.д.)
 
     if not question:
         await callback.message.answer("❌ Не удалось сгенерировать следующий вопрос.")
@@ -300,4 +362,97 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         reply_markup=get_answer_keyboard(question['options'])
     )
 
+    await callback.answer()
+
+
+@router.callback_query(F.data == "repeat_errors")
+async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    """Повтор ошибок из предыдущей сессии"""
+    # Получаем данные из state
+    data = await state.get_data()
+    errors = data.get('saved_errors', [])  # ← ИЗМЕНЕНО: ищем saved_errors
+
+    if not errors:
+        await callback.message.answer("✅ У тебя не было ошибок!")
+        await callback.answer()
+        return
+
+    user_id = callback.from_user.id
+    user = await session.get(User, user_id)
+
+    # Создаём новую сессию для повтора
+    quiz_session = Session(
+        user_id=user_id,
+        level=user.selected_level,
+        total_questions=len(errors),
+        correct_answers=0,
+        created_at=datetime.utcnow()
+    )
+
+    session.add(quiz_session)
+    await session.flush()
+    await session.commit()
+
+    # Генерируем первый вопрос из ошибок
+    first_word_id = errors[0]
+    first_word = await session.get(MasterWord, first_word_id)
+
+    # Генерируем дистракторы для первого слова
+    from app.services.quiz_service import get_distractors
+    distractors = await get_distractors(first_word, session)
+
+    if len(distractors) < 3:
+        # Дополняем дистракторами из того же уровня
+        result = await session.execute(
+            select(MasterWord).where(
+                MasterWord.cefr == user.selected_level,
+                MasterWord.id != first_word_id,
+                MasterWord.id.not_in([d.id for d in distractors])
+            )
+        )
+        all_words = result.scalars().all()
+        if all_words:
+            needed = min(3 - len(distractors), len(all_words))
+            distractors.extend(random.sample(all_words, needed))
+
+    # Формируем варианты ответов
+    options = [(first_word.id, first_word.translation_ru.capitalize())]
+    options.extend([(d.id, d.translation_ru.capitalize()) for d in distractors[:3]])
+    random.shuffle(options)
+
+    # Сохраняем данные в state
+    await state.update_data(
+        session_id=quiz_session.id,
+        current_question=1,
+        total_questions=len(errors),
+        correct_answers=0,
+        errors=[],
+        correct_word_id=first_word.id,
+        error_words=errors,
+        current_error_index=0
+    )
+
+    # Формируем текст вопроса
+    word_display = first_word.lemma
+    if first_word.article and first_word.article.value != '-':
+        word_display = f"{first_word.article.value} {first_word.lemma}"
+
+    question_text = (
+        f"🔄 <b>Повтор ошибок</b>\n"
+        f"📝 Вопрос 1/{len(errors)}\n\n"
+        f"🇩🇪 <b>{word_display}</b>\n\n"
+        f"Выбери правильный перевод:"
+    )
+
+    # Удаляем сообщение со статистикой
+    await callback.message.delete()
+
+    # Показываем первый вопрос
+    await callback.bot.send_message(
+        chat_id=callback.message.chat.id,
+        text=question_text,
+        reply_markup=get_answer_keyboard(options)
+    )
+
+    await state.set_state(QuizStates.answering)
     await callback.answer()
