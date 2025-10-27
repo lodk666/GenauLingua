@@ -8,7 +8,7 @@ from sqlalchemy import select
 
 
 from app.bot.states import QuizStates
-from app.bot.keyboards import get_answer_keyboard, get_results_keyboard
+from app.bot.keyboards import get_answer_keyboard, get_results_keyboard, get_main_menu_keyboard
 from app.database.models import User, Session, SessionItem, MasterWord
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from app.services.quiz_service import generate_question
@@ -455,4 +455,23 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
     )
 
     await state.set_state(QuizStates.answering)
+    await callback.answer()
+
+
+@router.callback_query(F.data == "main_menu")
+async def return_to_menu(callback: CallbackQuery, state: FSMContext):
+    """Возврат в главное меню"""
+    # Очищаем state
+    await state.clear()
+
+    # Удаляем сообщение со статистикой
+    await callback.message.delete()
+
+    # Показываем главное меню
+    await callback.bot.send_message(
+        chat_id=callback.message.chat.id,
+        text="🏠 <b>Главное меню</b>\n\nВыбери действие:",
+        reply_markup=get_main_menu_keyboard()
+    )
+
     await callback.answer()
