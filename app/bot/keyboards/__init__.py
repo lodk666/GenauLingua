@@ -3,10 +3,21 @@ from app.database.models import CEFRLevel
 
 
 def get_level_keyboard() -> InlineKeyboardMarkup:
-    """Клавиатура выбора уровня"""
+    """Клавиатура выбора уровня (2x3)"""
+    levels = list(CEFRLevel)
     buttons = [
-        [InlineKeyboardButton(text=level.value, callback_data=f"level_{level.value}")]
-        for level in CEFRLevel
+        [
+            InlineKeyboardButton(text=levels[0].value, callback_data=f"level_{levels[0].value}"),
+            InlineKeyboardButton(text=levels[1].value, callback_data=f"level_{levels[1].value}")
+        ],
+        [
+            InlineKeyboardButton(text=levels[2].value, callback_data=f"level_{levels[2].value}"),
+            InlineKeyboardButton(text=levels[3].value, callback_data=f"level_{levels[3].value}")
+        ],
+        [
+            InlineKeyboardButton(text=levels[4].value, callback_data=f"level_{levels[4].value}"),
+            InlineKeyboardButton(text=levels[5].value, callback_data=f"level_{levels[5].value}")
+        ]
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
@@ -33,9 +44,13 @@ def get_results_keyboard(has_errors: bool) -> InlineKeyboardMarkup:
 
 
 def get_main_menu_keyboard() -> ReplyKeyboardMarkup:
-    """Главное меню (обычные кнопки)"""
+    """Главное меню (4 кнопки)"""
     buttons = [
-        [KeyboardButton(text="📚 Учить слова")],
-        [KeyboardButton(text="📊 Статистика"), KeyboardButton(text="⚙️ Настройки")]
+        [KeyboardButton(text="📚 Учить слова"), KeyboardButton(text="📊 Статистика")],
+        [KeyboardButton(text="⚙️ Настройки"), KeyboardButton(text="❓ Помощь")]
     ]
-    return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
+    return ReplyKeyboardMarkup(
+        keyboard=buttons,
+        resize_keyboard=True,
+        is_persistent=True  # ← Меню всегда видно
+    )

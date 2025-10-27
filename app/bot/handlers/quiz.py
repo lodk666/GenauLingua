@@ -5,6 +5,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from aiogram.filters import Command
 
 
 from app.bot.states import QuizStates
@@ -476,7 +477,7 @@ async def return_to_menu(callback: CallbackQuery, state: FSMContext):
 
     await callback.answer()
 
-
+@router.message(Command("stats"))
 @router.message(F.text == "📊 Статистика")
 async def show_statistics(message: Message, state: FSMContext, session: AsyncSession):
     """Показ статистики пользователя"""
@@ -548,7 +549,7 @@ async def show_statistics(message: Message, state: FSMContext, session: AsyncSes
 
     await message.answer(stats_text)
 
-
+@router.message(Command("settings"))
 @router.message(F.text == "⚙️ Настройки")
 async def show_settings(message: Message, state: FSMContext, session: AsyncSession):
     """Показ настроек"""
