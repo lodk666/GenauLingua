@@ -475,3 +475,75 @@ async def return_to_menu(callback: CallbackQuery, state: FSMContext):
     )
 
     await callback.answer()
+
+
+@router.message(F.text == "📊 Статистика")
+async def show_statistics(message: Message, state: FSMContext, session: AsyncSession):
+    """Показ статистики пользователя"""
+    user_id = message.from_user.id
+
+    # Получаем все завершённые сессии пользователя
+    result = await session.execute(
+        select(Session)
+        .where(
+            Session.user_id == user_id,
+            Session.finished_at.isnot(None)  # Только завершённые
+        )
+        .order_by(Session.created_at.desc())
+        .limit(10)  # Последние 10 сессий
+    )
+    sessions = result.scalars().all()
+
+    if not sessions:
+        await message.answer(
+            "📊 <b>Статистика</b>\n\n"
+            "У тебя пока нет завершённых викторин.\n"
+            "Начни учить слова! 📚"
+        )
+        return
+
+    # Формируем текст статистики
+    stats_text = "📊 <b>Твоя статистика</b>\n\n"
+    stats_text += f"Всего викторин: <b>{len(sessions)}</b>\n\n"
+
+    # Общая статистика
+    total_questions = sum(s.total_questions for s in sessions)
+    total_correct = sum(s.correct_answers for s in sessions)
+    overall_percentage = (total_correct / total_questions * 100) if total_questions > 0 else 0
+
+    stats_text += (
+        f"📈 <b>Общий результат:</b>\n"
+        f"✅ Правильно: {total_correct}/{total_questions}\n"
+        f"📊 Процент: {overall_percentage:.1f}%\n\n"
+        f"━━━━━━━━━━━━━━━━━\n\n"
+        f"<b>Последние 10 викторин:</b>\n\n"
+    )
+
+    # Список последних сессий
+    for i, s in enumerate(sessions, 1):
+        percentage = (s.correct_answers / s.total_questions * 100) if s.total_questions > 0 else 0
+
+        # Форматируем дату
+        date_str = s.created_at.strftime("%d.%m.%Y %H:%M")
+
+        # Эмодзи в зависимости от результата
+        if percentage >= 80:
+            emoji = "🏆"
+        elif percentage >= 60:
+            emoji = "👍"
+        else:
+            emoji = "📝"
+
+        stats_text += (
+            f"{emoji} <b>#{i}</b> • {date_str}\n"
+            f"   Уровень: {s.level.value}\n"
+            f"   Результат: {s.correct_answers}/{s.total_questions} ({percentage:.0f}%)\n\n"
+        )
+
+    # Удаляем сообщение пользователя
+    try:
+        await message.delete()
+    except:
+        pass
+
+    await message.answer(stats_text)
