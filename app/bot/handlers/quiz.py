@@ -9,7 +9,7 @@ from aiogram.filters import Command
 
 from app.bot.states import QuizStates
 from app.bot.keyboards import get_answer_keyboard, get_results_keyboard, get_main_menu_keyboard, get_level_keyboard, get_translation_mode_keyboard
-from app.database.models import User, Session, SessionItem, MasterWord
+from app.database.models import User, Session, SessionItem, MasterWord, CEFRLevel
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from app.services.quiz_service import generate_question
 
@@ -22,6 +22,7 @@ def get_next_question_keyboard() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="Дальше →", callback_data="next_question")]
         ]
     )
+
 
 @router.message(F.text == "📚 Учить слова")
 async def start_quiz(message: Message, state: FSMContext, session: AsyncSession):
@@ -41,7 +42,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
     quiz_session = Session(
         user_id=user_id,
         level=user.selected_level,
-        total_questions=25,  # По умолчанию 25 вопросов
+        total_questions=25,
         correct_answers=0,
         created_at=datetime.utcnow()
     )
@@ -66,25 +67,22 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
         current_question=1,
         total_questions=25,
         correct_answers=0,
-        errors=[],  # Список ID неправильных слов для повтора
+        errors=[],
         correct_word_id=question['correct_word'].id,
-        used_word_ids = [question['correct_word'].id]
+        used_word_ids=[question['correct_word'].id]
     )
 
     # Формируем текст вопроса
-    # Формируем текст вопроса в зависимости от режима
     word = question['correct_word']
     mode = user.translation_mode
 
     if mode == "RU-DE":
-        # Режим RU→DE: показываем русский перевод
         question_text = (
             f"📝 Вопрос 1/25\n\n"
             f"🇷🇺 <b>{word.translation_ru.capitalize()}</b>\n\n"
             f"Выбери правильное слово:"
         )
     else:
-        # Режим DE→RU: показываем немецкое слово
         word_display = word.lemma
         if word.article and word.article.value != '-':
             word_display = f"{word.article.value} {word.lemma}"
@@ -95,32 +93,29 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
             f"Выбери правильный перевод:"
         )
 
+    # Удаляем команду пользователя
     try:
         await message.delete()
     except:
-        pass  # Если не удалось удалить - не критично
+        pass
 
-        # Удаляем все предыдущие сообщения бота (меню, приветствия)
-        # Telegram позволяет удалять только последние сообщения
+    # Удаляем все предыдущие сообщения
     try:
-        # Пытаемся удалить последние 10 сообщений
-        for i in range(1, 11):
+        for i in range(1, 8):
             try:
                 await message.bot.delete_message(
                     chat_id=message.chat.id,
                     message_id=message.message_id - i
                 )
             except:
-                pass  # Если сообщение уже удалено или нельзя удалить - пропускаем
+                pass
     except:
         pass
 
-        # Удаляем сообщение пользователя
-    try:
-        await message.delete()
-    except:
-        pass  # Если сообщение уже удалено или нельзя удалить - пропускаем
+    # Отправляем эмодзи с меню
+    await message.answer("📚", reply_markup=get_main_menu_keyboard())
 
+    # Отправляем первый вопрос
     await message.answer(
         question_text,
         reply_markup=get_answer_keyboard(question['options'])
@@ -128,9 +123,91 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
 
     await state.set_state(QuizStates.answering)
 
+@router.message(Command("stats"))
+@router.message(F.text == "📊 Статистика")
+async def show_statistics(message: Message, state: FSMContext, session: AsyncSession):
+    """Показ статистики пользователя"""
+    user_id = message.from_user.id
+
+    # Удаляем команду/сообщение пользователя
+    try:
+        await message.delete()
+    except:
+        pass
+
+    # Удаляем предыдущие сообщения
+    try:
+        for i in range(1, 8):
+            try:
+                await message.bot.delete_message(
+                    chat_id=message.chat.id,
+                    message_id=message.message_id - i
+                )
+            except:
+                pass
+    except:
+        pass
+
+    # Получаем все завершённые сессии пользователя
+    result = await session.execute(
+        select(Session)
+        .where(
+            Session.user_id == user_id,
+            Session.finished_at.isnot(None)
+        )
+        .order_by(Session.created_at.desc())
+        .limit(10)
+    )
+    sessions = result.scalars().all()
+
+    if not sessions:
+        stats_text = (
+            "📊 <b>Статистика</b>\n\n"
+            "У тебя пока нет завершённых викторин.\n"
+            "Начни учить слова! 📚"
+        )
+    else:
+        stats_text = "📊 <b>Твоя статистика</b>\n\n"
+        stats_text += f"Всего викторин: <b>{len(sessions)}</b>\n\n"
+
+        total_questions = sum(s.total_questions for s in sessions)
+        total_correct = sum(s.correct_answers for s in sessions)
+        overall_percentage = (total_correct / total_questions * 100) if total_questions > 0 else 0
+
+        stats_text += (
+            f"📈 <b>Общий результат:</b>\n"
+            f"✅ Правильно: {total_correct}/{total_questions}\n"
+            f"📊 Процент: {overall_percentage:.1f}%\n\n"
+            f"━━━━━━━━━━━━━━━━━\n\n"
+            f"<b>Последние 10 викторин:</b>\n\n"
+        )
+
+        for i, s in enumerate(sessions, 1):
+            percentage = (s.correct_answers / s.total_questions * 100) if s.total_questions > 0 else 0
+            date_str = s.created_at.strftime("%d.%m.%Y %H:%M")
+
+            if percentage >= 80:
+                emoji = "🏆"
+            elif percentage >= 60:
+                emoji = "👍"
+            else:
+                emoji = "📝"
+
+            stats_text += (
+                f"{emoji} <b>#{i}</b> • {date_str}\n"
+                f"   Уровень: {s.level.value}\n"
+                f"   Результат: {s.correct_answers}/{s.total_questions} ({percentage:.0f}%)\n\n"
+            )
+
+    # Отправляем эмодзи с меню
+    await message.answer("📊", reply_markup=get_main_menu_keyboard())
+
+    # Отправляем статистику
+    await message.answer(stats_text)
 
 @router.callback_query(F.data.startswith("answer_"), QuizStates.answering)
 async def process_answer(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    await callback.answer()
     """Обработка ответа пользователя"""
     # Получаем ID выбранного слова
     selected_word_id = int(callback.data.split("_")[1])
@@ -238,37 +315,58 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
 
         percentage = (correct_answers / total_questions) * 100
         result_text = (
-            f"🎉 <b>Викторина завершена!</b>\n\n"
-            f"📊 <b>Результаты:</b>\n"
-            f"✅ Правильно: <b>{correct_answers}/{total_questions}</b>\n"
-            f"📈 Процент: <b>{percentage:.1f}%</b>\n\n"
-            f"📝 <b>Детали:</b>\n" + "\n".join(details)
+                f"🎉 <b>Викторина завершена!</b>\n\n"
+                f"📊 <b>Результаты:</b>\n"
+                f"✅ Правильно: <b>{correct_answers}/{total_questions}</b>\n"
+                f"📈 Процент: <b>{percentage:.1f}%</b>\n\n"
+                f"📝 <b>Детали:</b>\n" + "\n".join(details)
         )
 
         if errors:
             result_text += f"\n\n❌ Ошибок: {len(errors)}"
 
-        # Удаляем сообщение с ответом на последний вопрос
-        await callback.message.delete()
+        # ПРОСТОЕ РЕШЕНИЕ:
+            # 1. Удаляем последний ответ викторины
+            try:
+                await callback.message.delete()
+            except:
+                pass
 
-        # Показываем результаты
-        await callback.bot.send_message(
-            chat_id=callback.message.chat.id,
-            text=result_text,
-            reply_markup=get_results_keyboard(has_errors=bool(errors))
-        )
+            # 2. Удаляем все предыдущие сообщения
+            try:
+                for i in range(1, 8):
+                    try:
+                        await callback.bot.delete_message(
+                            chat_id=callback.message.chat.id,
+                            message_id=callback.message.message_id - i
+                        )
+                    except:
+                        pass
+            except:
+                pass
 
-        # Сохраняем ошибки перед очисткой state
-        saved_errors = errors.copy()
-        await state.clear()
+            # 3. Отправляем галочку с меню
+            await callback.bot.send_message(
+                chat_id=callback.message.chat.id,
+                text="✅",
+                reply_markup=get_main_menu_keyboard()
+            )
 
-        # Возвращаем сохранённые ошибки для кнопки "Повторить"
-        await state.update_data(saved_errors=saved_errors)
+            # 4. Отправляем результаты
+            await callback.bot.send_message(
+                chat_id=callback.message.chat.id,
+                text=result_text,
+                reply_markup=get_results_keyboard(has_errors=bool(errors))
+            )
 
-    await callback.answer()
+            # Сохраняем ошибки
+            saved_errors = errors.copy()
+            await state.clear()
+            await state.update_data(saved_errors=saved_errors)
 
 @router.callback_query(F.data == "next_question", QuizStates.answering)
 async def show_next_question(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    await callback.answer()
     """Показ следующего вопроса"""
     # Получаем данные из state
     data = await state.get_data()
@@ -419,15 +517,12 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         reply_markup=get_answer_keyboard(question['options'])
     )
 
-    await callback.answer()
-
-
 @router.callback_query(F.data == "repeat_errors")
 async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     """Повтор ошибок из предыдущей сессии"""
     # Получаем данные из state
     data = await state.get_data()
-    errors = data.get('saved_errors', [])  # ← ИЗМЕНЕНО: ищем saved_errors
+    errors = data.get('saved_errors', [])
 
     if not errors:
         await callback.message.answer("✅ У тебя не было ошибок!")
@@ -472,28 +567,28 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
             needed = min(3 - len(distractors), len(all_words))
             distractors.extend(random.sample(all_words, needed))
 
-        # Формируем варианты ответов в зависимости от режима
-        mode = user.translation_mode
+    # Формируем варианты ответов в зависимости от режима
+    mode = user.translation_mode
 
-        if mode == "RU-DE":
-            # RU→DE: показываем немецкие слова
-            options = []
-            word_display = first_word.lemma
-            if first_word.article and first_word.article.value != '-':
-                word_display = f"{first_word.article.value} {first_word.lemma}"
-            options.append((first_word.id, word_display))
+    if mode == "RU-DE":
+        # RU→DE: показываем немецкие слова
+        options = []
+        word_display = first_word.lemma
+        if first_word.article and first_word.article.value != '-':
+            word_display = f"{first_word.article.value} {first_word.lemma}"
+        options.append((first_word.id, word_display))
 
-            for d in distractors[:3]:
-                distractor_display = d.lemma
-                if d.article and d.article.value != '-':
-                    distractor_display = f"{d.article.value} {d.lemma}"
-                options.append((d.id, distractor_display))
-        else:
-            # DE→RU: показываем русские переводы
-            options = [(first_word.id, first_word.translation_ru.capitalize())]
-            options.extend([(d.id, d.translation_ru.capitalize()) for d in distractors[:3]])
+        for d in distractors[:3]:
+            distractor_display = d.lemma
+            if d.article and d.article.value != '-':
+                distractor_display = f"{d.article.value} {d.lemma}"
+            options.append((d.id, distractor_display))
+    else:
+        # DE→RU: показываем русские переводы
+        options = [(first_word.id, first_word.translation_ru.capitalize())]
+        options.extend([(d.id, d.translation_ru.capitalize()) for d in distractors[:3]])
 
-        random.shuffle(options)
+    random.shuffle(options)
 
     # Сохраняем данные в state
     await state.update_data(
@@ -507,12 +602,8 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
         current_error_index=0
     )
 
-    # Формируем текст вопроса
     # Формируем текст вопроса в зависимости от режима
-    mode = user.translation_mode
-
     if mode == "RU-DE":
-        # Режим RU→DE: показываем русский перевод
         question_text = (
             f"🔄 <b>Повтор ошибок</b>\n"
             f"📝 Вопрос 1/{len(errors)}\n\n"
@@ -520,7 +611,6 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
             f"Выбери правильное слово:"
         )
     else:
-        # Режим DE→RU: показываем немецкое слово
         word_display = first_word.lemma
         if first_word.article and first_word.article.value != '-':
             word_display = f"{first_word.article.value} {first_word.lemma}"
@@ -564,81 +654,109 @@ async def return_to_menu(callback: CallbackQuery, state: FSMContext):
 
     await callback.answer()
 
-@router.message(Command("stats"))
-@router.message(F.text == "📊 Статистика")
-async def show_statistics(message: Message, state: FSMContext, session: AsyncSession):
-    """Показ статистики пользователя"""
+
+@router.message(F.text == "📚 Учить слова")
+async def start_quiz(message: Message, state: FSMContext, session: AsyncSession):
+    """Запуск викторины"""
     user_id = message.from_user.id
 
-    # Получаем все завершённые сессии пользователя
-    result = await session.execute(
-        select(Session)
-        .where(
-            Session.user_id == user_id,
-            Session.finished_at.isnot(None)  # Только завершённые
-        )
-        .order_by(Session.created_at.desc())
-        .limit(10)  # Последние 10 сессий
-    )
-    sessions = result.scalars().all()
+    # Получаем пользователя и его уровень
+    user = await session.get(User, user_id)
 
-    if not sessions:
+    if not user or not user.selected_level:
         await message.answer(
-            "📊 <b>Статистика</b>\n\n"
-            "У тебя пока нет завершённых викторин.\n"
-            "Начни учить слова! 📚"
+            "⚠️ Сначала выбери свой уровень с помощью команды /start"
         )
         return
 
-    # Формируем текст статистики
-    stats_text = "📊 <b>Твоя статистика</b>\n\n"
-    stats_text += f"Всего викторин: <b>{len(sessions)}</b>\n\n"
-
-    # Общая статистика
-    total_questions = sum(s.total_questions for s in sessions)
-    total_correct = sum(s.correct_answers for s in sessions)
-    overall_percentage = (total_correct / total_questions * 100) if total_questions > 0 else 0
-
-    stats_text += (
-        f"📈 <b>Общий результат:</b>\n"
-        f"✅ Правильно: {total_correct}/{total_questions}\n"
-        f"📊 Процент: {overall_percentage:.1f}%\n\n"
-        f"━━━━━━━━━━━━━━━━━\n\n"
-        f"<b>Последние 10 викторин:</b>\n\n"
+    # Создаём новую сессию
+    quiz_session = Session(
+        user_id=user_id,
+        level=user.selected_level,
+        total_questions=25,
+        correct_answers=0,
+        created_at=datetime.utcnow()
     )
 
-    # Список последних сессий
-    for i, s in enumerate(sessions, 1):
-        percentage = (s.correct_answers / s.total_questions * 100) if s.total_questions > 0 else 0
+    session.add(quiz_session)
+    await session.flush()
+    await session.commit()
 
-        # Форматируем дату
-        date_str = s.created_at.strftime("%d.%m.%Y %H:%M")
+    # Генерируем первый вопрос
+    question = await generate_question(user.selected_level, session, mode=user.translation_mode)
 
-        # Эмодзи в зависимости от результата
-        if percentage >= 80:
-            emoji = "🏆"
-        elif percentage >= 60:
-            emoji = "👍"
-        else:
-            emoji = "📝"
+    if not question:
+        await message.answer(
+            "❌ К сожалению, для этого уровня пока нет слов.\n"
+            "Попробуй выбрать другой уровень."
+        )
+        return
 
-        stats_text += (
-            f"{emoji} <b>#{i}</b> • {date_str}\n"
-            f"   Уровень: {s.level.value}\n"
-            f"   Результат: {s.correct_answers}/{s.total_questions} ({percentage:.0f}%)\n\n"
+    # Сохраняем данные в state
+    await state.update_data(
+        session_id=quiz_session.id,
+        current_question=1,
+        total_questions=25,
+        correct_answers=0,
+        errors=[],
+        correct_word_id=question['correct_word'].id,
+        used_word_ids=[question['correct_word'].id]
+    )
+
+    # Формируем текст вопроса
+    word = question['correct_word']
+    mode = user.translation_mode
+
+    if mode == "RU-DE":
+        question_text = (
+            f"📝 Вопрос 1/25\n\n"
+            f"🇷🇺 <b>{word.translation_ru.capitalize()}</b>\n\n"
+            f"Выбери правильное слово:"
+        )
+    else:
+        word_display = word.lemma
+        if word.article and word.article.value != '-':
+            word_display = f"{word.article.value} {word.lemma}"
+
+        question_text = (
+            f"📝 Вопрос 1/25\n\n"
+            f"🇩🇪 <b>{word_display}</b>\n\n"
+            f"Выбери правильный перевод:"
         )
 
-    # Удаляем сообщение пользователя
+    # Удаляем команду пользователя
     try:
         await message.delete()
     except:
         pass
 
-    await message.answer(stats_text)
+    # Удаляем все предыдущие сообщения
+    try:
+        for i in range(1, 8):
+            try:
+                await message.bot.delete_message(
+                    chat_id=message.chat.id,
+                    message_id=message.message_id - i
+                )
+            except:
+                pass
+    except:
+        pass
+
+    # Отправляем эмодзи с меню
+    await message.answer("📚", reply_markup=get_main_menu_keyboard())
+
+    # Отправляем первый вопрос
+    await message.answer(
+        question_text,
+        reply_markup=get_answer_keyboard(question['options'])
+    )
+
+    await state.set_state(QuizStates.answering)
 
 
 @router.message(Command("settings"))
-@router.message(F.text == "⚙️ Настройки")
+@router.message(F.text == "🦾 Настройки")
 async def show_settings(message: Message, state: FSMContext, session: AsyncSession):
     """Показ настроек"""
     user_id = message.from_user.id
@@ -656,28 +774,62 @@ async def show_settings(message: Message, state: FSMContext, session: AsyncSessi
         f"Что хочешь изменить?"
     )
 
-    # Кнопки настроек
     buttons = [
         [InlineKeyboardButton(text="📚 Изменить уровень", callback_data="change_level")],
         [InlineKeyboardButton(text="🔄 Изменить режим перевода", callback_data="change_mode")]
     ]
     keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
 
-    # Удаляем сообщение пользователя
+    # Удаляем команду пользователя
     try:
         await message.delete()
     except:
         pass
 
-    await message.answer(settings_text, reply_markup=keyboard)
+    # Удаляем все предыдущие сообщения
+    try:
+        for i in range(1, 8):
+            try:
+                await message.bot.delete_message(
+                    chat_id=message.chat.id,
+                    message_id=message.message_id - i
+                )
+            except:
+                pass
+    except:
+        pass
 
+    # Отправляем эмодзи с меню
+    await message.answer("🦾", reply_markup=get_main_menu_keyboard())
+
+    # Отправляем настройки
+    await message.answer(settings_text, reply_markup=keyboard)
 
 @router.callback_query(F.data == "change_level")
 async def settings_change_level(callback: CallbackQuery, state: FSMContext):
     """Переход к выбору уровня из настроек"""
+    # Создаём клавиатуру с кнопкой "Назад"
+    levels = list(CEFRLevel)
+    buttons = [
+        [
+            InlineKeyboardButton(text=levels[0].value, callback_data=f"level_{levels[0].value}"),
+            InlineKeyboardButton(text=levels[1].value, callback_data=f"level_{levels[1].value}")
+        ],
+        [
+            InlineKeyboardButton(text=levels[2].value, callback_data=f"level_{levels[2].value}"),
+            InlineKeyboardButton(text=levels[3].value, callback_data=f"level_{levels[3].value}")
+        ],
+        [
+            InlineKeyboardButton(text=levels[4].value, callback_data=f"level_{levels[4].value}"),
+            InlineKeyboardButton(text=levels[5].value, callback_data=f"level_{levels[5].value}")
+        ],
+        [InlineKeyboardButton(text="◀️ Назад", callback_data="back_to_settings")]  # ← ДОБАВИЛИ
+    ]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+
     await callback.message.edit_text(
         "📚 <b>Выбери новый уровень:</b>",
-        reply_markup=get_level_keyboard()
+        reply_markup=keyboard
     )
     await state.set_state(QuizStates.choosing_level)
     await callback.answer()

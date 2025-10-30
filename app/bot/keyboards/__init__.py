@@ -3,8 +3,8 @@ from app.database.models import CEFRLevel
 
 
 def get_level_keyboard() -> InlineKeyboardMarkup:
-    """Клавиатура выбора уровня (2x3)"""
-    levels = list(CEFRLevel)
+    """Клавиатура выбора уровня (3x2 — A1-C2)"""
+    levels = list(CEFRLevel)  # Теперь 6 уровней: A1, A2, B1, B2, C1, C2
     buttons = [
         [
             InlineKeyboardButton(text=levels[0].value, callback_data=f"level_{levels[0].value}"),
@@ -38,22 +38,23 @@ def get_results_keyboard(has_errors: bool) -> InlineKeyboardMarkup:
     if has_errors:
         buttons.append([InlineKeyboardButton(text="🔄 Повторить ошибки", callback_data="repeat_errors")])
 
-    buttons.append([InlineKeyboardButton(text="🏠 В меню", callback_data="main_menu")])
+    # Убрали кнопку "В меню" — она не нужна, т.к. есть постоянное меню
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
-
 
 def get_main_menu_keyboard() -> ReplyKeyboardMarkup:
     """Главное меню (4 кнопки)"""
     buttons = [
         [KeyboardButton(text="📚 Учить слова"), KeyboardButton(text="📊 Статистика")],
-        [KeyboardButton(text="⚙️ Настройки"), KeyboardButton(text="❓ Помощь")]
+        [KeyboardButton(text="🦾 Настройки"), KeyboardButton(text="❓ Помощь")]
     ]
     return ReplyKeyboardMarkup(
         keyboard=buttons,
         resize_keyboard=True,
-        is_persistent=True  # ← Меню всегда видно
+        is_persistent=True,  # ← ЭТО ДОЛЖНО БЫТЬ!
+        input_field_placeholder="Выбери действие..."  # ← ДОБАВЬ ЭТО
     )
+
 
 def get_translation_mode_keyboard(current_mode: str) -> InlineKeyboardMarkup:
     """Клавиатура выбора режима перевода"""

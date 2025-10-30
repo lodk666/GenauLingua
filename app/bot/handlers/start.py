@@ -27,7 +27,7 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
 
     # Пытаемся очистить предыдущие сообщения
     try:
-        for i in range(1, 20):
+        for i in range(1, 8):
             try:
                 await message.bot.delete_message(
                     chat_id=message.chat.id,
@@ -160,4 +160,21 @@ async def cmd_help(message: Message):
     except:
         pass
 
+    # Удаляем предыдущие сообщения
+    try:
+        for i in range(1, 8):
+            try:
+                await message.bot.delete_message(
+                    chat_id=message.chat.id,
+                    message_id=message.message_id - i
+                )
+            except:
+                pass
+    except:
+        pass
+
+    # Отправляем эмодзи с меню
+    await message.answer("❓", reply_markup=get_main_menu_keyboard())
+
+    # Отправляем справку
     await message.answer(help_text)
