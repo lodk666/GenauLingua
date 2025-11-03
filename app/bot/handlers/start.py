@@ -64,8 +64,8 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
         f"⚙️ Настройка уровня сложности\n\n"
     )
 
-    if user.selected_level:
-        welcome_text += f"Твой текущий уровень: <b>{user.selected_level.value}</b>\n\n"
+    if user.level:
+        welcome_text += f"Твой текущий уровень: <b>{user.level}</b>\n\n"
         welcome_text += "Выбери действие из меню ниже 👇"
 
         await message.answer(
@@ -91,7 +91,7 @@ async def select_level(callback: CallbackQuery, state: FSMContext, session: Asyn
 
     # Сохраняем выбранный уровень
     user = await session.get(User, user_id)
-    user.selected_level = level
+    user.level = level
     await session.commit()
 
     # Удаляем сообщение с выбором уровня
