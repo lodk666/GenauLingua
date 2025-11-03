@@ -1,0 +1,621 @@
+﻿word_de,article,pos,translation_ru,translation_uk,example_de,example_ru,example_uk,categories
+,-,adjective,,,Es ist sehr null.,Это очень null.,Це дуже null.,
+Abend,der,noun,вечер,вечір,Wir sehen uns heute Abend.,Увидимся сегодня вечером.,Побачимось сьогодні ввечері.,time
+Adresse,die,noun,адрес,адреса,Schicken Sie mir bitte Ihre Adresse.,"Пришлите, пожалуйста, ваш адрес.","Надішліть, будь ласка, вашу адресу.",city
+Alles klar,-,phrase,всё ясно,все зрозуміло,"Alles klar, danke.","Всё ясно, спасибо.","Все зрозуміло, дякую.",
+"Am Montag, am Wochenende",-,phrase,,,"Am Montag, am Wochenende.",,,
+"Am Morgen, am Abend, am Wochenende",-,phrase,,,"Am Morgen, am Abend, am Wochenende.",,,
+Anruf,der,noun,звонок,дзвінок,Ich bekomme später einen Anruf.,Позже у меня будет звонок.,Пізніше у мене буде дзвінок.,other
+Antwort,die,noun,ответ,відповідь,Danke für Ihre schnelle Antwort.,Спасибо за быстрый ответ.,Дякую за швидку відповідь.,other
+Apfel,der,noun,яблоко,яблуко,Ich esse jeden Tag einen Apfel.,Я ем яблоко каждый день.,Я щодня їм яблуко.,food
+Apotheke,die,noun,аптека,аптека,Die Apotheke macht um acht auf.,Аптека открывается в восемь.,Аптека відкривається о восьмій.,health|city
+April,der,noun,апрель,квітень,Im April regnet es oft.,В апреле часто идёт дождь.,У квітні часто йде дощ.,time
+Arbeit,die,noun,работа,робота,Ich gehe gleich zur Arbeit.,Я сейчас иду на работу.,Я зараз іду на роботу.,study
+Arm,der,noun,рука,рука,Mein Arm tut heute ein bisschen weh.,Моя рука сегодня немного болит.,Моя рука сьогодні трохи болить.,health
+Auf Wiedersehen,-,phrase,до свидания,до побачення,Auf Wiedersehen und einen schönen Tag.,До свидания и хорошего дня.,До побачення і гарного дня.,
+Aufgabe,die,noun,задание,завдання,Die Aufgabe ist nicht schwer.,Задание несложное.,Завдання не складне.,study
+August,der,noun,август,серпень,Im August fahren viele in Urlaub.,В августе многие едут в отпуск.,У серпні багато хто їде у відпустку.,time
+Auskunft,die,noun,справка,довідка,Fragen Sie an der Auskunft nach.,Спросите на стойке информации.,Запитайте на стійці інформації.,city
+Ausweis,der,noun,удостоверение,посвідчення,Ich habe meinen Ausweis dabei.,У меня с собой удостоверение.,У мене з собою посвідчення.,other
+Automat,der,noun,автомат,автомат,Der Automat nimmt nur Münzen.,Автомат принимает только монеты.,Автомат приймає лише монети.,city
+Bad,das,noun,ванная,ванна,Das Bad ist im ersten Stock.,Ванная на первом этаже.,Ванна на першому поверсі.,home
+Bahnhof,der,noun,вокзал,вокзал,Wir treffen uns am Bahnhof.,Встречаемся на вокзале.,Зустрічаємося на вокзалі.,transport|city
+Ball,der,noun,мяч,м’яч,Der Ball liegt im Garten.,Мяч лежит в саду.,М’яч лежить у саду.,other
+Banane,die,noun,банан,банан,Die Banane ist schon reif.,Банан уже спелый.,Банан уже стиглий.,food
+Bank,die,noun,банк,банк,Ich muss heute zur Bank.,Мне сегодня нужно в банк.,Мені сьогодні потрібно в банк.,city
+Basketball,der,noun,баскетбол,баскетбол,Am Abend spielen wir Basketball.,Вечером мы играем в баскетбол.,Ввечері ми граємо в баскетбол.,other
+Bett,das,noun,кровать,ліжко,Ich gehe früh ins Bett.,Я рано ложусь спать.,Я рано лягаю спати.,home
+Bier,das,noun,пиво,пиво,"Ein kaltes Bier, bitte.","Холодное пиво, пожалуйста.","Холодне пиво, будь ласка.",food
+Bild,das,noun,картинка,картинка,Das Bild hängt an der Wand.,Картинка висит на стене.,Картинка висить на стіні.,home
+Bis bald,-,phrase,до скорого,до скорого,Bis bald und gute Reise!,До скорого и хорошей дороги!,До скорого і гарної дороги!,transport
+Bis später,-,phrase,,,Bis später.,,,
+Bitte,-,phrase,пожалуйста,будь ласка,"Eine Tüte, bitte.","Пакет, пожалуйста.","Пакет, будь ласка.",
+Bitte schön!,-,phrase,,,Bitte schön!.,,,
+Bleistift,der,noun,карандаш,олівець,Hast du einen Bleistift für mich.,У тебя есть карандаш для меня.,У тебе є олівець для мене.,study
+Blume,die,noun,цветок,квітка,Die Blume riecht sehr gut.,Цветок очень приятно пахнет.,Квітка дуже добре пахне.,other
+Brille,die,noun,очки,окуляри,Ich finde meine Brille nicht.,Я не могу найти свои очки.,Я не можу знайти свої окуляри.,health
+Brot,das,noun,хлеб,хліб,Ich kaufe noch frisches Brot.,Куплю ещё свежий хлеб.,Куплю ще свіжий хліб.,food
+Butter,die,noun,масло,масло,Bitte reich mir die Butter.,"Передай, пожалуйста, масло.","Передай, будь ласка, масло.",food
+Bäckerei,die,noun,пекарня,пекарня,Die Bäckerei hat frisches Brot.,В пекарне есть свежий хлеб.,У пекарні є свіжий хліб.,city|food
+CD,die,noun,диск,диск,Ich höre die neue CD im Auto.,Я слушаю новый диск в машине.,Я слухаю новий диск у машині.,other
+Cent,der,noun,цент,цент,Das kostet zehn Cent.,Это стоит десять цент.,Це коштує десять цент.,other
+Chef,der,noun,шеф,шеф,Der Chef ist heute im Büro.,Шеф сегодня в офисе.,Шеф сьогодні в офісі.,study
+Computer,der,noun,компьютер,комп’ютер,Der Computer startet langsam.,Компьютер запускается медленно.,Комп’ютер запускається повільно.,study
+Couch,die,noun,диван,диван,Wir sitzen zusammen auf der Couch.,Мы сидим вместе на диване.,Ми сидимо разом на дивані.,home
+Dank,der,noun,благодарность,подяка,Vielen Dank für Ihre Hilfe.,Большое спасибо за помощь.,Дуже дякую за допомогу.,other
+Danke,-,phrase,спасибо,дякую,Danke für Ihre Hilfe.,Спасибо за вашу помощь.,Дякую за вашу допомогу.,
+Darf ich,-,phrase,,,Darf ich.,,,
+Dezember,der,noun,декабрь,грудень,Im Dezember ist es kalt.,В декабре холодно.,У грудні холодно.,time
+"Die Rechnung, bitte",-,phrase,"счёт, пожалуйста","рахунок, будь ласка","Die Rechnung, bitte. Danke.","Счёт, пожалуйста. Спасибо.","Рахунок, будь ласка. Дякую.",city|food
+Dienstag,der,noun,вторник,вівторок,Der Termin ist am Dienstag.,Встреча во вторник.,Зустріч у вівторок.,time
+Disco,die,noun,дискотека,дискотека,Heute Abend gehen wir in die Disco.,Сегодня вечером идём на дискотеку.,Сьогодні ввечері йдемо на дискотеку.,city
+Dollar,der,noun,доллар,долар,Das kostet zehn Dollar.,Это стоит десять доллар.,Це коштує десять долар.,other
+Donnerstag,der,noun,четверг,четвер,Der Kurs ist am Donnerstag.,Курс проходит по четвергам.,Курс у четвер.,time
+Dusche,die,noun,душ,душ,Die Dusche funktioniert wieder.,Душ снова работает.,Душ знову працює.,home
+E-Mail,die,noun,электронная почта,електронна пошта,Ich schreibe dir gleich eine E‑Mail.,Я сейчас напишу тебе письмо.,Зараз напишу тобі листа.,other
+"Einen Kaffee, bitte",-,phrase,"кофе, пожалуйста","каву, будь ласка","Einen Kaffee, bitte. Ohne Zucker.","Кофе, пожалуйста. Без сахара.","Каву, будь ласка. Без цукру.",food
+"Einen Moment, bitte",-,phrase,"минуточку, пожалуйста","хвилинку, будь ласка","Einen Moment, bitte. Ich komme gleich.","Минуточку, пожалуйста. Я сейчас приду.","Хвилинку, будь ласка. Я зараз прийду.",
+Eintritt,der,noun,вход,вхід,Der Eintritt kostet fünf Euro.,Вход стоит пять евро.,Вхід коштує п’ять євро.,city
+Eis,das,noun,мороженое,морозиво,Die Kinder möchten Eis essen.,Дети хотят мороженое.,Діти хочуть морозиво.,food
+Eltern,die,noun,родители,батьки,Meine Eltern wohnen in Köln.,Мои родители живут в Кёльне.,Мої батьки живуть у Кельні.,family
+Entschuldigung,die,noun,извинение,вибачення,"Entschuldigung, ich komme zu spät.","Извините, я опоздал.","Вибачте, я запізнився.",other
+Entschuldigung,-,phrase,извините,вибачте,"Entschuldigung, wo ist die Toilette?","Извините, где туалет?","Вибачте, де туалет?",city
+"Entschuldigung, ich suche",-,phrase,,,"Entschuldigung, ich suche.",,,
+Erdbeere,die,noun,клубника,полуниця,Die Erdbeere schmeckt süß.,Клубника сладкая на вкус.,Полуниця солодка на смак.,food
+Es ist,-,phrase,,,Es ist.,,,
+Es ist Viertel nach,-,phrase,,,Es ist Viertel nach.,,,
+Es ist halb (acht),-,phrase,,,Es ist halb (acht).,,,
+Es ist kalt,-,phrase,,,Es ist kalt.,,,
+Es ist warm,-,phrase,,,Es ist warm.,,,
+Es ist windig,-,phrase,,,Es ist windig.,,,
+Es regnet,-,phrase,,,Es regnet.,,,
+Es schneit,-,phrase,,,Es schneit.,,,
+Es tut mir leid,-,phrase,,,Es tut mir leid.,,,
+Euro,der,noun,евро,євро,Das kostet zehn Euro.,Это стоит десять евро.,Це коштує десять євро.,city
+Europakarte,die,noun,карта Европы,карта Європи,Die Europakarte hängt im Klassenraum.,Карта Европы висит в классе.,Карту Європи повісили в класі.,study
+Fahrplan,der,noun,расписание,розклад,Der Fahrplan hängt am Bahnhof.,Расписание висит на вокзале.,Розклад висить на вокзалі.,transport
+Fahrrad,das,noun,велосипед,велосипед,Er fährt jeden Tag mit dem Fahrrad.,Он каждый день ездит на велосипеде.,Він щодня їздить на велосипеді.,transport
+Familienname,der,noun,фамилия,прізвище,Wie ist Ihr Familienname.,Как ваша фамилия.,Яке у вас прізвище.,family
+Februar,der,noun,февраль,лютий,Der Februar hat 28 Tage.,В феврале 28 дней.,У лютому 28 днів.,time
+Fenster,das,noun,окно,вікно,Bitte mach das Fenster zu.,"Пожалуйста, закрой окно.","Будь ласка, закрий вікно.",home
+Fest,das,noun,праздник,свято,Am Wochenende ist ein großes Fest.,В выходные большой праздник.,На вихідних велике свято.,city
+Film,der,noun,фильм,фільм,Wir sehen heute einen Film.,Сегодня смотрим фильм.,Сьогодні дивимося фільм.,other
+Flasche,die,noun,бутылка,пляшка,Die Flasche ist fast leer.,Бутылка почти пустая.,Пляшка майже порожня.,other
+Fleisch,das,noun,мясо,м’ясо,Er isst kein Fleisch.,Он не ест мясо.,Він не їсть м’ясо.,food
+Formular,das,noun,бланк,бланк,Füllen Sie bitte das Formular aus.,"Пожалуйста, заполните бланк.","Будь ласка, заповніть бланк.",study
+Franken,der,noun,франк,франк,Das kostet zehn Franken.,Это стоит десять франк.,Це коштує десять франк.,other
+Frau,die,noun,женщина,жінка,Die Frau an der Kasse lächelt.,Женщина на кассе улыбается.,Жінка на касі усміхається.,other
+Freitag,der,noun,пятница,п’ятниця,Am Freitag habe ich frei.,В пятницу у меня выходной.,У п’ятницю в мене вихідний.,time
+Freund,der,noun,друг,друг,Mein Freund wohnt in München.,Мой друг живёт в Мюнхене.,Мій друг живе в Мюнхені.,family
+Freundin,die,noun,подруга,подруга,Meine Freundin arbeitet hier.,Моя подруга работает здесь.,Моя подруга працює тут.,family
+Freut mich!,-,phrase,,,Freut mich!.,,,
+Frühling,-,adjective,,,Es ist sehr Frühling.,Это очень Frühling.,Це дуже Frühling.,
+Frühstück,das,noun,завтрак,сніданок,Wir machen am Sonntag ein langes Frühstück.,В воскресенье у нас долгий завтрак.,У неділю в нас довгий сніданок.,food
+Gebäude,das,noun,здание,будівля,Das neue Gebäude ist fast fertig.,Новое здание почти готово.,Нова будівля майже готова.,city|home
+Gemüse,das,noun,овощи,овочі,Ich kaufe frisches Gemüse auf dem Markt.,Я покупаю свежие овощи на рынке.,Купую свіжі овочі на ринку.,food
+"Geradeaus, dann links",-,phrase,,,"Geradeaus, dann links.",,,
+Gern geschehen,-,phrase,не за что,нема за що,"Gern geschehen, kein Problem.","Не за что, без проблем.","Нема за що, без проблем.",
+Geschenk,das,noun,подарок,подарунок,Das Geschenk ist für meine Mutter.,Подарок для моей мамы.,Подарунок для моєї мами.,other
+Geschäft,das,noun,магазин,крамниця,Das Geschäft macht um neun auf.,Магазин открывается в девять.,Крамниця відкривається о дев’ятій.,city
+Gesicht,das,noun,лицо,обличчя,Er wäscht sich das Gesicht.,Он умывает лицо.,Він умиває обличчя.,health
+Gesundheit,-,phrase,будь здоров,будь здоров,Gesundheit!,Будь здоров!,Будь здоров!,health
+Gesundheit!,-,adjective,,,Es ist sehr Gesundheit!.,Это очень Gesundheit!.,Це дуже Gesundheit!.,
+Getränk,das,noun,напиток,напій,Ein kaltes Getränk wäre jetzt gut.,Хорошо бы сейчас холодный напиток.,Зараз добре було б холодний напій.,food
+Glas,das,noun,стакан,склянка,"Ein Glas Wasser, bitte.","Стакан воды, пожалуйста.","Склянку води, будь ласка.",other
+Grad,das,noun,градус,градус,Das kostet zehn Grad.,Это стоит десять градус.,Це коштує десять градус.,other
+Gramm,das,noun,грамм,грам,Ich brauche zweihundert Gramm Käse.,Мне нужно двести граммов сыра.,Мені потрібно двісті грамів сиру.,food
+Großmutter,die,noun,бабушка,бабуся,Meine Großmutter backt gerne Kuchen.,Моя бабушка любит печь пироги.,Моя бабуся любить пекти пироги.,family
+Großvater,der,noun,дедушка,дідусь,Mein Großvater erzählt oft Geschichten.,Мой дедушка часто рассказывает истории.,Мій дідусь часто розповідає історії.,family
+Grüß Gott,-,phrase,,,Grüß Gott.,,,
+"Gut, danke",-,phrase,,,"Gut, danke.",,,
+Gute Besserung,-,phrase,скорейшего выздоровления,швидкого одужання,Gute Besserung und viel Ruhe.,Скорейшего выздоровления и больше отдыха.,Швидкого одужання і більше відпочинку.,health
+Gute Nacht,-,phrase,спокойной ночи,на добраніч,Gute Nacht und schlaf gut.,Спокойной ночи и сладких снов.,На добраніч і солодких снів.,time|health
+Guten Abend,-,phrase,добрый вечер,доброго вечора,"Guten Abend, meine Damen und Herren.","Добрый вечер, дамы и господа.","Доброго вечора, пані та панове.",time
+Guten Morgen,-,phrase,доброе утро,доброго ранку,"Guten Morgen, Frau Keller.","Доброе утро, госпожа Келлер.","Доброго ранку, пані Келлер.",time
+Guten Tag,-,phrase,добрый день,доброго дня,"Guten Tag, kann ich helfen?","Добрый день, могу помочь?","Доброго дня, можу допомогти?",
+Haar,das,noun,волос,волосся,Mein Haar ist heute zu lang.,Сегодня у меня слишком длинные волосы.,Сьогодні в мене занадто довге волосся.,health
+Hafen,der,noun,порт,порт,Der Hafen ist nicht weit von hier.,Порт недалеко отсюда.,Порт недалеко звідси.,city|transport
+Hallo,-,phrase,привет,привіт,"Hallo, wie geht es dir?","Привет, как ты?","Привіт, як ти?",
+"Hallo, hier spricht",-,phrase,,,"Hallo, hier spricht.",,,
+Handy,das,noun,мобильный телефон,мобільний телефон,Mein Handy liegt im Wohnzimmer.,Мой телефон лежит в гостиной.,Мій телефон лежить у вітальні.,other
+Haus,das,noun,дом,дім,Ihr Haus hat einen kleinen Garten.,Их дом имеет маленький сад.,Їхній дім має маленький сад.,home
+Herbst,-,adjective,,,Es ist sehr Herbst.,Это очень Herbst.,Це дуже Herbst.,
+Herr,der,noun,господин,пан,Herr Becker wartet schon.,Господин Беккер уже ждёт.,Пан Беккер уже чекає.,other
+"Heute, morgen, übermorgen",-,phrase,,,"Heute, morgen, übermorgen.",,,
+Hier bitte,-,phrase,,,Hier bitte.,,,
+Hilfe,-,phrase,помогите,допоможіть,"Hilfe, ich habe mich verletzt.","Помогите, я поранился.","Допоможіть, я поранився.",health
+Hund,der,noun,собака,собака,Der Hund schläft unter dem Tisch.,Собака спит под столом.,Собака спить під столом.,other
+Ich arbeite als ...,-,phrase,я работаю ...,я працюю ...,Ich arbeite als Verkäufer.,Я работаю продавцом.,Я працюю продавцем.,study|city
+Ich bin Schüler,-,phrase,,,Ich bin Schüler.,,,
+Ich bin glücklich,-,phrase,,,Ich bin glücklich.,,,
+Ich bin krank,-,phrase,,,Ich bin krank.,,,
+Ich bin müde,-,phrase,,,Ich bin müde.,,,
+Ich denke,-,phrase,,,Ich denke.,,,
+Ich finde,-,phrase,,,Ich finde.,,,
+Ich glaube,-,phrase,,,Ich glaube.,,,
+Ich habe eine Frage,-,phrase,у меня есть вопрос,в мене є питання,"Entschuldigung, ich habe eine Frage.","Извините, у меня есть вопрос.","Вибачте, в мене є питання.",
+Ich heiße ...,-,phrase,меня зовут ...,мене звати ...,Ich heiße Anna Müller.,Меня зовут Анна Мюллер.,Мене звати Анна Мюллер.,
+Ich hätte gern,-,phrase,,,Ich hätte gern.,,,
+Ich komme aus ...,-,phrase,я из ...,я з ...,Ich komme aus der Ukraine.,Я из Украины.,Я з України.,
+Ich mag,-,phrase,,,Ich mag.,,,
+Ich möchte gern,-,phrase,,,Ich möchte gern.,,,
+Ich möchte mit,-,phrase,,,Ich möchte mit.,,,
+Ich spreche nur wenig Deutsch,-,phrase,я говорю чуть-чуть по‑немецки,я трохи говорю німецькою,Ich spreche nur wenig Deutsch.,Я говорю немного по‑немецки.,Я трохи говорю німецькою.,
+Ich verstehe nicht,-,phrase,я не понимаю,я не розумію,"Entschuldigung, ich verstehe nicht.","Извините, я не понимаю.","Вибачте, я не розумію.",
+Ich weiß nicht,-,phrase,,,Ich weiß nicht.,,,
+Ich wohne in ...,-,phrase,я живу в ...,я живу в ...,Ich wohne in Berlin.,Я живу в Берлине.,Я живу в Берліні.,home|city
+Ja,-,adjective,,,Es ist sehr Ja.,Это очень Ja.,Це дуже Ja.,
+Jahr – die Jahre,-,phrase,,,Jahr – die Jahre.,,,
+Januar,der,noun,январь,січень,Der Januar ist oft sehr kalt.,Январь часто очень холодный.,Січень часто дуже холодний.,time
+Juli,der,noun,июль,липень,Im Juli fahren wir ans Meer.,В июле мы едем к морю.,У липні ми їдемо до моря.,time
+Junge,der,noun,мальчик,хлопчик,Der Junge spielt im Hof Fußball.,Мальчик играет во дворе в футбол.,Хлопчик грає у дворі у футбол.,family
+Juni,der,noun,июнь,червень,Der Kurs beginnt im Juni.,Курс начинается в июне.,Курс починається в червні.,time
+Kannst du mir helfen?,-,phrase,,,Kannst du mir helfen?.,,,
+Karte,die,noun,карта,карта,Haben Sie eine Stadtkarte für mich?,У вас есть карта города для меня?,Маєте міську карту для мене?,city
+Kartoffel,die,noun,картофель,картопля,Ich kaufe heute Kartoffeln für die Suppe.,Я покупаю сегодня картошку для супа.,Купую сьогодні картоплю для супу.,food
+Katze,die,noun,кошка,кіт/кицька,Unsere Katze schläft auf dem Sofa.,Наша кошка спит на диване.,Наша кицька спить на дивані.,
+Kein Problem,-,phrase,без проблем,без проблем,"Kein Problem, ich mache das.","Без проблем, я сделаю это.","Без проблем, я це зроблю.",
+Keller,der,noun,подвал,підвал,Die Getränke stehen im Keller.,Напитки стоят в подвале.,Напої стоять у підвалі.,home
+Kilogramm,das,noun,килограмм,кілограм,Die Tasche wiegt zwei Kilogramm.,Сумка весит два килограмма.,Сумка важить два кілограми.,other
+Kilometer,der,noun,километр,кілометр,Es sind fünf Kilometer bis dort.,Туда пять километров.,Туди п’ять кілометрів.,transport
+Kind,das,noun,ребёнок,дитина,Das Kind malt ein Bild.,Ребёнок рисует картинку.,Дитина малює картинку.,family
+Kirche,die,noun,церковь,церква,Die Kirche ist im Zentrum der Stadt.,Церковь находится в центре города.,Церква в центрі міста.,city
+Klasse,die,noun,класс,клас,Unsere Klasse hat heute Sport.,У нашего класса сегодня спорт.,У нашого класу сьогодні фізкультура.,study
+Kleid,das,noun,платье,сукня,Das Kleid passt dir sehr gut.,Платье тебе очень подходит.,Сукня тобі дуже пасує.,
+Kleidung,die,noun,одежда,одяг,Ich brauche warme Kleidung für den Winter.,Мне нужна тёплая одежда на зиму.,Мені потрібен теплий одяг на зиму.,
+Kuchen,der,noun,пирог,пиріг,Der Kuchen schmeckt ausgezeichnet.,Пирог на вкус отличный.,Пиріг смакує чудово.,food
+Kultur,die,noun,культура,культура,Die Stadt hat eine reiche Kultur.,В городе богатая культура.,Місто має багату культуру.,city
+Käse,der,noun,сыр,сир,Magst du Käse auf dem Brot?,Ты любишь сыр на хлебе?,Ти любиш сир на хлібі?,food
+Können Sie bitte wiederholen?,-,phrase,,,Können Sie bitte wiederholen?.,,,
+Küche,die,noun,кухня,кухня,"Die Küche ist klein, aber praktisch.","Кухня маленькая, но удобная.","Кухня маленька, але зручна.",home
+Lampe,die,noun,лампа,лампа,Die Lampe über dem Tisch ist neu.,Лампа над столом новая.,Лампа над столом нова.,home
+Land,das,noun,страна,країна,Deutschland ist ein schönes Land.,Германия — красивая страна.,Німеччина — гарна країна.,
+"Langsamer, bitte",-,phrase,"помедленнее, пожалуйста","повільніше, будь ласка","Sprechen Sie etwas langsamer, bitte.","Говорите немного медленнее, пожалуйста.","Говоріть трохи повільніше, будь ласка.",
+Lebensmittel,das,noun,продукты,продукти,Wir kaufen Lebensmittel im Supermarkt.,Мы покупаем продукты в супермаркете.,Купуємо продукти в супермаркеті.,food
+Lehrer,der,noun,учитель,вчитель,Unser Lehrer ist geduldig.,Наш учитель терпелив.,Наш вчитель терплячий.,study
+Lehrer,-,phrase,,,Lehrer.,,,
+Lehrerin,die,noun,учительница,вчителька,Die Lehrerin erklärt alles sehr klar.,Учительница объясняет всё очень ясно.,Вчителька пояснює все дуже чітко.,study
+Leute,die,noun,люди,люди,Viele Leute warten an der Haltestelle.,Много людей ждут на остановке.,Багато людей чекають на зупинці.,
+Liter,der,noun,литр,літр,Ich kaufe einen Liter Milch.,Я куплю литр молока.,Я куплю літр молока.,food
+Mahlzeit,die,noun,приём пищи,прийом їжі,Gute Mahlzeit! Wir essen jetzt.,Приятного аппетита! Мы сейчас едим.,Смачного! Ми зараз їмо.,food
+Mai,der,noun,май,травень,Im Mai blühen viele Bäume.,В мае цветёт много деревьев.,У травні цвітуть багато дерев.,time
+Mama,die,noun,мама,мама,Meine Mama arbeitet im Krankenhaus.,Моя мама работает в больнице.,Моя мама працює в лікарні.,family
+Mann,der,noun,мужчина,чоловік,Der Mann hilft der Nachbarin.,Мужчина помогает соседке.,Чоловік допомагає сусідці.,family
+Markt,der,noun,рынок,ринок,Am Samstag ist Markt in der Stadt.,В субботу в городе рынок.,У суботу в місті ярмарок.,city
+Messer,das,noun,нож,ніж,Das Messer ist sehr scharf.,Нож очень острый.,Ніж дуже гострий.,home
+Meter,der,noun,метр,метр,Der Tisch ist zwei Meter lang.,Стол два метра длиной.,Стіл два метри завдовжки.,home
+Milch,die,noun,молоко,молоко,Ich trinke morgens Milch im Kaffee.,Я пью утром молоко в кофе.,П’ю зранку молоко в каві.,food
+Minute,die,noun,минута,хвилина,Warte bitte eine Minute.,"Подожди, пожалуйста, минуту.","Зачекай, будь ласка, хвилину.",time
+Mir geht es gut,-,phrase,у меня всё хорошо,в мене все добре,"Danke, mir geht es gut.","Спасибо, у меня всё хорошо.","Дякую, в мене все добре.",
+Mittag,der,noun,полдень,опівдень,Wir essen gegen Mittag zu Hause.,Мы едим около полудня дома.,Їмо вдома близько опівдня.,time
+Mittwoch,der,noun,среда,середа,Am Mittwoch habe ich Sport.,В среду у меня спорт.,У середу в мене спорт.,time
+Monat – die Monate,-,phrase,,,Monat – die Monate.,,,
+Montag,der,noun,понедельник,понеділок,Am Montag habe ich einen Termin.,В понедельник у меня встреча.,У понеділок у мене зустріч.,time
+Mutter,die,noun,мать,мати,Meine Mutter ruft mich später an.,Моя мама позже мне позвонит.,Моя мати зателефонує мені пізніше.,family
+Mädchen,das,noun,девочка,дівчинка,Das Mädchen liest ein Buch.,Девочка читает книгу.,Дівчинка читає книжку.,family
+März,der,noun,март,березень,Im März wird es langsam warm.,В марте становится постепенно тепло.,У березні стає потроху тепло.,time
+Nacht,die,noun,ночь,ніч,In der Nacht ist es ruhig.,Ночью тихо.,Уночі тихо.,time
+Name,der,noun,имя,ім’я,Wie ist dein Name?,Как твоё имя?,Як твоє ім’я?,
+Nase,die,noun,нос,ніс,Meine Nase ist ein bisschen kalt.,Мой нос немного замёрз.,Мій ніс трохи змерз.,health
+Natürlich,-,adjective,,,Es ist sehr Natürlich.,Это очень Natürlich.,Це дуже Natürlich.,
+Nein,-,adjective,,,Es ist sehr Nein.,Это очень Nein.,Це дуже Nein.,
+"Noch einmal, bitte",-,phrase,"ещё раз, пожалуйста","ще раз, будь ласка","Können Sie das noch einmal, bitte?","Можете это ещё раз, пожалуйста?","Можете це ще раз, будь ласка?",
+Norden,-,adjective,,,Es ist sehr Norden.,Это очень Norden.,Це дуже Norden.,
+November,der,noun,ноябрь,листопад,Im November ist es oft grau.,В ноябре часто серо.,У листопаді часто сіро.,time|weather
+Nummer,die,noun,номер,номер,Wie ist deine Nummer?,Какой у тебя номер?,Який у тебе номер?,
+Oktober,der,noun,октябрь,жовтень,Im Oktober fallen die Blätter.,В октябре опадают листья.,У жовтні опадає листя.,time
+Onkel,der,noun,дядя,дядько,Mein Onkel wohnt in Wien.,Мой дядя живёт в Вене.,Мій дядько живе у Відні.,family
+Osten,-,adjective,,,Es ist sehr Osten.,Это очень Osten.,Це дуже Osten.,
+Papier,das,noun,бумага,папір,Hast du ein Blatt Papier?,У тебя есть лист бумаги?,Маєш аркуш паперу?,study
+Park,der,noun,парк,парк,Wir gehen am Nachmittag in den Park.,Днём идём в парк.,Після обіду йдемо до парку.,city
+Pass,der,noun,паспорт,паспорт,Vergiss deinen Pass nicht!,Не забудь свой паспорт!,Не забудь свій паспорт!,
+Pfund,das,noun,фунт,фунт,Das kostet zehn Pfund.,Это стоит десять фунт.,Це коштує десять фунт.,other
+Platz,der,noun,место,місце,Ist hier noch ein Platz frei?,Здесь ещё есть свободное место?,Тут ще є вільне місце?,city
+Post,die,noun,почта,пошта,Die Post ist heute geschlossen.,Почта сегодня закрыта.,Пошта сьогодні зачинена.,city
+Poster,das,noun,плакат,плакат,Das Poster hängt über dem Bett.,Плакат висит над кроватью.,Плакат висить над ліжком.,
+Postleitzahl,die,noun,почтовый индекс,поштовий індекс,Wie ist Ihre Postleitzahl?,Какой у вас почтовый индекс?,Який у вас поштовий індекс?,city
+Problem,das,noun,проблема,проблема,"Kein Problem, ich kümmere mich darum.","Без проблем, я займусь этим.","Без проблем, я цим займуся.",
+Radio,das,noun,радио,радіо,Ich höre morgens Radio im Auto.,По утрам слушаю радио в машине.,Вранці слухаю радіо в машині.,
+Regen,der,noun,дождь,дощ,Morgen gibt es viel Regen.,Завтра будет много дождя.,Завтра буде багато дощу.,weather
+Reis,der,noun,рис,рис,Ich koche heute Reis mit Gemüse.,Сегодня я готовлю рис с овощами.,Сьогодні готую рис із овочами.,food
+Restaurant,das,noun,ресторан,ресторан,Das Restaurant ist immer voll.,Ресторан всегда полон.,Ресторан завжди повний.,city|food
+Saft,der,noun,сок,сік,Der Apfelsaft schmeckt frisch.,Яблочный сок на вкус свежий.,Яблучний сік має свіжий смак.,food
+Salat,der,noun,салат,салат,Zum Abendessen gibt es Salat.,На ужин будет салат.,На вечерю буде салат.,food
+Samstag,der,noun,суббота,субота,Am Samstag schlafen wir länger.,В субботу мы спим дольше.,У суботу ми спимо довше.,time
+Satz,der,noun,предложение,речення,Der Satz ist grammatisch richtig.,Предложение грамматически правильное.,Речення граматично правильне.,study
+Schade!,-,adjective,,,Es ist sehr Schade!.,Это очень Schade!.,Це дуже Schade!.,
+Schnee,der,noun,снег,сніг,Morgen fällt viel Schnee.,Завтра выпадет много снега.,Завтра випаде багато снігу.,weather
+Schule,die,noun,школа,школа,Die Schule beginnt um acht Uhr.,Школа начинается в восемь.,Школа починається о восьмій.,study
+Schwester,die,noun,сестра,сестра,Meine Schwester wohnt in Hamburg.,Моя сестра живёт в Гамбурге.,Моя сестра живе в Гамбурзі.,family
+Schönen Tag noch,-,phrase,,,Schönen Tag noch.,,,
+Schüler,der,noun,ученик,учень,Jeder Schüler hat ein Heft.,У каждого ученика есть тетрадь.,Кожен учень має зошит.,study
+Schülerin,die,noun,ученица,учениця,Die neue Schülerin ist sehr fleißig.,Новая ученица очень старательная.,Нова учениця дуже старанна.,study
+See,der,noun,озеро,озеро,Der See ist heute ganz ruhig.,Озеро сегодня совсем спокойное.,Озеро сьогодні зовсім спокійне.,
+Seit wann,-,phrase,,,Seit wann.,,,
+Seite,die,noun,страница,сторінка,"Öffne die Seite zwölf, bitte.","Открой, пожалуйста, страницу двенадцать.","Відкрий, будь ласка, сторінку дванадцять.",study
+September,der,noun,сентябрь,вересень,Im September beginnt die Schule.,В сентябре начинается школа.,У вересні починається школа.,time|study
+Servus,-,adjective,,,Es ist sehr Servus.,Это очень Servus.,Це дуже Servus.,
+Sommer,-,adjective,,,Es ist sehr Sommer.,Это очень Sommer.,Це дуже Sommer.,
+Sonne,die,noun,солнце,сонце,Die Sonne scheint den ganzen Tag.,Солнце светит весь день.,Сонце світить увесь день.,weather
+Sonne scheint,-,phrase,,,Sonne scheint.,,,
+Sonntag,der,noun,воскресенье,неділя,Am Sonntag besuchen wir Freunde.,В воскресенье мы навещаем друзей.,У неділю відвідуємо друзів.,time
+Sonst noch etwas?,-,phrase,,,Sonst noch etwas?.,,,
+"Sprechen Sie langsamer, bitte",-,phrase,,,"Sprechen Sie langsamer, bitte.",,,
+Stadt,die,noun,город,місто,Die Stadt wächst sehr schnell.,Город растёт очень быстро.,Місто росте дуже швидко.,city
+Stift,der,noun,ручка/карандаш,ручка/олівець,Kann ich deinen Stift benutzen?,Можно воспользоваться твоей ручкой?,Можна скористатися твоєю ручкою?,study
+Stimmt so,-,phrase,,,Stimmt so.,,,
+Student,der,noun,студент,студент,Der Student arbeitet nebenbei.,Студент подрабатывает.,Студент підробляє.,study
+Studentin,die,noun,студентка,студентка,Die Studentin sucht eine Wohnung.,Студентка ищет жильё.,Студентка шукає житло.,study
+Stunde,die,noun,час,година,Die Stunde ist schnell vorbei.,Час быстро прошёл.,Година швидко минула.,time
+Super!,-,adjective,,,Es ist sehr Super!.,Это очень Super!.,Це дуже Super!.,
+Supermarkt,der,noun,супермаркет,супермаркет,Der Supermarkt hat bis zehn auf.,Супермаркет открыт до десяти.,Супермаркет працює до десятої.,city
+Suppe,die,noun,суп,суп,Die Suppe ist heute sehr lecker.,Суп сегодня очень вкусный.,Суп сьогодні дуже смачний.,food
+Süden,-,adjective,,,Es ist sehr Süden.,Это очень Süden.,Це дуже Süden.,
+Tag,der,noun,день,день,Jeden Tag lerne ich ein bisschen Deutsch.,Каждый день я немного учу немецкий.,Щодня я трохи вчу німецьку.,time
+Tag – die Tage,-,phrase,,,Tag – die Tage.,,,
+Tasche,die,noun,сумка,сумка,Deine Tasche ist auf dem Stuhl.,Твоя сумка на стуле.,Твоя сумка на стільці.,
+Tee,der,noun,чай,чай,Möchten Sie grünen Tee?,Хотите зелёный чай?,Хочете зелений чай?,food
+Tisch,der,noun,стол,стіл,Der Tisch steht am Fenster.,Стол стоит у окна.,Стіл стоїть біля вікна.,home
+Tochter,die,noun,дочь,дочка,Meine Tochter ist acht Jahre alt.,Моей дочери восемь лет.,Моїй дочці вісім років.,family
+Toll!,-,adjective,,,Es ist sehr Toll!.,Это очень Toll!.,Це дуже Toll!.,
+Tomate,die,noun,помидор,помідор,Die Tomate ist sehr frisch.,Помидор очень свежий.,Помідор дуже свіжий.,food
+Tschüss,-,phrase,пока,бувай,"Tschüss, bis morgen!","Пока, до завтра!","Бувай, до завтра!",
+Tür,die,noun,дверь,двері,Mach bitte die Tür leise zu.,"Закрой, пожалуйста, дверь тихо.","Будь ласка, зачиняй двері тихо.",home
+Uhr,die,noun,часы,годинник,Meine Uhr geht ein bisschen vor.,Мои часы немного спешат.,Мій годинник трохи поспішає.,time
+Um 7 Uhr,-,phrase,,,Um 7 Uhr.,,,
+Um wie viel Uhr,-,phrase,,,Um wie viel Uhr.,,,
+Und dir?,-,phrase,,,Und dir?.,,,
+Universität,die,noun,университет,університет,Die Universität ist modern ausgestattet.,Университет современно оснащён.,Університет сучасно оснащений.,study
+Vater,der,noun,отец,батько,Mein Vater arbeitet als Ingenieur.,Мой отец работает инженером.,Мій батько працює інженером.,family
+Verwandte,der,noun,родственник,родич,Ein Verwandter wohnt bei uns.,Один родственник живёт у нас.,Один родич живе в нас.,family
+Vielen Dank,-,phrase,,,Vielen Dank.,,,
+Vielleicht,-,adverb,возможно,можливо,Vielleicht komme ich später.,"Возможно, я приду позже.","Можливо, я прийду пізніше.",
+Vogel,der,noun,птица,птах,Der Vogel sitzt auf dem Ast.,Птица сидит на ветке.,Птах сидить на гілці.,
+Wann trifft ihr euch?,-,phrase,,,Wann trifft ihr euch?.,,,
+Was darf’s sein?,-,phrase,,,Was darf’s sein?.,,,
+Was kostet das,-,phrase,сколько это стоит,скільки це коштує,"Entschuldigung, was kostet das?","Извините, сколько это стоит?","Вибачте, скільки це коштує?",city
+Was kostet das?,-,phrase,,,Was kostet das?.,,,
+Was machst du beruflich?,-,phrase,,,Was machst du beruflich?.,,,
+Wasser,das,noun,вода,вода,Ich trinke viel Wasser am Tag.,Я пью много воды в день.,Я п’ю багато води за день.,food
+Westen,-,adjective,,,Es ist sehr Westen.,Это очень Westen.,Це дуже Westen.,
+Wetter,das,noun,погода,погода,Das Wetter wird morgen besser.,Погода завтра станет лучше.,Погода завтра стане кращою.,weather
+Wie alt bist du? – Ich bin,-,phrase,,,Wie alt bist du? – Ich bin.,,,
+Wie bitte?,-,phrase,,,Wie bitte?.,,,
+Wie geht’s Ihnen?,-,phrase,,,Wie geht’s Ihnen?.,,,
+Wie geht’s dir?,-,phrase,,,Wie geht’s dir?.,,,
+Wie heißen Sie,-,phrase,как вас зовут,як вас звати,Wie heißen Sie bitte?,"Скажите, как вас зовут.","Скажіть, як вас звати.",
+Wie heißen Sie?,-,phrase,,,Wie heißen Sie?.,,,
+Wie heißt du?,-,phrase,,,Wie heißt du?.,,,
+Wie ist das Wetter?,-,phrase,,,Wie ist das Wetter?.,,,
+Wie komme ich zum Bahnhof?,-,phrase,,,Wie komme ich zum Bahnhof?.,,,
+Wie lange,-,phrase,,,Wie lange.,,,
+Wie spät ist es?,-,phrase,,,Wie spät ist es?.,,,
+Wie viel ist das?,-,phrase,,,Wie viel ist das?.,,,
+Wind,der,noun,ветер,вітер,Heute weht starker Wind.,Сегодня дует сильный ветер.,Сьогодні дме сильний вітер.,weather
+Winter,-,adjective,,,Es ist sehr Winter.,Это очень Winter.,Це дуже Winter.,
+Wo ist,-,phrase,,,Wo ist.,,,
+Wo ist die Toilette,-,phrase,где туалет,де туалет,"Wo ist die Toilette, bitte?","Подскажите, где туалет?","Підкажіть, де туалет?",city
+Woche,die,noun,неделя,тиждень,Die Woche war stressig.,Неделя была напряжённой.,Тиждень був напруженим.,time
+Woher kommen Sie?,-,phrase,,,Woher kommen Sie?.,,,
+Wohnung,die,noun,квартира,квартира,Die Wohnung ist hell und ruhig.,Квартира светлая и тихая.,Квартира світла і тиха.,home
+Wolke,die,noun,облако,хмара,Viele Wolken am Himmel.,На небе много облаков.,На небі багато хмар.,weather
+Zeit,die,noun,время,час,Ich habe heute wenig Zeit.,У меня сегодня мало времени.,Сьогодні маю мало часу.,time
+Zimmer,das,noun,комната,кімната,"Mein Zimmer ist klein, aber gemütlich.","Моя комната маленькая, но уютная.","Моя кімната маленька, але затишна.",home
+Zug,der,noun,поезд,потяг,Der Zug kommt pünktlich an.,Поезд прибывает вовремя.,Потяг прибуває вчасно.,transport
+Zum Mitnehmen oder hier?,-,phrase,,,Zum Mitnehmen oder hier?.,,,
+abfahren,-,adjective,,,Es ist sehr abfahren.,Это очень abfahren.,Це дуже abfahren.,
+abholen,-,adjective,,,Es ist sehr abholen.,Это очень abholen.,Це дуже abholen.,
+acht,-,number,восемь,вісім,Die Apotheke öffnet um acht.,Аптека открывается в восемь.,Аптека відкривається о восьмій.,time|health|city
+achtzehn,-,adjective,,,Es ist sehr achtzehn.,Это очень achtzehn.,Це дуже achtzehn.,
+achtzig,-,adjective,,,Es ist sehr achtzig.,Это очень achtzig.,Це дуже achtzig.,
+allein,-,adjective,один,сам,Heute Abend bin ich allein zu Hause.,Сегодня вечером я один дома.,Сьогодні ввечері я сам удома.,
+alt,-,adjective,старый,старий,"Mein Handy ist alt, aber funktioniert noch.","Мой телефон старый, но ещё работает.","Мій телефон старий, але ще працює.",
+ander,-,adjective,другой,інший,Wir nehmen heute einen anderen Bus.,Сегодня поедем на другом автобусе.,Сьогодні поїдемо іншим автобусом.,
+anfangen,-,verb,начинать,починати,Der Kurs fängt morgen an.,Курс начинается завтра.,Курс починається завтра.,study
+angenehm,-,adjective,приятный,приємний,Die Musik ist leise und angenehm.,Музыка тихая и приятная.,Музика тиха і приємна.,
+ankommen,-,verb,прибывать,прибувати,Der Zug kommt pünktlich an.,Поезд прибывает вовремя.,Потяг прибуває вчасно.,transport
+anrufen,-,verb,звонить,дзвонити,Ich rufe dich heute Abend an.,Я позвоню тебе сегодня вечером.,Я зателефоную тобі сьогодні ввечері.,
+ansehen,-,adjective,,,Es ist sehr ansehen.,Это очень ansehen.,Це дуже ansehen.,
+antworten,-,verb,отвечать,відповідати,Bitte antworte schnell.,"Пожалуйста, ответь быстро.","Будь ласка, відповідай швидко.",
+anziehen,-,verb,надевать,вдягати,Ich ziehe meine Jacke an.,Я надеваю свою куртку.,Я вдягаю свою куртку.,home
+arbeiten,-,verb,работать,працювати,Ich arbeite in einem Büro.,Я работаю в офисе.,Я працюю в офісі.,study|city
+arbeitslos,-,adjective,безработный,безробітний,Er ist seit zwei Monaten arbeitslos.,Он без работы уже два месяца.,Він без роботи вже два місяці.,
+arm,-,adjective,бедный,бідний,"Er ist nicht arm, nur sparsam.","Он не бедный, только экономный.","Він не бідний, тільки економний.",
+auf,-,adjective,,,Es ist sehr auf.,Это очень auf.,Це дуже auf.,
+aufhören,-,adjective,,,Es ist sehr aufhören.,Это очень aufhören.,Це дуже aufhören.,
+aufmachen,-,adjective,,,Es ist sehr aufmachen.,Это очень aufmachen.,Це дуже aufmachen.,
+aufstehen,-,verb,вставать,вставати,Ich stehe jeden Morgen um sieben auf.,Я встаю каждое утро в семь.,Я встаю щоранку о сьомій.,health
+ausfüllen,-,adjective,,,Es ist sehr ausfüllen.,Это очень ausfüllen.,Це дуже ausfüllen.,
+ausgehen,-,adjective,,,Es ist sehr ausgehen.,Это очень ausgehen.,Це дуже ausgehen.,
+ausländisch,-,adjective,иностранный,іноземний,Ich lerne gern ausländische Sprachen.,Я охотно учу иностранные языки.,Я із задоволенням вчу іноземні мови.,
+ausschalten,-,adjective,,,Es ist sehr ausschalten.,Это очень ausschalten.,Це дуже ausschalten.,
+aussehen,-,verb,выглядеть,виглядати,Du siehst müde aus.,Ты выглядишь усталым.,Ти виглядаєш втомленим.,health
+aussteigen,-,adjective,,,Es ist sehr aussteigen.,Это очень aussteigen.,Це дуже aussteigen.,
+backen,-,verb,печь,пекти,Meine Oma backt Kuchen.,Моя бабушка печёт пироги.,Моя бабуся пече пироги.,food
+baden,-,verb,купаться,купатися,Die Kinder baden im See.,Дети купаются в озере.,Діти купаються в озері.,
+bald,-,adverb,скоро,скоро,Ich rufe dich bald an.,Я скоро тебе позвоню.,Я скоро тобі подзвоню.,
+bauen,-,adjective,,,Es ist sehr bauen.,Это очень bauen.,Це дуже bauen.,
+bedeuten,-,adjective,,,Es ist sehr bedeuten.,Это очень bedeuten.,Це дуже bedeuten.,
+beginnen,-,verb,начинать,починати,Der Film beginnt um acht.,Фильм начинается в восемь.,Фільм починається о восьмій.,time|city
+bekannt,-,adjective,известный,відомий,Das Café ist hier sehr bekannt.,Это кафе здесь очень известно.,Це кафе тут дуже відоме.,
+bekommen,-,verb,получать,отримувати,Ich bekomme viele E-Mails.,Я получаю много писем.,Я отримую багато листів.,study|city
+benutzen,-,verb,использовать,використовувати,Benutze bitte die andere Tür.,"Пожалуйста, пользуйся другой дверью.","Будь ласка, користуйся іншими дверима.",home
+beschreiben,-,adjective,,,Es ist sehr beschreiben.,Это очень beschreiben.,Це дуже beschreiben.,
+besuchen,-,verb,посещать,відвідувати,Wir besuchen am Sonntag Freunde.,Мы навещаем друзей в воскресенье.,Ми відвідуємо друзів у неділю.,family|time
+bezahlen,-,verb,платить,платити,Ich bezahle mit Karte.,Я плачу картой.,Я плачу карткою.,city
+billig,-,adjective,дешёвый,дешевий,Das Ticket war überraschend billig.,Билет оказался удивительно дешёвым.,Квиток виявився дивовижно дешевим.,
+blau,-,adjective,синий,синій,Der Himmel ist heute klar und blau.,Небо сегодня ясное и голубое.,Небо сьогодні ясне і блакитне.,colors
+bleiben,-,verb,оставаться,залишатися,Ich bleibe heute zu Hause.,Я сегодня останусь дома.,Я сьогодні залишуся вдома.,home
+brauchen,-,verb,нуждаться,потребувати,Ich brauche Hilfe.,Мне нужна помощь.,Мені потрібна допомога.,health
+braun,-,adjective,коричневый,коричневий,Meine Tasche ist dunkelbraun und klein.,Моя сумка тёмно-коричневая и маленькая.,Моя сумка темно-коричнева і маленька.,colors
+breit,-,adjective,широкий,широкий,Die Straße ist hier sehr breit.,Дорога здесь очень широкая.,Дорога тут дуже широка.,
+bringen,-,verb,приносить,приносити,Er bringt mir Kaffee.,Он приносит мне кофе.,Він приносить мені каву.,food
+danken,-,adjective,,,Es ist sehr danken.,Это очень danken.,Це дуже danken.,
+denken,-,verb,думать,думати,Ich denke oft an dich.,Я часто думаю о тебе.,Я часто думаю про тебе.,
+dick,-,adjective,толстый,товстий,Das Buch ist ziemlich dick.,Книга довольно толстая.,Книга досить товста.,
+dort,-,adverb,там,там,Die Haltestelle ist dort.,Остановка там.,Зупинка там.,transport|city
+draußen,-,adverb,снаружи,зовні,Wir warten draußen vor dem Gebäude.,Мы ждём снаружи перед зданием.,Ми чекаємо зовні перед будівлею.,
+drei,-,number,три,три,Wir sind drei Personen.,Нас три человека.,Нас троє.,
+dreizehn,-,adjective,,,Es ist sehr dreizehn.,Это очень dreizehn.,Це дуже dreizehn.,
+dreißig,-,adjective,,,Es ist sehr dreißig.,Это очень dreißig.,Це дуже dreißig.,
+drinnen,-,adverb,внутри,всередині,"Es ist kalt, wir bleiben drinnen.","Холодно, мы остаёмся внутри.","Холодно, ми залишаємося всередині.",
+dritte,-,adjective,,,Es ist sehr dritte.,Это очень dritte.,Це дуже dritte.,
+dumm,-,adjective,глупый,дурний,Das war eine dumme Idee.,Это была глупая идея.,Це була дурна ідея.,
+durstig,-,adjective,испытывающий жажду,спраглий,Nach dem Lauf bin ich sehr durstig.,После пробежки я очень хочу пить.,Після пробіжки я дуже хочу пити.,health
+duschen,-,verb,принимать душ,приймати душ,Ich dusche morgens kurz.,Я утром быстро принимаю душ.,Я зранку швидко приймаю душ.,home|health
+dürfen,-,verb,мочь (с разрешения),можна (з дозволу),Hier darf man nicht rauchen.,Здесь нельзя курить.,Тут не можна палити.,
+einfach,-,adjective,простой,простий,Die Lösung ist eigentlich ganz einfach.,Решение на самом деле довольно простое.,Рішення насправді доволі просте.,
+einkaufen,-,adjective,,,Es ist sehr einkaufen.,Это очень einkaufen.,Це дуже einkaufen.,
+einladen,-,verb,приглашать,запрошувати,Ich lade dich zum Essen ein.,Я приглашаю тебя на ужин.,Я запрошую тебе на вечерю.,food|family
+eins,-,number,один,один,Ich habe nur eins dabei.,У меня с собой только один.,У мене з собою лише один.,
+einschlafen,-,adjective,,,Es ist sehr einschlafen.,Это очень einschlafen.,Це дуже einschlafen.,
+einsteigen,-,verb,садиться (в транспорт),сісти (в транспорт),Bitte steigen Sie ein!,"Пожалуйста, садитесь!","Будь ласка, сідайте!",transport
+einundzwanzig,-,adjective,,,Es ist sehr einundzwanzig.,Это очень einundzwanzig.,Це дуже einundzwanzig.,
+einverstanden,-,adjective,согласный,згодний,"Ja, ich bin damit einverstanden.","Да, я с этим согласен.","Так, я з цим згоден.",
+elf,-,adjective,,,Es ist sehr elf.,Это очень elf.,Це дуже elf.,
+empfehlen,-,adjective,,,Es ist sehr empfehlen.,Это очень empfehlen.,Це дуже empfehlen.,
+enden,-,adjective,,,Es ist sehr enden.,Это очень enden.,Це дуже enden.,
+eng,-,adjective,узкий,вузький,Die Hose ist mir zu eng.,Штаны мне слишком узкие.,Штани мені надто вузькі.,
+entschuldigen (sich),-,phrase,,,entschuldigen (sich).,,,
+erlaubt,-,adjective,разрешённый,дозволений,Hier ist Rauchen nicht erlaubt.,Здесь курить не разрешено.,Тут палити не дозволено.,other
+erste,-,adjective,,,Es ist sehr erste.,Это очень erste.,Це дуже erste.,
+essen,-,verb,есть,їсти,Ich esse gern Pizza.,Я люблю есть пиццу.,Я люблю їсти піцу.,food
+fahren,-,verb,ехать/водить,їхати/водити,Ich fahre jeden Tag zur Arbeit.,Я каждый день езжу на работу.,Я щодня їжджу на роботу.,transport|study
+fallen,-,verb,падать,падати,Die Blätter fallen im Herbst.,Листья падают осенью.,Листя падає восени.,weather|time
+falsch,-,adjective,неправильный,неправильний,Das ist leider falsch.,"Это, к сожалению, неправильно.","Це, на жаль, неправильно.",study
+feiern,-,verb,праздновать,святкувати,Wir feiern am Freitag.,Мы празднуем в пятницу.,Ми святкуємо в п’ятницю.,time
+fernsehen,-,verb,смотреть телевизор,дивитися телевізор,Ich sehe abends fern.,Я вечером смотрю телевизор.,Я ввечері дивлюся телевізор.,home
+fertig,-,adjective,готовый,готовий,Das Essen ist gleich fertig.,Еда скоро будет готова.,Їжа скоро буде готова.,food
+finden,-,verb,находить,знаходити,Ich finde den Schlüssel nicht.,Я не могу найти ключ.,Я не можу знайти ключ.,home
+fliegen,-,verb,лететь,летіти,Wir fliegen morgen nach Spanien.,Мы завтра летим в Испанию.,Ми завтра летимо до Іспанії.,transport
+fragen,-,verb,спрашивать,питати,Ich frage den Lehrer.,Я спрашиваю учителя.,Я питаю вчителя.,study
+frei,-,adjective,свободный,вільний,Ist dieser Platz noch frei?,Это место ещё свободно?,Це місце ще вільне?,city
+freundlich,-,adjective,дружелюбный,дружній,Die Verkäuferin ist sehr freundlich.,Продавщица очень дружелюбная.,Продавчиня дуже привітна.,city
+froh,-,adjective,радостный,радісний,Ich bin froh über die Nachricht.,Я рад этой новости.,Я радий цій новині.,
+früh,-,adjective,рано,рано,Ich stehe früh auf.,Я рано встаю.,Я рано встаю.,time|health
+frühstücken,-,verb,завтракать,снідати,Wir frühstücken um acht.,Мы завтракаем в восемь.,Ми снідаємо о восьмій.,food|time
+funktionieren,-,verb,работать/функционировать,працювати/функціонувати,Die Lampe funktioniert wieder.,Лампа снова работает.,Лампа знову працює.,home
+fünf,-,number,пять,п’ять,Ich warte noch fünf Minuten.,Я подожду ещё пять минут.,Я зачекаю ще п’ять хвилин.,time
+fünfte,-,phrase,,,fünfte.,,,
+fünfzehn,-,adjective,,,Es ist sehr fünfzehn.,Это очень fünfzehn.,Це дуже fünfzehn.,
+fünfzig,-,adjective,,,Es ist sehr fünfzig.,Это очень fünfzig.,Це дуже fünfzig.,
+ganz,-,adjective,,,Es ist sehr ganz.,Это очень ganz.,Це дуже ganz.,
+gar,-,adjective,,,Es ist sehr gar.,Это очень gar.,Це дуже gar.,
+geben,-,verb,давать,давати,Gib mir bitte das Buch.,"Дай мне, пожалуйста, книгу.","Дай мені, будь ласка, книжку.",study|home
+gefallen,-,verb,нравиться,подобатися,Der Film gefällt mir.,Фильм мне нравится.,Фільм мені подобається.,
+gehen,-,verb,идти,йти,Ich gehe zu Fuß nach Hause.,Я иду домой пешком.,Я йду пішки додому.,home|health
+gehören,-,verb,принадлежать,належати,Das gehört mir.,Это принадлежит мне.,Це належить мені.,
+gelb,-,adjective,жёлтый,жовтий,Die Banane ist gelb.,Банан жёлтый.,Банан жовтий.,colors|food
+gemeinsam,-,adjective,,,Es ist sehr gemeinsam.,Это очень gemeinsam.,Це дуже gemeinsam.,
+gerade,-,adverb,сейчас/только что,зараз/щойно,Ich komme gerade nach Hause.,Я как раз прихожу домой.,Я щойно приходжу додому.,time|home
+gern,-,adjective,,,Es ist sehr gern.,Это очень gern.,Це дуже gern.,
+gesund,-,adjective,,,Es ist sehr gesund.,Это очень gesund.,Це дуже gesund.,
+gewinnen,-,verb,выигрывать,вигравати,Er gewinnt oft beim Spiel.,Он часто выигрывает в игре.,Він часто виграє у грі.,
+glauben,-,verb,верить/думать,вірити/думати,Ich glaube dir.,Я верю тебе.,Я тобі вірю.,
+glücklich,-,adjective,счастливый,щасливий,Heute bin ich sehr glücklich.,Сегодня я очень счастлив.,Сьогодні я дуже щасливий.,
+grau,-,adjective,серый,сірий,Der Himmel ist heute grau.,Небо сегодня серое.,Небо сьогодні сіре.,colors|weather
+groß,-,adjective,большой/высокий,великий/високий,Das Haus ist sehr groß.,Дом очень большой.,Дім дуже великий.,home
+grün,-,adjective,зелёный,зелений,Der Salat ist frisch und grün.,Салат свежий и зелёный.,Салат свіжий і зелений.,colors|food
+grüßen,-,verb,приветствовать,вітати,Ich grüße meine Nachbarn.,Я приветствую своих соседей.,Я вітаю своїх сусідів.,city|family
+gut,-,adjective,,,Es ist sehr gut.,Это очень gut.,Це дуже gut.,
+haben,-,verb,иметь,мати,Ich habe keine Zeit.,У меня нет времени.,У мене немає часу.,time
+halten,-,verb,держать/останавливаться,тримати/зупинятися,Der Bus hält hier.,Автобус останавливается здесь.,Автобус зупиняється тут.,transport
+heiß,-,adjective,горячий/жаркий,гарячий/спекотний,Der Tee ist zu heiß.,Чай слишком горячий.,Чай занадто гарячий.,food
+heißen,-,verb,называться,називатися,Wie heißt du?,Как тебя зовут?,Як тебе звати?,
+helfen,-,verb,помогать,допомагати,Er hilft seiner Mutter.,Он помогает своей маме.,Він допомагає своїй мамі.,family|health
+hell,-,adjective,светлый,світлий,Das Zimmer ist hell und ruhig.,Комната светлая и тихая.,Кімната світла і тиха.,home
+heute,-,adjective,,,Es ist sehr heute.,Это очень heute.,Це дуже heute.,
+hier,-,adverb,здесь,тут,Ich wohne hier in der Nähe.,Я живу здесь поблизости.,Я живу тут неподалік.,home|city
+holen,-,verb,забирать/приносить,забирати/приносити,Ich hole schnell den Arzt.,Я быстро приведу врача.,Я швидко покличу лікаря.,health|city
+hundert,-,number,сто,сто,Im Lager sind hundert Stühle.,На складе сто стульев.,На складі сто стільців.,city|home
+hungrig,-,adjective,голодный,голодний,Ich bin hungrig nach dem Sport.,Я голоден после спорта.,Я голодний після спорту.,health|food
+höflich,-,adjective,,,Es ist sehr höflich.,Это очень höflich.,Це дуже höflich.,
+hören,-,verb,слышать/слушать,чути/слухати,Ich höre gern Musik.,Я люблю слушать музыку.,Я люблю слухати музику.,
+immer,-,adverb,всегда,завжди,Er kommt immer pünktlich.,Он всегда приходит вовремя.,Він завжди приходить вчасно.,time
+jung,-,adjective,,,Es ist sehr jung.,Это очень jung.,Це дуже jung.,
+kalt,-,adjective,холодный,холодний,Im Winter ist es kalt.,Зимой холодно.,Взимку холодно.,weather|time
+kaputt,-,adjective,сломанный,зламаний,Mein Handy ist kaputt.,Мой телефон сломан.,Мій телефон зламаний.,
+kaufen,-,verb,покупать,купувати,Ich kaufe Brot und Milch.,Я покупаю хлеб и молоко.,Я купую хліб і молоко.,food
+kennen,-,verb,знать/быть знакомым,знати/бути знайомим,Ich kenne ihn gut.,Я его хорошо знаю.,Я його добре знаю.,
+klar,-,adjective,ясный/понятный,ясний/зрозумілий,Ist das jetzt klar?,Теперь это ясно?,Тепер це зрозуміло?,
+klein,-,adjective,маленький,маленький,Unsere Küche ist sehr klein.,Наша кухня очень маленькая.,Наша кухня дуже маленька.,home
+klug,-,adjective,умный,розумний,Das ist eine kluge Idee.,Это умная мысль.,Це розумна думка.,
+komisch,-,adjective,,,Es ist sehr komisch.,Это очень komisch.,Це дуже komisch.,
+kommen,-,verb,приходить,приходити,Er kommt morgen zurück.,Он вернётся завтра.,Він повернеться завтра.,time
+kosten,-,verb,стоить,коштувати,Wie viel kostet das?,Сколько это стоит?,Скільки це коштує?,city
+krank,-,adjective,больной,хворий,Er ist krank und bleibt zu Hause.,Он болен и остаётся дома.,Він хворий і залишається вдома.,health|home
+kurz,-,adjective,короткий,короткий,Die Pause ist sehr kurz.,Перерыв очень короткий.,Перерва дуже коротка.,study
+können,-,verb,мочь (уметь),могти (вміти),Ich kann gut kochen.,Я умею хорошо готовить.,Я вмію добре готувати.,food
+küssen,-,verb,целовать,цілувати,Sie küssen sich zum Abschied.,Они целуются на прощание.,Вони цілуються на прощання.,family
+lachen,-,verb,смеяться,сміятися,Wir lachen über den Witz.,Мы смеёмся над шуткой.,Ми сміємося з жарту.,
+lang,-,adjective,,,Es ist sehr lang.,Это очень lang.,Це дуже lang.,
+langsam,-,adjective,медленный,повільний,Bitte fahr langsam.,"Пожалуйста, едь медленно.","Будь ласка, їдь повільно.",transport
+laufen,-,verb,бежать/ходить,бігти/ходити,Ich laufe jeden Morgen im Park.,Я бегаю каждое утро в парке.,Я бігаю щоранку в парку.,health|city
+laut,-,adjective,громкий,гучний,Die Musik ist zu laut.,Музыка слишком громкая.,Музика занадто гучна.,
+leben,-,verb,жить,жити,Sie lebt in Deutschland.,Она живёт в Германии.,Вона живе в Німеччині.,home|city
+leicht,-,adjective,лёгкий,легкий,Die Aufgabe ist leicht.,Задание лёгкое.,Завдання легке.,study
+leise,-,adjective,тихий,тихий,Sei bitte leise.,"Пожалуйста, будь тише.","Будь ласка, будь тихіше.",
+lernen,-,verb,учить/изучать,вчити/вивчати,Ich lerne Deutsch.,Я учу немецкий.,Я вчу німецьку.,study
+lesen,-,verb,читать,читати,Ich lese gern Bücher.,Я люблю читать книги.,Я люблю читати книжки.,study
+letzte,-,adjective,последний,останній,Das ist die letzte Frage.,Это последний вопрос.,Це останнє питання.,study
+lieben,-,verb,любить,любити,Ich liebe meine Familie.,Я люблю свою семью.,Я люблю свою родину.,family
+liegen,-,verb,лежать/находиться,лежати/знаходитися,Das Buch liegt auf dem Tisch.,Книга лежит на столе.,Книга лежить на столі.,home
+lila,-,adjective,фиолетовый,фіолетовий,Ich mag lila Blumen.,Мне нравятся фиолетовые цветы.,Мені подобаються фіолетові квіти.,colors
+machen,-,verb,делать,робити,Was machst du heute Abend?,Что ты делаешь сегодня вечером?,Що ти робиш сьогодні ввечері?,
+macht,-,phrase,,,macht.,,,
+manchmal,-,adverb,иногда,інколи,Manchmal trinke ich Tee.,Иногда я пью чай.,Інколи я п’ю чай.,food
+meinen,-,verb,думать/полагать,вважати,"Ich meine, das ist besser so.","Я считаю, так лучше.","Я вважаю, так краще.",
+mieten,-,verb,снимать,орендувати,Wir mieten eine kleine Wohnung.,Мы снимаем небольшую квартиру.,Ми орендуємо невелику квартиру.,home
+mitbringen,-,verb,приносить с собой,приносити із собою,Bring bitte Brot mit.,"Пожалуйста, принеси с собой хлеб.","Будь ласка, принеси з собою хліб.",food
+mitkommen,-,verb,идти вместе,йти разом,Kommst du morgen mit?,Пойдёшь завтра с нами?,Підеш завтра з нами?,
+mitnehmen,-,verb,брать с собой,брати із собою,Nimm einen Regenschirm mit.,Возьми с собой зонт.,Візьми з собою парасольку.,weather
+mitspielen,-,adjective,,,Es ist sehr mitspielen.,Это очень mitspielen.,Це дуже mitspielen.,
+möchten,-,verb,хотеть бы,хотіти б,"Ich möchte einen Kaffee, bitte.","Я хотел бы кофе, пожалуйста.","Я хотів би каву, будь ласка.",food
+mögen,-,verb,нравиться/любить,подобатися/любити,Ich mag frisches Obst.,Мне нравится свежие фрукты.,Мені подобаються свіжі фрукти.,food
+möglich,-,adjective,возможный,можливий,Ist ein Termin morgen möglich?,Возможна встреча завтра?,Можлива зустріч завтра?,time|city
+müde,-,adjective,уставший,втомлений,Ich bin nach der Arbeit müde.,Я устал после работы.,Я втомився після роботи.,health|study
+müssen,-,verb,должен/нужно,мусити/потрібно,Ich muss früh aufstehen.,Мне нужно рано вставать.,Мені треба рано вставати.,
+nah,-,adjective,близкий,близький,Die Schule ist ganz nah.,Школа совсем близко.,Школа зовсім близько.,study|city
+nehmen,-,verb,брать,брати,Ich nehme die U-Bahn.,Я поеду на метро.,Я поїду метро.,transport
+nennen,-,verb,называть,називати,Nenn mir bitte ein Beispiel.,"Назови, пожалуйста, пример.","Назви, будь ласка, приклад.",
+nett,-,adjective,милый/приятный,милий/приємний,Die Nachbarn sind sehr nett.,Соседи очень милые.,Сусіди дуже приємні.,home|city
+neu,-,adjective,новый,новий,Das Auto ist neu.,Машина новая.,Авто нове.,transport
+neun,-,number,девять,дев’ять,Der Bus kommt um neun.,Автобус прибывает в девять.,Автобус прибуває о дев’ятій.,time|transport
+neunzehn,-,adjective,,,Es ist sehr neunzehn.,Это очень neunzehn.,Це дуже neunzehn.,
+neunzig,-,adjective,,,Es ist sehr neunzig.,Это очень neunzig.,Це дуже neunzig.,
+nicht,-,adjective,,,Es ist sehr nicht.,Это очень nicht.,Це дуже nicht.,
+nie,-,adverb,никогда,ніколи,Ich rauche nie.,Я никогда не курю.,Я ніколи не курю.,health
+noch,-,adjective,,,Es ist sehr noch.,Это очень noch.,Це дуже noch.,
+normal,-,adjective,нормальный,нормальний,Das ist völlig normal.,Это совершенно нормально.,Це цілком нормально.,
+oft,-,adverb,часто,часто,Wir gehen oft spazieren.,Мы часто гуляем.,Ми часто гуляємо.,
+orange,-,adjective,оранжевый,помаранчевий,Die Jacke ist orange.,Куртка оранжевая.,Куртка помаранчева.,colors|home
+ordnen,-,adjective,,,Es ist sehr ordnen.,Это очень ordnen.,Це дуже ordnen.,
+packen,-,adjective,,,Es ist sehr packen.,Это очень packen.,Це дуже packen.,
+parken,-,verb,парковаться,паркуватися,Hier darf man nicht parken.,Здесь нельзя парковаться.,Тут не можна паркуватися.,transport
+passen,-,adjective,,,Es ist sehr passen.,Это очень passen.,Це дуже passen.,
+passieren,-,verb,случаться,траплятися,Was ist gestern passiert?,Что вчера случилось?,Що сталося вчора?,
+probieren,-,verb,пробовать,пробувати,Möchtest du den Kuchen probieren?,Хочешь попробовать пирог?,Хочеш спробувати пиріг?,food
+putzen,-,verb,убирать/чистить,прибирати/чистити,Ich putze heute die Küche.,Я сегодня убираю на кухне.,Я сьогодні прибираю на кухні.,home
+rechts.,-,adjective,,,Es ist sehr rechts..,Это очень rechts..,Це дуже rechts..,
+reden,-,verb,говорить/разговаривать,говорити/розмовляти,Wir reden später darüber.,Мы поговорим об этом позже.,Поговоримо про це пізніше.,
+regnen,-,verb,идти (о дожде),йти (про дощ),Heute regnet es den ganzen Tag.,Сегодня весь день идёт дождь.,Сьогодні цілий день дощить.,weather
+reich,-,adjective,богатый,багатий,"Er ist reich, aber bescheiden.","Он богат, но скромен.","Він багатий, але скромний.",
+reisen,-,verb,путешествовать,подорожувати,Wir reisen im Sommer nach Italien.,Мы путешествуем летом в Италию.,Ми подорожуємо влітку до Італії.,transport
+reiten,-,verb,ездить верхом,їздити верхи,Sie reitet jeden Sonntag.,Она ездит верхом каждое воскресенье.,Вона їздить верхи щонеділі.,
+rennen,-,verb,бежать (быстро),бігти (швидко),Er rennt zur Haltestelle.,Он бежит к остановке.,Він біжить до зупинки.,
+reservieren,-,verb,бронировать,бронювати,Ich reserviere einen Tisch.,Я забронирую столик.,Я забронюю столик.,city
+richtig,-,adjective,правильный,правильний,Das ist die richtige Antwort.,Это правильный ответ.,Це правильна відповідь.,study
+rosa,-,adjective,розовый,рожевий,Das Kleid ist rosa.,Платье розовое.,Сукня рожева.,colors
+rot,-,adjective,красный,червоний,Die Ampel ist rot.,Светофор красный.,Світлофор червоний.,colors|transport
+rufen,-,verb,звать/звонить,кликати/дзвонити,Ruf mich bitte heute an.,"Позвони мне сегодня, пожалуйста.","Подзвони мені сьогодні, будь ласка.",
+ruhig,-,adjective,спокойный,спокійний,Bleib bitte ruhig.,"Оставайся спокойным, пожалуйста.","Залишайся спокійним, будь ласка.",
+sagen,-,verb,говорить/сказать,казати/сказати,Sag mir bitte Bescheid.,"Скажи мне, пожалуйста, заранее.","Скажи мені, будь ласка, заздалегідь.",
+sammeln,-,adjective,,,Es ist sehr sammeln.,Это очень sammeln.,Це дуже sammeln.,
+sauber,-,adjective,чистый,чистий,Die Küche ist jetzt sauber.,Кухня теперь чистая.,Кухня тепер чиста.,home
+sauer,-,adjective,кислый/сердитый,кислий/сердитий,Die Milch ist sauer geworden.,Молоко скисло.,Молоко скисло.,food
+schaffen,-,verb,справляться/успевать,впоратися/встигати,Ich schaffe das bis morgen.,Я справлюсь с этим до завтра.,Я впораюся з цим до завтра.,
+scharf,-,adjective,острый,гострий,Das Messer ist sehr scharf.,Нож очень острый.,Ніж дуже гострий.,home
+schauen,-,verb,смотреть,дивитися,"Schau mal, das ist schön.","Посмотри, это красиво.","Подивись, це гарно.",
+scheinen,-,verb,светить/казаться,світити/здаватися,Die Sonne scheint heute stark.,Сегодня солнце сильно светит.,Сонце сьогодні сильно світить.,weather
+schicken,-,verb,посылать,надсилати,Ich schicke dir die Dateien.,Я отправлю тебе файлы.,Я надішлю тобі файли.,
+schlafen,-,verb,спать,спати,Ich schlafe heute früh ein.,Я сегодня рано усну.,Я сьогодні рано засну.,health
+schlecht,-,adjective,,,Es ist sehr schlecht.,Это очень schlecht.,Це дуже schlecht.,
+schließen,-,verb,закрывать,зачиняти,Bitte schließe die Tür.,"Пожалуйста, закрой дверь.","Будь ласка, зачинь двері.",home
+schmecken,-,verb,нравиться на вкус,смакувати,Schmeckt dir die Suppe?,Тебе устраивает вкус супа?,Тобі смакує суп?,food
+schmutzig,-,adjective,грязный,брудний,Die Schuhe sind schmutzig.,Обувь грязная.,Взуття брудне.,home
+schneiden,-,verb,резать,різати,Ich schneide das Brot.,Я нарежу хлеб.,Я поріжу хліб.,food
+schnell,-,adjective,быстрый,швидкий,Der Zug ist sehr schnell.,Поезд очень быстрый.,Потяг дуже швидкий.,transport
+schreiben,-,verb,писать,писати,Ich schreibe eine E‑Mail.,Я пишу электронное письмо.,Я пишу електронного листа.,study
+schwarz,-,adjective,чёрный,чорний,Mein Mantel ist schwarz.,Моё пальто чёрное.,Мій пальто чорний.,colors|home
+schwer,-,adjective,тяжёлый/трудный,важкий/складний,Die Tasche ist schwer.,Сумка тяжёлая.,Сумка важка.,home
+schwimmen,-,verb,плавать,плавати,Wir schwimmen im See.,Мы плаваем в озере.,Ми плаваємо в озері.,
+schön,-,adjective,красивый,гарний,Der Park ist heute schön.,Парк сегодня красивый.,Парк сьогодні гарний.,city
+sechs,-,number,шесть,шість,Der Kurs beginnt um sechs.,Курс начинается в шесть.,Курс починається о шостій.,time
+sechzehn,-,adjective,,,Es ist sehr sechzehn.,Это очень sechzehn.,Це дуже sechzehn.,
+sechzig,-,adjective,,,Es ist sehr sechzig.,Это очень sechzig.,Це дуже sechzig.,
+sehen,-,verb,видеть,бачити,Ich sehe dich später.,Я увижу тебя позже.,Я побачу тебе пізніше.,
+sein,-,verb,быть,бути,Ich bin heute sehr müde.,Я сегодня очень уставший.,Я сьогодні дуже втомлений.,
+selten,-,adverb,редко,рідко,Sie fährt selten mit dem Bus.,Она редко ездит на автобусе.,Вона рідко їздить автобусом.,transport
+senden,-,verb,посылать/отправлять,надсилати/відправляти,Ich sende dir die Datei.,Я отправлю тебе файл.,Я надішлю тобі файл.,study
+setzen,-,verb,сажать/усаживать,садити/усаджувати,Setz das Kind auf den Stuhl.,Посади ребёнка на стул.,Посади дитину на стілець.,home
+sicher,-,adjective,безопасный/уверенный,безпечний/упевнений,Ist die Seite sicher?,Сайт безопасный?,Сайт безпечний?,study|city
+sieben,-,number,семь,сім,Wir treffen uns um sieben.,Встречаемся в семь.,Зустрічаємося о сьомій.,time
+siebzehn,-,adjective,,,Es ist sehr siebzehn.,Это очень siebzehn.,Це дуже siebzehn.,
+siebzig,-,adjective,,,Es ist sehr siebzig.,Это очень siebzig.,Це дуже siebzig.,
+singen,-,verb,петь,співати,Sie singt jeden Morgen.,Она поёт каждое утро.,Вона співає щоранку.,time
+sitzen,-,verb,сидеть,сидіти,Ich sitze hinten im Bus.,Я сижу сзади в автобусе.,Я сиджу ззаду в автобусі.,transport
+sofort,-,adverb,сразу,відразу,Komm bitte sofort her.,"Подойди, пожалуйста, сразу.","Підійди, будь ласка, відразу.",
+spielen,-,verb,играть,грати,Wir spielen Karten am Abend.,Мы играем в карты вечером.,Ми граємо в карти ввечері.,
+sportlich,-,adjective,,,Es ist sehr sportlich.,Это очень sportlich.,Це дуже sportlich.,
+sprechen,-,verb,говорить,говорити,Wir sprechen morgen weiter.,Мы продолжим говорить завтра.,Продовжимо говорити завтра.,
+spät,-,adjective,поздно,пізно,Es ist schon sehr spät.,Уже очень поздно.,Вже дуже пізно.,time
+später,-,adverb,позже,пізніше,Wir sprechen später weiter.,Поговорим позже.,Поговоримо пізніше.,
+stark,-,adjective,сильный,сильний,Er ist sehr stark.,Он очень сильный.,Він дуже сильний.,
+stehen,-,verb,стоять,стояти,Der Bus steht an der Ampel.,Автобус стоит на светофоре.,Автобус стоїть на світлофорі.,transport
+stellen,-,verb,ставить/ставлять,ставити,Stell die Tasche hier hin.,Постав сумку сюда.,Постав сумку сюди.,home
+stimmen,-,adjective,,,Es ist sehr stimmen.,Это очень stimmen.,Це дуже stimmen.,
+studieren,-,verb,изучать (в вузе),вивчати (в виші),Er studiert Informatik.,Он изучает информатику.,Він вивчає інформатику.,study
+suchen,-,verb,искать,шукати,Ich suche meine Schlüssel.,Я ищу свои ключи.,Я шукаю свої ключі.,
+super,-,adjective,,,Es ist sehr super.,Это очень super.,Це дуже super.,
+tanzen,-,verb,танцевать,танцювати,Wir tanzen am Samstag Abend.,Мы танцуем в субботу вечером.,Ми танцюємо в суботу ввечері.,
+tausend,-,adjective,,,Es ist sehr tausend.,Это очень tausend.,Це дуже tausend.,
+telefonieren,-,verb,разговаривать по телефону,телефонувати,Ich telefoniere mit meiner Mutter.,Я разговариваю по телефону с мамой.,Я телефоную з мамою.,family
+teuer,-,adjective,дорогой,дорогий,Das Handy ist teuer.,Телефон дорогой.,Телефон дорогий.,city
+toll,-,adjective,,,Es ist sehr toll.,Это очень toll.,Це дуже toll.,
+tragen,-,verb,носить/нести,носити/нести,Sie trägt heute eine Jacke.,Она сегодня в куртке.,Вона сьогодні в куртці.,
+traurig,-,adjective,грустный,сумний,Sie ist heute traurig.,Она сегодня грустная.,Вона сьогодні сумна.,
+treffen,-,verb,встречать(ся),зустрічати(ся),Wir treffen uns um sieben.,Мы встречаемся в семь.,Ми зустрічаємось о сьомій.,time|city
+trinken,-,verb,пить,пити,Ich trinke gerade Tee.,Я сейчас пью чай.,Я зараз п’ю чай.,food
+trocken,-,adjective,сухой,сухий,Die Straße ist wieder trocken.,Дорога снова сухая.,Дорога знову суха.,weather|city
+tun,-,verb,делать/совершать,робити/здійснювати,Was tust du für deine Gesundheit?,Что ты делаешь для своего здоровья?,Що ти робиш для свого здоров’я?,health
+umsteigen,-,verb,пересаживаться,пересідати,Wir steigen in Frankfurt um.,Мы пересаживаемся во Франкфурте.,Ми пересідаємо у Франкфурті.,transport
+umziehen,-,verb,переезжать,переїжджати,Wir ziehen nächste Woche um.,Мы переезжаем на следующей неделе.,Ми переїжджаємо наступного тижня.,home
+unterrichten,-,verb,преподавать,викладати,Sie unterrichtet Deutsch.,Она преподаёт немецкий.,Вона викладає німецьку.,study
+unterschreiben,-,verb,подписывать,підписувати,Bitte unterschreiben Sie hier.,"Пожалуйста, подпишите здесь.","Будь ласка, підпишіть тут.",
+verdienen,-,verb,зарабатывать,заробляти,Er verdient nicht schlecht.,Он зарабатывает неплохо.,Він заробляє непогано.,study
+vergessen,-,verb,забывать,забувати,Ich vergesse manchmal Namen.,Я иногда забываю имена.,Я інколи забуваю імена.,
+verheiratet,-,adjective,,,Es ist sehr verheiratet.,Это очень verheiratet.,Це дуже verheiratet.,
+verkaufen,-,verb,продавать,продавати,Er verkauft sein altes Auto.,Он продаёт свою старую машину.,Він продає свій старий автомобіль.,transport|city
+verschieden,-,adjective,разный/различный,різний/різноманітний,Wir haben verschiedene Meinungen.,У нас разные мнения.,У нас різні думки.,
+verstehen,-,verb,понимать,розуміти,Ich verstehe dich gut.,Я хорошо тебя понимаю.,Я добре тебе розумію.,
+versuchen,-,verb,пытаться,намагатися,Ich versuche es noch einmal.,Я попробую ещё раз.,Я спробую ще раз.,
+viel,-,adjective,,,Es ist sehr viel.,Это очень viel.,Це дуже viel.,
+vier,-,number,четыре,чотири,Der Zug fährt um vier.,Поезд отправляется в четыре.,Поїзд від’їжджає о четвертій.,time|transport
+vierte,-,adjective,,,Es ist sehr vierte.,Это очень vierte.,Це дуже vierte.,
+vierzehn,-,adjective,,,Es ist sehr vierzehn.,Это очень vierzehn.,Це дуже vierzehn.,
+vierzig,-,adjective,,,Es ist sehr vierzig.,Это очень vierzig.,Це дуже vierzig.,
+voll,-,adjective,полный/заполненный,повний/заповнений,Der Bus ist heute sehr voll.,Автобус сегодня очень полный.,Автобус сьогодні дуже повний.,transport
+vor (neun),-,phrase,,,vor (neun).,,,
+vorbereiten,-,verb,готовить/подготавливать,готувати/підготовляти,Ich bereite das Essen vor.,Я готовлю еду.,Я готую їжу.,food
+vorlesen,-,adjective,,,Es ist sehr vorlesen.,Это очень vorlesen.,Це дуже vorlesen.,
+vorstellen (sich),-,verb,представлять(ся),представляти(ся),Ich stelle mich kurz vor.,Я кратко представлюсь.,Я коротко представлюся.,
+wahr,-,adjective,,,Es ist sehr wahr.,Это очень wahr.,Це дуже wahr.,
+warm,-,adjective,тёплый,теплий,Im Mai wird es warm.,В мае становится тепло.,У травні теплішає.,weather|time
+warten,-,verb,ждать,чекати,Wir warten vor dem Eingang.,Мы ждём перед входом.,Ми чекаємо перед входом.,city
+waschen,-,verb,мыть/стирать,мити/прати,Ich wasche heute die Wäsche.,Я сегодня стираю одежду.,Я сьогодні перу одяг.,home|health
+wehtun,-,verb,болеть/причинять боль,боліти/завдавати болю,Mein Kopf tut weh.,У меня болит голова.,У мене болить голова.,health
+weiß,-,adjective,белый,білий,Die Tasse ist weiß.,Чашка белая.,Чашка біла.,colors|home
+werden,-,verb,становиться,ставати,Es wird langsam dunkel.,Постепенно темнеет.,Поступово темніє.,
+wichtig,-,adjective,важный,важливий,Das ist sehr wichtig.,Это очень важно.,Це дуже важливо.,
+wirklich,-,adjective,,,Es ist sehr wirklich.,Это очень wirklich.,Це дуже wirklich.,
+wissen,-,verb,знать (факт),знати (факт),Das weiß ich leider nicht.,"К сожалению, я этого не знаю.","На жаль, я цього не знаю.",
+witzig,-,adjective,,,Es ist sehr witzig.,Это очень witzig.,Це дуже witzig.,
+wohnen,-,verb,жить/проживать,жити/проживати,Ich wohne in Berlin.,Я живу в Берлине.,Я живу в Берліні.,home
+wollen,-,verb,хотеть,хотіти,Ich will heute früh schlafen.,Я хочу сегодня рано лечь спать.,Я хочу сьогодні рано лягти спати.,health
+wünschen,-,verb,желать,бажати,Ich wünsche dir einen schönen Tag.,Желаю тебе хорошего дня.,Бажаю тобі гарного дня.,
+zahlen,-,verb,платить,платити,Ich zahle bar oder mit Karte.,Я плачу наличными или картой.,Я плачу готівкою чи карткою.,city
+zehn,-,number,десять,десять,Ich arbeite bis zehn.,Я работаю до десяти.,Я працюю до десятої.,time|study
+zeigen,-,verb,показывать,показувати,"Zeig mir den Weg, bitte.","Покажи мне путь, пожалуйста.","Покажи мені шлях, будь ласка.",city
+ziehen,-,verb,тянуть/переезжать,тягнути/переїжджати,Wir ziehen den Schrank nach links.,Мы двигаем шкаф влево.,Рухаємо шафу ліворуч.,home
+zuerst,-,adverb,сначала,спочатку,"Zuerst kochen wir, dann essen wir.","Сначала готовим, потом едим.","Спочатку готуємо, потім їмо.",food
+zufrieden,-,adjective,довольный,задоволений,Ich bin zufrieden mit der Arbeit.,Я доволен работой.,Я задоволений роботою.,study
+zuhören,-,verb,слушать (внимательно),слухати (уважно),Hör bitte gut zu.,"Пожалуйста, слушай внимательно.","Будь ласка, слухай уважно.",study
+zumachen,-,verb,закрывать,закривати,Mach bitte die Tür zu.,"Пожалуйста, закрой дверь.","Будь ласка, зачинь двері.",home
+zurückkommen,-,verb,возвращаться,повертатися,Komm bitte um neun zurück.,"Пожалуйста, вернись к девяти.","Повернись, будь ласка, о дев’ятій.",
+zusammen,-,adverb,вместе,разом,Wir lernen zusammen Deutsch.,Мы вместе учим немецкий.,Ми разом вчимо німецьку.,study
+zwanzig,-,number,двадцать,двадцять,Das kostet zwanzig Euro.,Это стоит двадцать евро.,Це коштує двадцять євро.,city
+zwei,-,number,два,два,Ich nehme zwei Tickets.,Я возьму два билета.,Я візьму два квитки.,city|transport
+zweite,-,adjective,,,Es ist sehr zweite.,Это очень zweite.,Це дуже zweite.,
+zwölf,-,adjective,,,Es ist sehr zwölf.,Это очень zwölf.,Це дуже zwölf.,
+öffnen,-,verb,открывать,відкривати,Öffnest du bitte das Fenster?,"Откроешь, пожалуйста, окно?","Відкриєш, будь ласка, вікно?",home
+überall,-,adjective,,,Es ist sehr überall.,Это очень überall.,Це дуже überall.,

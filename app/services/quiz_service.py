@@ -1,7 +1,7 @@
 import random
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database.models import MasterWord, CEFRLevel, PartOfSpeech
+from app.database.models import Word, CEFRLevel, PartOfSpeech
 
 
 async def generate_question(level: str, session: AsyncSession, exclude_ids: list[int] = None,
@@ -11,10 +11,10 @@ async def generate_question(level: str, session: AsyncSession, exclude_ids: list
         exclude_ids = []
 
     # Получаем слова, исключая уже использованные
-    query = select(MasterWord).where(MasterWord.cefr == level)
+    query = select(Word).where(Word.level == level)
 
     if exclude_ids:
-        query = query.where(MasterWord.id.not_in(exclude_ids))
+        query = query.where(Word.id.not_in(exclude_ids))
 
     result = await session.execute(query)
     words = result.scalars().all()
@@ -35,16 +35,16 @@ async def generate_question(level: str, session: AsyncSession, exclude_ids: list
     if mode == "RU-DE":
         # RU→DE: показываем немецкие слова как варианты
         options = []
-        correct_display = correct_word.lemma
-        if correct_word.article and correct_word.article.value != '-':
-            correct_display = f"{correct_word.article.value} {correct_word.lemma}"
+        correct_display = correct_word.word_de
+        if correct_word.article and correct_word.article != '-':
+            correct_display = f"{correct_word.article} {correct_word.word_de}"
 
         options.append((correct_word.id, correct_display))
 
         for d in distractors[:3]:
-            distractor_display = d.lemma
-            if d.article and d.article.value != '-':
-                distractor_display = f"{d.article.value} {d.lemma}"
+            distractor_display = d.word_de
+            if d.article and d.article != '-':
+                distractor_display = f"{d.article} {d.word_de}"
             options.append((d.id, distractor_display))
     else:
         # DE→RU: показываем русские переводы как варианты
@@ -61,16 +61,16 @@ async def generate_question(level: str, session: AsyncSession, exclude_ids: list
         'correct_answer_index': correct_answer_index
     }
 
-async def get_distractors(word: MasterWord, session: AsyncSession) -> list[MasterWord]:
+async def get_distractors(word: Word, session: AsyncSession) -> list[Word]:
     """Подбирает дистракторы для слова"""
-    query = select(MasterWord).where(
-        MasterWord.id != word.id,
-        MasterWord.cefr == word.cefr,
-        MasterWord.pos == word.pos
+    query = select(Word).where(
+        Word.id != word.id,
+        Word.level == word.level,
+        Word.pos == word.pos
     )
 
     if word.pos == PartOfSpeech.NOUN and word.article:
-        query = query.where(MasterWord.article != word.article)
+        query = query.where(Word.article != word.article)
 
     result = await session.execute(query)
     candidates = result.scalars().all()

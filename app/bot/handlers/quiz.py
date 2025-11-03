@@ -9,7 +9,7 @@ from aiogram.filters import Command
 
 from app.bot.states import QuizStates
 from app.bot.keyboards import get_answer_keyboard, get_results_keyboard, get_main_menu_keyboard, get_level_keyboard, get_translation_mode_keyboard
-from app.database.models import User, Session, SessionItem, MasterWord, CEFRLevel
+from app.database.models import User, QuizSession, QuizQuestion, Word, CEFRLevel
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from app.services.quiz_service import generate_question
 
@@ -32,19 +32,19 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
     # Получаем пользователя и его уровень
     user = await session.get(User, user_id)
 
-    if not user or not user.selected_level:
+    if not user or not user.level:
         await message.answer(
             "⚠️ Сначала выбери свой уровень с помощью команды /start"
         )
         return
 
     # Создаём новую сессию
-    quiz_session = Session(
+    quiz_session = QuizSession(
         user_id=user_id,
-        level=user.selected_level,
+        level=user.level,
+        translation_mode=user.translation_mode,
         total_questions=25,
         correct_answers=0,
-        created_at=datetime.utcnow()
     )
 
     session.add(quiz_session)
@@ -52,7 +52,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
     await session.commit()
 
     # Генерируем первый вопрос
-    question = await generate_question(user.selected_level, session, mode=user.translation_mode)
+    question = await generate_question(user.level, session, mode=user.translation_mode)
 
     if not question:
         await message.answer(
@@ -83,9 +83,9 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
             f"Выбери правильное слово:"
         )
     else:
-        word_display = word.lemma
-        if word.article and word.article.value != '-':
-            word_display = f"{word.article.value} {word.lemma}"
+        word_display = word.word_de
+        if word.article and word.article != '-':
+            word_display = f"{word.article} {word.word_de}"
 
         question_text = (
             f"📝 Вопрос 1/25\n\n"
@@ -150,12 +150,12 @@ async def show_statistics(message: Message, state: FSMContext, session: AsyncSes
 
     # Получаем все завершённые сессии пользователя
     result = await session.execute(
-        select(Session)
+        select(QuizSession)
         .where(
-            Session.user_id == user_id,
-            Session.finished_at.isnot(None)
+            QuizSession.user_id == user_id,
+            QuizSession.finished_at.isnot(None)
         )
-        .order_by(Session.created_at.desc())
+        .order_by(QuizSession.created_at.desc())
         .limit(10)
     )
     sessions = result.scalars().all()
@@ -223,13 +223,13 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
     used_word_ids = data.get('used_word_ids', [])
 
     # Получаем правильное слово из БД
-    correct_word = await session.get(MasterWord, correct_word_id)
+    correct_word = await session.get(Word, correct_word_id)
 
     # Проверяем правильность ответа
     is_correct = (selected_word_id == correct_word_id)
 
     # Сохраняем результат в БД
-    session_item = SessionItem(
+    session_item = QuizQuestion(
         session_id=session_id,
         word_id=correct_word_id,
         is_correct=is_correct,
@@ -239,9 +239,9 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
     await session.commit()
 
     # Формируем правильный ответ для показа
-    word_display = correct_word.lemma
-    if correct_word.article and correct_word.article.value != '-':
-        word_display = f"{correct_word.article.value} {correct_word.lemma}"
+    word_display = correct_word.word_de
+    if correct_word.article and correct_word.article != '-':
+        word_display = f"{correct_word.article} {correct_word.word_de}"
 
     # Получаем режим пользователя
     user = await session.get(User, callback.from_user.id)
@@ -289,26 +289,26 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
     # Проверяем, закончились ли вопросы
     if current_question >= total_questions:
         # Завершаем сессию
-        quiz_session = await session.get(Session, session_id)
+        quiz_session = await session.get(QuizSession, session_id)
         quiz_session.correct_answers = correct_answers
         quiz_session.finished_at = datetime.utcnow()
         await session.commit()
 
         # Получаем детальную статистику
         result_items = await session.execute(
-            select(SessionItem, MasterWord)
-            .join(MasterWord, SessionItem.word_id == MasterWord.id)
-            .where(SessionItem.session_id == session_id)
-            .order_by(SessionItem.answered_at)
+            select(QuizQuestion, Word)
+            .join(Word, QuizQuestion.word_id == Word.id)
+            .where(QuizQuestion.session_id == session_id)
+            .order_by(QuizQuestion.answered_at)
         )
         items = result_items.all()
 
         # Формируем список правильных/неправильных
         details = []
         for item, word in items:
-            word_display = word.lemma
-            if word.article and word.article.value != '-':
-                word_display = f"{word.article.value} {word.lemma}"
+            word_display = word.word_de
+            if word.article and word.article != '-':
+                word_display = f"{word.article} {word.word_de}"
 
             icon = "✅" if item.is_correct else "❌"
             details.append(f"{icon} {word_display} — {word.translation_ru.capitalize()}")
@@ -400,7 +400,7 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
 
         # Получаем слово из списка ошибок
         next_word_id = error_words[current_error_index]
-        next_word = await session.get(MasterWord, next_word_id)
+        next_word = await session.get(Word, next_word_id)
 
         # Генерируем дистракторы
         from app.services.quiz_service import get_distractors
@@ -408,10 +408,10 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
 
         if len(distractors) < 3:
             result = await session.execute(
-                select(MasterWord).where(
-                    MasterWord.cefr == user.selected_level,
-                    MasterWord.id != next_word_id,
-                    MasterWord.id.not_in([d.id for d in distractors])
+                select(Word).where(
+                    Word.cefr == user.level,
+                    Word.id != next_word_id,
+                    Word.id.not_in([d.id for d in distractors])
                 )
             )
             all_words = result.scalars().all()
@@ -426,15 +426,15 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
             if mode == "RU-DE":
                 # RU→DE: показываем немецкие слова
                 options = []
-                word_display = next_word.lemma
-                if next_word.article and next_word.article.value != '-':
-                    word_display = f"{next_word.article.value} {next_word.lemma}"
+                word_display = next_word.word_de
+                if next_word.article and next_word.article != '-':
+                    word_display = f"{next_word.article} {next_word.word_de}"
                 options.append((next_word.id, word_display))
 
                 for d in distractors[:3]:
                     distractor_display = d.lemma
-                    if d.article and d.article.value != '-':
-                        distractor_display = f"{d.article.value} {d.lemma}"
+                    if d.article and d.article != '-':
+                        distractor_display = f"{d.article} {d.lemma}"
                     options.append((d.id, distractor_display))
             else:
                 # DE→RU: показываем русские переводы
@@ -457,7 +457,7 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         max_attempts = 10
 
         while attempts < max_attempts:
-            question = await generate_question(user.selected_level, session, exclude_ids=used_word_ids, mode=user.translation_mode)
+            question = await generate_question(user.level, session, exclude_ids=used_word_ids, mode=user.translation_mode)
             if question:
                 break
             attempts += 1
@@ -501,9 +501,9 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         )
     else:
         # Режим DE→RU: показываем немецкое слово
-        word_display = word.lemma
-        if word.article and word.article.value != '-':
-            word_display = f"{word.article.value} {word.lemma}"
+        word_display = word.word_de
+        if word.article and word.article != '-':
+            word_display = f"{word.article} {word.word_de}"
 
         question_text = (
             f"📝 <b>Вопрос {current_question}/{total_questions}</b>\n\n"
@@ -533,12 +533,12 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
     user = await session.get(User, user_id)
 
     # Создаём новую сессию для повтора
-    quiz_session = Session(
+    quiz_session = QuizSession(
         user_id=user_id,
-        level=user.selected_level,
-        total_questions=len(errors),
+        level=user.level,
+        translation_mode=user.translation_mode,
+        total_questions=25,
         correct_answers=0,
-        created_at=datetime.utcnow()
     )
 
     session.add(quiz_session)
@@ -547,7 +547,7 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
 
     # Генерируем первый вопрос из ошибок
     first_word_id = errors[0]
-    first_word = await session.get(MasterWord, first_word_id)
+    first_word = await session.get(Word, first_word_id)
 
     # Генерируем дистракторы для первого слова
     from app.services.quiz_service import get_distractors
@@ -556,10 +556,10 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
     if len(distractors) < 3:
         # Дополняем дистракторами из того же уровня
         result = await session.execute(
-            select(MasterWord).where(
-                MasterWord.cefr == user.selected_level,
-                MasterWord.id != first_word_id,
-                MasterWord.id.not_in([d.id for d in distractors])
+            select(Word).where(
+                Word.cefr == user.level,
+                Word.id != first_word_id,
+                Word.id.not_in([d.id for d in distractors])
             )
         )
         all_words = result.scalars().all()
@@ -573,15 +573,15 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
     if mode == "RU-DE":
         # RU→DE: показываем немецкие слова
         options = []
-        word_display = first_word.lemma
-        if first_word.article and first_word.article.value != '-':
-            word_display = f"{first_word.article.value} {first_word.lemma}"
+        word_display = first_word.word_de
+        if first_word.article and first_word.article != '-':
+            word_display = f"{first_word.article} {first_word.word_de}"
         options.append((first_word.id, word_display))
 
         for d in distractors[:3]:
             distractor_display = d.lemma
-            if d.article and d.article.value != '-':
-                distractor_display = f"{d.article.value} {d.lemma}"
+            if d.article and d.article != '-':
+                distractor_display = f"{d.article} {d.lemma}"
             options.append((d.id, distractor_display))
     else:
         # DE→RU: показываем русские переводы
@@ -611,9 +611,9 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
             f"Выбери правильное слово:"
         )
     else:
-        word_display = first_word.lemma
-        if first_word.article and first_word.article.value != '-':
-            word_display = f"{first_word.article.value} {first_word.lemma}"
+        word_display = first_word.word_de
+        if first_word.article and first_word.article != '-':
+            word_display = f"{first_word.article} {first_word.word_de}"
 
         question_text = (
             f"🔄 <b>Повтор ошибок</b>\n"
@@ -663,19 +663,19 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
     # Получаем пользователя и его уровень
     user = await session.get(User, user_id)
 
-    if not user or not user.selected_level:
+    if not user or not user.level:
         await message.answer(
             "⚠️ Сначала выбери свой уровень с помощью команды /start"
         )
         return
 
     # Создаём новую сессию
-    quiz_session = Session(
+    quiz_session = QuizSession(
         user_id=user_id,
-        level=user.selected_level,
+        level=user.level,
+        translation_mode=user.translation_mode,
         total_questions=25,
         correct_answers=0,
-        created_at=datetime.utcnow()
     )
 
     session.add(quiz_session)
@@ -683,7 +683,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
     await session.commit()
 
     # Генерируем первый вопрос
-    question = await generate_question(user.selected_level, session, mode=user.translation_mode)
+    question = await generate_question(user.level, session, mode=user.translation_mode)
 
     if not question:
         await message.answer(
@@ -714,9 +714,9 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
             f"Выбери правильное слово:"
         )
     else:
-        word_display = word.lemma
-        if word.article and word.article.value != '-':
-            word_display = f"{word.article.value} {word.lemma}"
+        word_display = word.word_de
+        if word.article and word.article != '-':
+            word_display = f"{word.article} {word.word_de}"
 
         question_text = (
             f"📝 Вопрос 1/25\n\n"
@@ -762,7 +762,7 @@ async def show_settings(message: Message, state: FSMContext, session: AsyncSessi
     user_id = message.from_user.id
     user = await session.get(User, user_id)
 
-    current_level = user.selected_level.value if user and user.selected_level else "не выбран"
+    current_level = user.level.value if user and user.level else "не выбран"
     current_mode = user.translation_mode if user else "DE-RU"
 
     mode_text = "🇩🇪→🇷🇺 Немецкий → Русский" if current_mode == "DE-RU" else "🇷🇺→🇩🇪 Русский → Немецкий"
@@ -878,7 +878,7 @@ async def back_to_settings(callback: CallbackQuery, session: AsyncSession):
     user_id = callback.from_user.id
     user = await session.get(User, user_id)
 
-    current_level = user.selected_level.value if user and user.selected_level else "не выбран"
+    current_level = user.level.value if user and user.level else "не выбран"
     current_mode = user.translation_mode if user else "DE-RU"
 
     mode_text = "🇩🇪→🇷🇺 Немецкий → Русский" if current_mode == "DE-RU" else "🇷🇺→🇩🇪 Русский → Немецкий"
@@ -908,7 +908,7 @@ async def change_level(callback: CallbackQuery, state: FSMContext, session: Asyn
 
     # Обновляем уровень пользователя
     user = await session.get(User, user_id)
-    user.selected_level = level
+    user.level = level
     await session.commit()
 
     # Удаляем сообщение с выбором уровня
