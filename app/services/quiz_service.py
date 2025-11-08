@@ -32,7 +32,7 @@ async def generate_question(level: str, session: AsyncSession, exclude_ids: list
             distractors.extend(random.sample(all_other, needed))
 
     # Формируем варианты ответов в зависимости от режима
-    if mode == "RU_TO_DE":
+    if mode.value == "ru_to_de":
         # RU→DE: показываем немецкие слова как варианты
         options = []
         correct_display = correct_word.word_de
