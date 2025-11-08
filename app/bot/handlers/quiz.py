@@ -76,7 +76,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
     word = question['correct_word']
     mode = user.translation_mode
 
-    if mode == "RU-DE":
+    if mode == "RU_TO_DE":
         question_text = (
             f"📝 Вопрос 1/25\n\n"
             f"🇷🇺 <b>{word.translation_ru.capitalize()}</b>\n\n"
@@ -250,7 +250,7 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
     # Обновляем счётчик правильных ответов
     if is_correct:
         correct_answers += 1
-        if mode == "RU-DE":
+        if mode == "RU_TO_DE":
             response_text = (
                 f"✅ <b>Правильно!</b>\n\n"
                 f"🇷🇺 {correct_word.translation_ru.capitalize()} = 🇩🇪 {word_display}"
@@ -261,7 +261,7 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
                 f"🇩🇪 {word_display} = 🇷🇺 {correct_word.translation_ru.capitalize()}"
             )
     else:
-        if mode == "RU-DE":
+        if mode == "RU_TO_DE":
             response_text = (
                 f"❌ <b>Неправильно!</b>\n\n"
                 f"Правильный ответ:\n"
@@ -423,7 +423,7 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
             user = await session.get(User, callback.from_user.id)
             mode = user.translation_mode
 
-            if mode == "RU-DE":
+            if mode == "RU_TO_DE":
                 # RU→DE: показываем немецкие слова
                 options = []
                 word_display = next_word.word_de
@@ -492,7 +492,7 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
     user = await session.get(User, callback.from_user.id)
     mode = user.translation_mode
 
-    if mode == "RU-DE":
+    if mode == "RU_TO_DE":
         # Режим RU→DE: показываем русский перевод
         question_text = (
             f"📝 <b>Вопрос {current_question}/{total_questions}</b>\n\n"
@@ -570,7 +570,7 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
     # Формируем варианты ответов в зависимости от режима
     mode = user.translation_mode
 
-    if mode == "RU-DE":
+    if mode == "RU_TO_DE":
         # RU→DE: показываем немецкие слова
         options = []
         word_display = first_word.word_de
@@ -603,7 +603,7 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
     )
 
     # Формируем текст вопроса в зависимости от режима
-    if mode == "RU-DE":
+    if mode == "RU_TO_DE":
         question_text = (
             f"🔄 <b>Повтор ошибок</b>\n"
             f"📝 Вопрос 1/{len(errors)}\n\n"
@@ -707,7 +707,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
     word = question['correct_word']
     mode = user.translation_mode
 
-    if mode == "RU-DE":
+    if mode == "RU_TO_DE":
         question_text = (
             f"📝 Вопрос 1/25\n\n"
             f"🇷🇺 <b>{word.translation_ru.capitalize()}</b>\n\n"
@@ -763,9 +763,9 @@ async def show_settings(message: Message, state: FSMContext, session: AsyncSessi
     user = await session.get(User, user_id)
 
     current_level = user.level.value if user and user.level else "не выбран"
-    current_mode = user.translation_mode if user else "DE-RU"
+    current_mode = user.translation_mode if user else "DE_TO_RU"
 
-    mode_text = "🇩🇪→🇷🇺 Немецкий → Русский" if current_mode == "DE-RU" else "🇷🇺→🇩🇪 Русский → Немецкий"
+    mode_text = "🇩🇪→🇷🇺 Немецкий → Русский" if current_mode == "DE_TO_RU" else "🇷🇺→🇩🇪 Русский → Немецкий"
 
     settings_text = (
         f"⚙️ <b>Настройки</b>\n\n"
@@ -840,7 +840,7 @@ async def settings_change_mode(callback: CallbackQuery, session: AsyncSession):
     """Переход к выбору режима перевода"""
     user_id = callback.from_user.id
     user = await session.get(User, user_id)
-    current_mode = user.translation_mode if user else "DE-RU"
+    current_mode = user.translation_mode if user else "DE_TO_RU"
 
     await callback.message.edit_text(
         "🔄 <b>Выбери режим перевода:</b>\n\n"
@@ -859,10 +859,10 @@ async def set_translation_mode(callback: CallbackQuery, session: AsyncSession):
 
     # Обновляем режим
     user = await session.get(User, user_id)
-    user.translation_mode = mode
+    user.translation_mode = "DE_TO_RU"
     await session.commit()
 
-    mode_text = "🇩🇪→🇷🇺 Немецкий → Русский" if mode == "DE-RU" else "🇷🇺→🇩🇪 Русский → Немецкий"
+    mode_text = "🇩🇪→🇷🇺 Немецкий → Русский" if mode == "DE_TO_RU" else "🇷🇺→🇩🇪 Русский → Немецкий"
 
     await callback.message.edit_text(
         f"✅ Режим перевода изменён!\n\n"
@@ -879,9 +879,9 @@ async def back_to_settings(callback: CallbackQuery, session: AsyncSession):
     user = await session.get(User, user_id)
 
     current_level = user.level.value if user and user.level else "не выбран"
-    current_mode = user.translation_mode if user else "DE-RU"
+    current_mode = user.translation_mode if user else "DE_TO_RU"
 
-    mode_text = "🇩🇪→🇷🇺 Немецкий → Русский" if current_mode == "DE-RU" else "🇷🇺→🇩🇪 Русский → Немецкий"
+    mode_text = "🇩🇪→🇷🇺 Немецкий → Русский" if current_mode == "DE_TO_RU" else "🇷🇺→🇩🇪 Русский → Немецкий"
 
     settings_text = (
         f"⚙️ <b>Настройки</b>\n\n"
