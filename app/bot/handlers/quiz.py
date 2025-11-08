@@ -443,9 +443,9 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
                 options.append((next_word.id, word_display))
 
                 for d in distractors[:3]:
-                    distractor_display = d.lemma
+                    distractor_display = d.word_de
                     if d.article and d.article != '-':
-                        distractor_display = f"{d.article} {d.lemma}"
+                        distractor_display = f"{d.article} {d.word_de}"
                     options.append((d.id, distractor_display))
             else:
                 # DE→RU: показываем русские переводы
@@ -592,9 +592,9 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
         options.append((first_word.id, word_display))
 
         for d in distractors[:3]:
-            distractor_display = d.lemma
+            distractor_display = d.word_de
             if d.article and d.article != '-':
-                distractor_display = f"{d.article} {d.lemma}"
+                distractor_display = f"{d.article} {d.word_de}"
             options.append((d.id, distractor_display))
     else:
         # DE→RU: показываем русские переводы
