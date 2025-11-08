@@ -62,13 +62,13 @@ def get_translation_mode_keyboard(current_mode: str) -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton(
                 text="🇩🇪→🇷🇺 DE-RU" + (" ✓" if current_mode == "DE_TO_RU" else ""),
-                callback_data="mode_DE-RU"
+                callback_data="mode_de_to_ru"
             )
         ],
         [
             InlineKeyboardButton(
                 text="🇷🇺→🇩🇪 RU-DE" + (" ✓" if current_mode == "RU_TO_DE" else ""),
-                callback_data="mode_RU-DE"
+                callback_data="mode_ru_to_de"
             )
         ],
         [
