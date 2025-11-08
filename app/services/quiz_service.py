@@ -5,7 +5,7 @@ from app.database.models import Word, CEFRLevel, PartOfSpeech
 
 
 async def generate_question(level: str, session: AsyncSession, exclude_ids: list[int] = None,
-                            mode: str = "DE-RU") -> dict | None:
+                            mode: str = "DE_TO_RU") -> dict | None:
     """Генерирует вопрос для викторины"""
     if exclude_ids is None:
         exclude_ids = []
@@ -32,7 +32,7 @@ async def generate_question(level: str, session: AsyncSession, exclude_ids: list
             distractors.extend(random.sample(all_other, needed))
 
     # Формируем варианты ответов в зависимости от режима
-    if mode == "RU-DE":
+    if mode == "RU_TO_DE":
         # RU→DE: показываем немецкие слова как варианты
         options = []
         correct_display = correct_word.word_de
