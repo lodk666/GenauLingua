@@ -248,32 +248,41 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
     mode = user.translation_mode
 
     # Обновляем счётчик правильных ответов
+    # Обновляем счётчик правильных ответов
     if is_correct:
         correct_answers += 1
         if mode == "RU_TO_DE":
             response_text = (
                 f"✅ <b>Правильно!</b>\n\n"
-                f"🇷🇺 {correct_word.translation_ru.capitalize()} = 🇩🇪 {word_display}"
+                f"🇷🇺 <b>{correct_word.translation_ru.capitalize()}</b> = 🇩🇪 <b>{word_display}</b>\n\n"
+                f"🇩🇪 {correct_word.example_de}\n\n"
+                f"🇷🇺 {correct_word.example_ru}"
             )
         else:
             response_text = (
                 f"✅ <b>Правильно!</b>\n\n"
-                f"🇩🇪 {word_display} = 🇷🇺 {correct_word.translation_ru.capitalize()}"
+                f"🇩🇪 <b>{word_display}</b> = 🇷🇺 <b>{correct_word.translation_ru.capitalize()}</b>\n\n"
+                f"🇩🇪 {correct_word.example_de}\n\n"
+                f"🇷🇺 {correct_word.example_ru}"
             )
     else:
         if mode == "RU_TO_DE":
             response_text = (
                 f"❌ <b>Неправильно!</b>\n\n"
-                f"Правильный ответ:\n"
-                f"🇷🇺 {correct_word.translation_ru.capitalize()} = <b>🇩🇪 {word_display}</b>"
+                f"Правильный ответ:\n\n"
+                f"🇷🇺 <b>{correct_word.translation_ru.capitalize()}</b> = 🇩🇪 <b>{word_display}</b>\n\n"
+                f"🇩🇪 {correct_word.example_de}\n\n"
+                f"🇷🇺 {correct_word.example_ru}"
             )
         else:
             response_text = (
                 f"❌ <b>Неправильно!</b>\n\n"
-                f"Правильный ответ:\n"
-                f"🇩🇪 {word_display} = <b>🇷🇺 {correct_word.translation_ru.capitalize()}</b>"
+                f"Правильный ответ:\n\n"
+                f"🇩🇪 <b>{word_display}</b> = 🇷🇺 <b>{correct_word.translation_ru.capitalize()}</b>\n\n"
+                f"🇩🇪 {correct_word.example_de}\n\n"
+                f"🇷🇺 {correct_word.example_ru}"
             )
-        errors.append(correct_word_id)  # ← ТОЛЬКО здесь!
+        errors.append(correct_word_id)
 
     await callback.message.edit_text(
         response_text,
@@ -506,8 +515,9 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
             word_display = f"{word.article} {word.word_de}"
 
         question_text = (
-            f"📝 <b>Вопрос {current_question}/{total_questions}</b>\n\n"
+            f"📚 Вопрос {current_question}/{total_questions}\n\n"
             f"🇩🇪 <b>{word_display}</b>\n\n"
+            f"📝 {word.example_de}\n\n"
             f"Выбери правильный перевод:"
         )
 
