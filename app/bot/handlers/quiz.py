@@ -153,9 +153,9 @@ async def show_statistics(message: Message, state: FSMContext, session: AsyncSes
         select(QuizSession)
         .where(
             QuizSession.user_id == user_id,
-            QuizSession.finished_at.isnot(None)
+            QuizSession.completed_at.isnot(None)
         )
-        .order_by(QuizSession.created_at.desc())
+        .order_by(QuizSession.started_at.desc())
         .limit(10)
     )
     sessions = result.scalars().all()
@@ -184,7 +184,7 @@ async def show_statistics(message: Message, state: FSMContext, session: AsyncSes
 
         for i, s in enumerate(sessions, 1):
             percentage = (s.correct_answers / s.total_questions * 100) if s.total_questions > 0 else 0
-            date_str = s.created_at.strftime("%d.%m.%Y %H:%M")
+            date_str = s.started_at.strftime("%d.%m.%Y %H:%M")
 
             if percentage >= 80:
                 emoji = "🏆"
@@ -291,7 +291,7 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
         # Завершаем сессию
         quiz_session = await session.get(QuizSession, session_id)
         quiz_session.correct_answers = correct_answers
-        quiz_session.finished_at = datetime.utcnow()
+        quiz_session.completed_at = datetime.utcnow()
         await session.commit()
 
         # Получаем детальную статистику
