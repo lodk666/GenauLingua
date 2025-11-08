@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from aiogram.filters import Command
 
+from app.database.models import TranslationMode
 from app.bot.states import QuizStates
 from app.bot.keyboards import get_answer_keyboard, get_results_keyboard, get_main_menu_keyboard, get_level_keyboard, get_translation_mode_keyboard
 from app.database.models import User, QuizSession, QuizQuestion, Word, CEFRLevel
@@ -775,7 +776,10 @@ async def show_settings(message: Message, state: FSMContext, session: AsyncSessi
     current_level = user.level.value if user and user.level else "не выбран"
     current_mode = user.translation_mode if user else "DE_TO_RU"
 
-    mode_text = "🇩🇪→🇷🇺 Немецкий → Русский" if current_mode == "DE_TO_RU" else "🇷🇺→🇩🇪 Русский → Немецкий"
+    if current_mode.value == "de_to_ru":
+        mode_text = "🇩🇪→🇷🇺 Немецкий → Русский"
+    else:
+        mode_text = "🇷🇺→🇩🇪 Русский → Немецкий"
 
     settings_text = (
         f"⚙️ <b>Настройки</b>\n\n"
@@ -864,15 +868,16 @@ async def settings_change_mode(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data.startswith("mode_"))
 async def set_translation_mode(callback: CallbackQuery, session: AsyncSession):
     """Установка режима перевода"""
-    mode = callback.data.split("_")[1]
+    mode = callback.data[5:]
     user_id = callback.from_user.id
 
     # Обновляем режим
     user = await session.get(User, user_id)
-    user.translation_mode = "DE_TO_RU"
+    user.translation_mode = TranslationMode(mode)
     await session.commit()
 
-    mode_text = "🇩🇪→🇷🇺 Немецкий → Русский" if mode == "DE_TO_RU" else "🇷🇺→🇩🇪 Русский → Немецкий"
+    mode_text = "🇩🇪→🇷🇺 Немецкий → Русский" if mode == "de_to_ru" else "🇷🇺→🇩🇪 Русский → Немецкий"
+
 
     await callback.message.edit_text(
         f"✅ Режим перевода изменён!\n\n"
@@ -891,7 +896,10 @@ async def back_to_settings(callback: CallbackQuery, session: AsyncSession):
     current_level = user.level.value if user and user.level else "не выбран"
     current_mode = user.translation_mode if user else "DE_TO_RU"
 
-    mode_text = "🇩🇪→🇷🇺 Немецкий → Русский" if current_mode == "DE_TO_RU" else "🇷🇺→🇩🇪 Русский → Немецкий"
+    if current_mode.value == "de_to_ru":
+        mode_text = "🇩🇪→🇷🇺 Немецкий → Русский"
+    else:
+        mode_text = "🇷🇺→🇩🇪 Русский → Немецкий"
 
     settings_text = (
         f"⚙️ <b>Настройки</b>\n\n"
