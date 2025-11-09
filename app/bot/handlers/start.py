@@ -1,8 +1,15 @@
+try:
+    from aiogram.utils.exceptions import MessageNotModified, MessageToEditNotFound
+except ImportError:
+    # Если проблема с импорта, попробуй
+    MessageNotModified, MessageToEditNotFound = Exception, Exception
 from aiogram import Router, F
+
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import date, timedelta
 
 from app.bot.states import QuizStates
 from app.bot.keyboards import get_level_keyboard, get_main_menu_keyboard
@@ -10,11 +17,50 @@ from app.database.models import User
 
 router = Router()
 
+async def update_anchor_message_start(message: Message, session: AsyncSession, user: User):
+    anchor_id = user.anchor_message_id
+    text = (
+        f"🔥 Стрик: {user.streak_days} дней\n"
+        f"📝 Выучено слов: {user.words_learned}\n"
+        f"🏆 Викторин: {user.quizzes_passed}\n"
+        f"✅ Правильных ответов: {user.success_rate}%\n"
+        f"🎯 Уровень: {user.level}"
+    )
+    try:
+        if anchor_id is not None:
+            await message.bot.edit_message_text(text, chat_id=message.chat.id, message_id=anchor_id)
+        else:
+            sent = await message.answer(text)
+            user.anchormessageid = sent.message_id
+            await session.commit()
+    except (MessageNotModified, MessageToEditNotFound):
+        sent = await message.answer(text)
+        user.anchormessageid = sent.message_id
+        await session.commit()
+
+async def update_user_activity(session, user_id):
+    user = await session.get(User, user_id)
+    today = date.today()
+    if user.last_active_date == today:
+        return
+    elif user.last_active_date == today - timedelta(days=1):
+        user.streak_days += 1
+    else:
+        user.streak_days = 1
+    user.last_active_date = today
+    await session.commit()
+
+
 
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
     """Обработчик команды /start"""
     user_id = message.from_user.id
+
+    await update_user_activity(session, user_id)
+
+    user = await session.get(User, user_id)
+    await update_anchor_message_start(message, session, user)
 
     # Очищаем state при перезапуске
     await state.clear()
