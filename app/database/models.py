@@ -1,16 +1,66 @@
-from datetime import datetime
+from datetime import datetime, date
+from sqlalchemy import Date
 from typing import List, Optional
+
 from sqlalchemy import (
     BigInteger, String, Boolean, DateTime, Integer, 
     ForeignKey, Text, Enum as SQLEnum, Float
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import ARRAY
+from app.database.enums import CEFRLevel, TranslationMode
 import enum
+
 
 
 class Base(DeclarativeBase):
     pass
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    username: Mapped[Optional[str]] = mapped_column(String(255))
+    first_name: Mapped[Optional[str]] = mapped_column(String(255))
+    last_name: Mapped[Optional[str]] = mapped_column(String(255))
+
+    # Старые поля для статистики
+    last_active_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    streak_days: Mapped[int] = mapped_column(Integer, default=0)
+    words_learned: Mapped[int] = mapped_column(Integer, default=0)
+    quizzes_passed: Mapped[int] = mapped_column(Integer, default=0)
+    success_rate: Mapped[int] = mapped_column(Integer, default=0)
+
+    # Новые поля и настройки
+    level: Mapped[CEFRLevel] = mapped_column(SQLEnum(CEFRLevel), default=CEFRLevel.A1)
+    translation_mode: Mapped[TranslationMode] = mapped_column(SQLEnum(TranslationMode), default=TranslationMode.DE_TO_RU)
+    interface_language: Mapped[str] = mapped_column(String(2), default="ru")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    anchor_message_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+
+    # Связи
+    quiz_sessions: Mapped[List["QuizSession"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
+
+class UserWord(Base):
+    __tablename__ = "user_words"
+
+    user_id = mapped_column(ForeignKey("users.id"), primary_key=True)
+    word_id = mapped_column(ForeignKey("words.id"), primary_key=True)
+
+    # прогресс по слову
+    correct_streak = mapped_column(Integer, default=0, nullable=False)
+    last_seen_at = mapped_column(DateTime, nullable=True)
+
+    # считается “выучено”, когда достигнут порог streak
+    learned = mapped_column(Boolean, default=False, nullable=False)
+
+    user = relationship("User", backref="learned_items")
+    word = relationship("Word", backref="learned_by")
+
 
 
 class PartOfSpeech(enum.Enum):
@@ -24,58 +74,6 @@ class PartOfSpeech(enum.Enum):
     PREPOSITION = "preposition"
     CONJUNCTION = "conjunction"
     OTHER = "other"
-
-
-class CEFRLevel(enum.Enum):
-    """Уровни по CEFR"""
-    A1 = "A1"
-    A2 = "A2"
-    B1 = "B1"
-    B2 = "B2"
-    C1 = "C1"
-    C2 = "C2"
-
-
-class TranslationMode(enum.Enum):
-    """Режимы перевода"""
-    DE_TO_RU = "de_to_ru"  # Немецкий → Русский
-    RU_TO_DE = "ru_to_de"  # Русский → Немецкий
-    DE_TO_UK = "de_to_uk"  # Немецкий → Украинский
-    UK_TO_DE = "uk_to_de"  # Украинский → Немецкий
-
-
-class User(Base):
-    __tablename__ = "users"
-
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    username: Mapped[Optional[str]] = mapped_column(String(255))
-    first_name: Mapped[Optional[str]] = mapped_column(String(255))
-    last_name: Mapped[Optional[str]] = mapped_column(String(255))
-    
-    # Настройки пользователя
-    level: Mapped[CEFRLevel] = mapped_column(
-        SQLEnum(CEFRLevel), 
-        default=CEFRLevel.A1
-    )
-    translation_mode: Mapped[TranslationMode] = mapped_column(
-        SQLEnum(TranslationMode), 
-        default=TranslationMode.DE_TO_RU
-    )
-    
-    # Язык интерфейса (ru/uk)
-    interface_language: Mapped[str] = mapped_column(String(2), default="ru")
-    
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, 
-        default=datetime.utcnow
-    )
-    
-    # Relationships
-    quiz_sessions: Mapped[List["QuizSession"]] = relationship(
-        back_populates="user",
-        cascade="all, delete-orphan"
-    )
-
 
 class Word(Base):
     __tablename__ = "words"

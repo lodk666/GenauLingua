@@ -13,8 +13,22 @@ from app.bot.keyboards import get_answer_keyboard, get_results_keyboard, get_mai
 from app.database.models import User, QuizSession, QuizQuestion, Word, CEFRLevel
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from app.services.quiz_service import generate_question
+from datetime import date, timedelta
 
 router = Router()
+
+async def update_user_activity(session: AsyncSession, user_id: int):
+    user = await session.get(User, user_id)
+    today = date.today()
+    if user.last_active_date == today:
+        return
+    elif user.last_active_date == today - timedelta(days=1):
+        user.streak_days += 1
+    else:
+        user.streak_days = 1
+    user.last_active_date = today
+    await session.commit()
+
 
 def get_next_question_keyboard() -> InlineKeyboardMarkup:
     """Кнопка 'Дальше' для перехода к следующему вопросу"""
@@ -209,6 +223,26 @@ async def show_statistics(message: Message, state: FSMContext, session: AsyncSes
 
 @router.callback_query(F.data.startswith("answer_"), QuizStates.answering)
 async def process_answer(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    await update_user_activity(session, callback.from_user.id)
+
+    # Обновляем закрепленное сообщение (якорь) с прогрессом, только если оно есть
+    anchor_id = (await state.get_data()).get("anchor_message_id")
+    if anchor_id:
+        user = await session.get(User, callback.from_user.id)
+        try:
+            await callback.message.bot.edit_message_text(
+                chat_id=callback.message.chat.id,
+                message_id=anchor_id,
+                text=f"🔥 Стрик: {user.streak_days} дней\n"
+                     f"📝 Выучено слов: {user.words_learned}\n"
+                     f"🏆 Викторин: {user.quizzes_passed}\n"
+                     f"✅ Правильных ответов: {user.success_rate}%\n"
+                     f"🎯 Уровень: {user.level}",
+                parse_mode="HTML"
+            )
+        except:
+            # если якорь удалён, обновление не проводится
+            pass
     await callback.answer()
     """Обработка ответа пользователя"""
     # Получаем ID выбранного слова
@@ -299,6 +333,38 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
 
     # Проверяем, закончились ли вопросы
     if current_question >= total_questions:
+        user = await session.get(User, callback.from_user.id)
+
+        # обновляем статистику
+        user.quizzes_passed = (user.quizzes_passed or 0) + 1
+        success_rate = int((correct_answers / total_questions) * 100)
+        user.success_rate = success_rate
+
+        unique_used = set(used_word_ids) if used_word_ids else set()
+        user.words_learned = (user.words_learned or 0) + len(unique_used)
+
+        await session.commit()
+
+        # опционально: обновляем якорь с прогрессом после финала
+        try:
+            data = await state.get_data()
+            anchor_id = data.get("anchor_message_id")
+            if anchor_id:
+                await callback.message.bot.edit_message_text(
+                    chat_id=callback.message.chat.id,
+                    message_id=anchor_id,
+                    text=(
+                        f"🔥 Стрик: {user.streak_days} дней\n"
+                        f"📝 Выучено слов: {user.words_learned}\n"
+                        f"🏆 Викторин: {user.quizzes_passed}\n"
+                        f"✅ Правильных ответов: {user.success_rate}%\n"
+                        f"🎯 Уровень: {user.level}"
+                    ),
+                    parse_mode="HTML"
+                )
+        except:
+            pass
+
         # Завершаем сессию
         quiz_session = await session.get(QuizSession, session_id)
         quiz_session.correct_answers = correct_answers
