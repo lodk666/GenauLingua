@@ -1,10 +1,10 @@
 try:
     from aiogram.utils.exceptions import MessageNotModified, MessageToEditNotFound
 except ImportError:
-    # Если проблема с импорта, попробуй
     MessageNotModified, MessageToEditNotFound = Exception, Exception
-from aiogram import Router, F
 
+import asyncio
+from aiogram import Router, F
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
@@ -17,26 +17,75 @@ from app.database.models import User
 
 router = Router()
 
-async def update_anchor_message_start(message: Message, session: AsyncSession, user: User):
-    anchor_id = user.anchor_message_id
-    text = (
-        f"🔥 Стрик: {user.streak_days} дней\n"
-        f"📝 Выучено слов: {user.words_learned}\n"
-        f"🏆 Викторин: {user.quizzes_passed}\n"
-        f"✅ Правильных ответов: {user.success_rate}%\n"
-        f"🎯 Уровень: {user.level}"
-    )
+
+async def delete_messages_fast(bot, chat_id: int, start_id: int, end_id: int):
+    """
+    Быстрое удаление сообщений параллельно
+    """
+    tasks = []
+    for msg_id in range(start_id, end_id):
+        tasks.append(bot.delete_message(chat_id=chat_id, message_id=msg_id))
+
+    # Удаляем все сообщения одновременно
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    # Логируем результаты
+    deleted = sum(1 for r in results if not isinstance(r, Exception))
+    print(f"   🧹 Удалено {deleted}/{len(tasks)} сообщений")
+
+
+async def ensure_anchor(message: Message, session: AsyncSession, user: User, emoji: str = "🏠"):
+    """
+    Создаёт новый якорь БЕЗ удаления старого
+    Старый якорь удалится позже вместе с остальными сообщениями
+
+    ЛОГИКА:
+    1. Создаём НОВЫЙ якорь (чат никогда не пустой!)
+    2. Возвращаем ID старого якоря для удаления
+    """
+    old_anchor_id = user.anchor_message_id
+
+    # Создаём новый якорь СРАЗУ (чтобы чат не был пустым)
     try:
-        if anchor_id is not None:
-            await message.bot.edit_message_text(text, chat_id=message.chat.id, message_id=anchor_id)
-        else:
-            sent = await message.answer(text)
-            user.anchormessageid = sent.message_id
-            await session.commit()
-    except (MessageNotModified, MessageToEditNotFound):
-        sent = await message.answer(text)
-        user.anchormessageid = sent.message_id
+        sent = await message.answer(emoji, reply_markup=get_main_menu_keyboard())
+        new_anchor_id = sent.message_id
+
+        # Обновляем ID якоря в базе
+        user.anchor_message_id = new_anchor_id
         await session.commit()
+
+        print(f"   ✨ Создан новый якорь {new_anchor_id}")
+
+        # Возвращаем ID старого якоря для удаления
+        return old_anchor_id, new_anchor_id
+    except Exception as e:
+        print(f"   ❌ Ошибка создания якоря: {e}")
+        return old_anchor_id, None
+
+
+async def cleanup_messages(message: Message, anchor_id: int, last_content_id: int):
+    """
+    Удаляет все сообщения между якорем и последним контентом
+    """
+    print(f"🧹 CLEANUP: Удаляю сообщения от {anchor_id + 1} до {last_content_id}")
+    print(f"   Якорь ID: {anchor_id}")
+    print(f"   Последний контент ID: {last_content_id}")
+    print(f"   Всего удалить: {last_content_id - anchor_id - 1} сообщений")
+
+    deleted_count = 0
+    for msg_id in range(anchor_id + 1, last_content_id):
+        try:
+            await message.bot.delete_message(
+                chat_id=message.chat.id,
+                message_id=msg_id
+            )
+            deleted_count += 1
+            print(f"   ✅ Удалено сообщение {msg_id}")
+        except Exception as e:
+            print(f"   ❌ Не удалось удалить {msg_id}: {e}")
+
+    print(f"🧹 CLEANUP завершён: удалено {deleted_count} сообщений")
+
 
 async def update_user_activity(session, user_id):
     user = await session.get(User, user_id)
@@ -51,16 +100,10 @@ async def update_user_activity(session, user_id):
     await session.commit()
 
 
-
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
     """Обработчик команды /start"""
     user_id = message.from_user.id
-
-    await update_user_activity(session, user_id)
-
-    user = await session.get(User, user_id)
-    await update_anchor_message_start(message, session, user)
 
     # Очищаем state при перезапуске
     await state.clear()
@@ -68,19 +111,6 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
     # Удаляем команду /start из чата
     try:
         await message.delete()
-    except:
-        pass
-
-    # Пытаемся очистить предыдущие сообщения
-    try:
-        for i in range(1, 8):
-            try:
-                await message.bot.delete_message(
-                    chat_id=message.chat.id,
-                    message_id=message.message_id - i
-                )
-            except:
-                pass
     except:
         pass
 
@@ -97,6 +127,9 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
         session.add(user)
         await session.commit()
 
+    # Обновляем активность ПОСЛЕ того, как пользователь точно есть в БД
+    await update_user_activity(session, user_id)
+
     # Приветственное сообщение
     first_name = message.from_user.first_name or "друг"
 
@@ -111,13 +144,19 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
     )
 
     if user.level:
-        welcome_text += f"Твой текущий уровень: <b>{user.level}</b>\n\n"
+        welcome_text += f"Твой текущий уровень: <b>{user.level.value}</b>\n\n"
         welcome_text += "Выбери действие из меню ниже 👇"
 
-        await message.answer(
-            welcome_text,
-            reply_markup=get_main_menu_keyboard()
-        )
+        # Создаём новый якорь СРАЗУ (возвращает old_anchor_id, new_anchor_id)
+        old_anchor_id, new_anchor_id = await ensure_anchor(message, session, user, emoji="🏠")
+
+        # Удаляем всё старое параллельно (быстро!)
+        if old_anchor_id:
+            current_msg_id = message.message_id
+            await delete_messages_fast(message.bot, message.chat.id, old_anchor_id, current_msg_id)
+
+        # Отправляем приветствие
+        await message.answer(welcome_text)
     else:
         welcome_text += "Для начала выбери свой уровень немецкого:"
 
@@ -128,6 +167,7 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
         )
 
         await state.set_state(QuizStates.choosing_level)
+
 
 @router.callback_query(F.data.startswith("level_"))
 async def select_level(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
@@ -143,11 +183,18 @@ async def select_level(callback: CallbackQuery, state: FSMContext, session: Asyn
     # Удаляем сообщение с выбором уровня
     await callback.message.delete()
 
-    # Отправляем только меню
-    await callback.message.answer(
-        f"✅ Отлично! Уровень {level} выбран.\n\n"
-        f"Выбери действие:",
-        reply_markup=get_main_menu_keyboard()
+    # Создаём новый якорь СРАЗУ
+    old_anchor_id, new_anchor_id = await ensure_anchor(callback.message, session, user, emoji="🏠")
+
+    # Удаляем всё старое параллельно
+    if old_anchor_id:
+        current_msg_id = callback.message.message_id
+        await delete_messages_fast(callback.bot, callback.message.chat.id, old_anchor_id, current_msg_id)
+
+    # Отправляем подтверждение
+    await callback.bot.send_message(
+        chat_id=callback.message.chat.id,
+        text=f"✅ Отлично! Уровень {level} выбран.\n\nВыбери действие:"
     )
 
     await state.clear()
@@ -156,31 +203,27 @@ async def select_level(callback: CallbackQuery, state: FSMContext, session: Asyn
 
 @router.message(Command("help"))
 @router.message(F.text == "❓ Помощь")
-async def cmd_help(message: Message):
+async def cmd_help(message: Message, session: AsyncSession):
     """Справка по боту"""
+    user_id = message.from_user.id
+    user = await session.get(User, user_id)
+
     help_text = (
         "❓ <b>Помощь — GenauLingua Bot</b>\n\n"
-
         "🎯 <b>Основные функции:</b>\n\n"
-
         "📚 <b>Учить слова</b>\n"
         "Викторина из 25 слов с 4 вариантами ответов.\n"
         "Выбирай правильный перевод и улучшай свой словарный запас!\n\n"
-
         "📊 <b>Статистика</b>\n"
         "Смотри свой прогресс: количество правильных ответов,\n"
         "процент успешности, история последних викторин.\n\n"
-
         "⚙️ <b>Настройки</b>\n"
         "Меняй уровень сложности от A1 до C2.\n"
         "Выбирай уровень, который соответствует твоим знаниям.\n\n"
-
         "🔄 <b>Повтор ошибок</b>\n"
         "После викторины можешь повторить только те слова,\n"
         "в которых допустил ошибки.\n\n"
-
         "━━━━━━━━━━━━━━━━━\n\n"
-
         "📝 <b>Уровни CEFR:</b>\n"
         "• A1 — Начальный\n"
         "• A2 — Элементарный\n"
@@ -188,15 +231,12 @@ async def cmd_help(message: Message):
         "• B2 — Средне-продвинутый\n"
         "• C1 — Продвинутый\n"
         "• C2 — Свободное владение\n\n"
-
         "━━━━━━━━━━━━━━━━━\n\n"
-
         "💡 <b>Команды:</b>\n"
         "/start — Перезапустить бота\n"
         "/help — Эта справка\n"
         "/stats — Статистика\n"
         "/settings — Настройки\n\n"
-
         "Удачи в изучении немецкого! 🇩🇪✨"
     )
 
@@ -206,21 +246,13 @@ async def cmd_help(message: Message):
     except:
         pass
 
-    # Удаляем предыдущие сообщения
-    try:
-        for i in range(1, 8):
-            try:
-                await message.bot.delete_message(
-                    chat_id=message.chat.id,
-                    message_id=message.message_id - i
-                )
-            except:
-                pass
-    except:
-        pass
+    # Создаём новый якорь СРАЗУ
+    old_anchor_id, new_anchor_id = await ensure_anchor(message, session, user, emoji="❓")
 
-    # Отправляем эмодзи с меню
-    await message.answer("❓", reply_markup=get_main_menu_keyboard())
+    # Удаляем всё старое параллельно
+    if old_anchor_id:
+        current_msg_id = message.message_id
+        await delete_messages_fast(message.bot, message.chat.id, old_anchor_id, current_msg_id)
 
     # Отправляем справку
     await message.answer(help_text)

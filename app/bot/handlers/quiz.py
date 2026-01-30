@@ -1,4 +1,5 @@
 import random
+import asyncio
 from datetime import datetime
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
@@ -9,13 +10,84 @@ from aiogram.filters import Command
 
 from app.database.models import TranslationMode
 from app.bot.states import QuizStates
-from app.bot.keyboards import get_answer_keyboard, get_results_keyboard, get_main_menu_keyboard, get_level_keyboard, get_translation_mode_keyboard
+from app.bot.keyboards import get_answer_keyboard, get_results_keyboard, get_main_menu_keyboard, get_level_keyboard, \
+    get_translation_mode_keyboard
 from app.database.models import User, QuizSession, QuizQuestion, Word, CEFRLevel
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from app.services.quiz_service import generate_question
 from datetime import date, timedelta
 
 router = Router()
+
+
+async def delete_messages_fast(bot, chat_id: int, start_id: int, end_id: int):
+    """
+    Быстрое удаление сообщений параллельно
+    """
+    tasks = []
+    for msg_id in range(start_id, end_id):
+        tasks.append(bot.delete_message(chat_id=chat_id, message_id=msg_id))
+
+    # Удаляем все сообщения одновременно
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    # Логируем результаты
+    deleted = sum(1 for r in results if not isinstance(r, Exception))
+    print(f"   🧹 Удалено {deleted}/{len(tasks)} сообщений")
+
+
+async def ensure_anchor(message: Message, session: AsyncSession, user: User, emoji: str = "🏠"):
+    """
+    Создаёт новый якорь БЕЗ удаления старого
+    Старый якорь удалится позже вместе с остальными сообщениями
+
+    ЛОГИКА:
+    1. Создаём НОВЫЙ якорь (чат никогда не пустой!)
+    2. Возвращаем ID старого якоря для удаления
+    """
+    old_anchor_id = user.anchor_message_id
+
+    # Создаём новый якорь СРАЗУ (чтобы чат не был пустым)
+    try:
+        sent = await message.answer(emoji, reply_markup=get_main_menu_keyboard())
+        new_anchor_id = sent.message_id
+
+        # Обновляем ID якоря в базе
+        user.anchor_message_id = new_anchor_id
+        await session.commit()
+
+        print(f"   ✨ Создан новый якорь {new_anchor_id}")
+
+        # Возвращаем ID старого якоря для удаления
+        return old_anchor_id, new_anchor_id
+    except Exception as e:
+        print(f"   ❌ Ошибка создания якоря: {e}")
+        return old_anchor_id, None
+
+
+async def cleanup_messages(message: Message, anchor_id: int, last_content_id: int):
+    """
+    Удаляет все сообщения между якорем и последним контентом
+    """
+    print(f"🧹 CLEANUP: Удаляю сообщения от {anchor_id + 1} до {last_content_id}")
+    print(f"   Якорь ID: {anchor_id}")
+    print(f"   Последний контент ID: {last_content_id}")
+    print(f"   Всего удалить: {last_content_id - anchor_id - 1} сообщений")
+
+    deleted_count = 0
+    for msg_id in range(anchor_id + 1, last_content_id):
+        try:
+            await message.bot.delete_message(
+                chat_id=message.chat.id,
+                message_id=msg_id
+            )
+            deleted_count += 1
+            print(f"   ✅ Удалено сообщение {msg_id}")
+        except Exception as e:
+            print(f"   ❌ Не удалось удалить {msg_id}: {e}")
+
+    print(f"🧹 CLEANUP завершён: удалено {deleted_count} сообщений")
+
 
 async def update_user_activity(session: AsyncSession, user_id: int):
     user = await session.get(User, user_id)
@@ -115,21 +187,13 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
     except:
         pass
 
-    # Удаляем все предыдущие сообщения
-    try:
-        for i in range(1, 8):
-            try:
-                await message.bot.delete_message(
-                    chat_id=message.chat.id,
-                    message_id=message.message_id - i
-                )
-            except:
-                pass
-    except:
-        pass
+    # Создаём новый якорь СРАЗУ
+    old_anchor_id, new_anchor_id = await ensure_anchor(message, session, user, emoji="📚")
 
-    # Отправляем эмодзи с меню
-    await message.answer("📚", reply_markup=get_main_menu_keyboard())
+    # Удаляем всё старое параллельно
+    if old_anchor_id:
+        current_msg_id = message.message_id
+        await delete_messages_fast(message.bot, message.chat.id, old_anchor_id, current_msg_id)
 
     # Отправляем первый вопрос
     await message.answer(
@@ -139,28 +203,17 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
 
     await state.set_state(QuizStates.answering)
 
+
 @router.message(Command("stats"))
 @router.message(F.text == "📊 Статистика")
 async def show_statistics(message: Message, state: FSMContext, session: AsyncSession):
     """Показ статистики пользователя"""
     user_id = message.from_user.id
+    user = await session.get(User, user_id)
 
     # Удаляем команду/сообщение пользователя
     try:
         await message.delete()
-    except:
-        pass
-
-    # Удаляем предыдущие сообщения
-    try:
-        for i in range(1, 8):
-            try:
-                await message.bot.delete_message(
-                    chat_id=message.chat.id,
-                    message_id=message.message_id - i
-                )
-            except:
-                pass
     except:
         pass
 
@@ -215,11 +268,17 @@ async def show_statistics(message: Message, state: FSMContext, session: AsyncSes
                 f"   Результат: {s.correct_answers}/{s.total_questions} ({percentage:.0f}%)\n\n"
             )
 
-    # Отправляем эмодзи с меню
-    await message.answer("📊", reply_markup=get_main_menu_keyboard())
+    # Создаём новый якорь СРАЗУ
+    old_anchor_id, new_anchor_id = await ensure_anchor(message, session, user, emoji="📊")
+
+    # Удаляем всё старое параллельно
+    if old_anchor_id:
+        current_msg_id = message.message_id
+        await delete_messages_fast(message.bot, message.chat.id, old_anchor_id, current_msg_id)
 
     # Отправляем статистику
     await message.answer(stats_text)
+
 
 @router.callback_query(F.data.startswith("answer_"), QuizStates.answering)
 async def process_answer(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
@@ -240,10 +299,9 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
                      f"🎯 Уровень: {user.level}",
                 parse_mode="HTML"
             )
-        except:
-            # если якорь удалён, обновление не проводится
+        except Exception:
             pass
-    await callback.answer()
+
     """Обработка ответа пользователя"""
     # Получаем ID выбранного слова
     selected_word_id = int(callback.data.split("_")[1])
@@ -402,44 +460,24 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
         if errors:
             result_text += f"\n\n❌ Ошибок: {len(errors)}"
 
-        # ПРОСТОЕ РЕШЕНИЕ:
-            # 1. Удаляем последний ответ викторины
-            try:
-                await callback.message.delete()
-            except:
-                pass
+        # Удаляем последний ответ викторины
+        try:
+            await callback.message.delete()
+        except:
+            pass
 
-            # 2. Удаляем все предыдущие сообщения
-            try:
-                for i in range(1, 8):
-                    try:
-                        await callback.bot.delete_message(
-                            chat_id=callback.message.chat.id,
-                            message_id=callback.message.message_id - i
-                        )
-                    except:
-                        pass
-            except:
-                pass
+        # Отправляем результаты
+        await callback.bot.send_message(
+            chat_id=callback.message.chat.id,
+            text=result_text,
+            reply_markup=get_results_keyboard(has_errors=bool(errors))
+        )
 
-            # 3. Отправляем галочку с меню
-            await callback.bot.send_message(
-                chat_id=callback.message.chat.id,
-                text="✅",
-                reply_markup=get_main_menu_keyboard()
-            )
+        # Сохраняем ошибки
+        saved_errors = errors.copy()
+        await state.clear()
+        await state.update_data(saved_errors=saved_errors)
 
-            # 4. Отправляем результаты
-            await callback.bot.send_message(
-                chat_id=callback.message.chat.id,
-                text=result_text,
-                reply_markup=get_results_keyboard(has_errors=bool(errors))
-            )
-
-            # Сохраняем ошибки
-            saved_errors = errors.copy()
-            await state.clear()
-            await state.update_data(saved_errors=saved_errors)
 
 @router.callback_query(F.data == "next_question", QuizStates.answering)
 async def show_next_question(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
@@ -534,7 +572,8 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         max_attempts = 10
 
         while attempts < max_attempts:
-            question = await generate_question(user.level, session, exclude_ids=used_word_ids, mode=user.translation_mode)
+            question = await generate_question(user.level, session, exclude_ids=used_word_ids,
+                                               mode=user.translation_mode)
             if question:
                 break
             attempts += 1
@@ -595,6 +634,7 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         question_text,
         reply_markup=get_answer_keyboard(question['options'])
     )
+
 
 @router.callback_query(F.data == "repeat_errors")
 async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
@@ -810,21 +850,13 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
     except:
         pass
 
-    # Удаляем все предыдущие сообщения
-    try:
-        for i in range(1, 8):
-            try:
-                await message.bot.delete_message(
-                    chat_id=message.chat.id,
-                    message_id=message.message_id - i
-                )
-            except:
-                pass
-    except:
-        pass
+    # Создаём новый якорь СРАЗУ
+    old_anchor_id, new_anchor_id = await ensure_anchor(message, session, user, emoji="📚")
 
-    # Отправляем эмодзи с меню
-    await message.answer("📚", reply_markup=get_main_menu_keyboard())
+    # Удаляем всё старое параллельно
+    if old_anchor_id:
+        current_msg_id = message.message_id
+        await delete_messages_fast(message.bot, message.chat.id, old_anchor_id, current_msg_id)
 
     # Отправляем первый вопрос
     await message.answer(
@@ -869,24 +901,17 @@ async def show_settings(message: Message, state: FSMContext, session: AsyncSessi
     except:
         pass
 
-    # Удаляем все предыдущие сообщения
-    try:
-        for i in range(1, 8):
-            try:
-                await message.bot.delete_message(
-                    chat_id=message.chat.id,
-                    message_id=message.message_id - i
-                )
-            except:
-                pass
-    except:
-        pass
+    # Создаём новый якорь СРАЗУ
+    old_anchor_id, new_anchor_id = await ensure_anchor(message, session, user, emoji="🦾")
 
-    # Отправляем эмодзи с меню
-    await message.answer("🦾", reply_markup=get_main_menu_keyboard())
+    # Удаляем всё старое параллельно
+    if old_anchor_id:
+        current_msg_id = message.message_id
+        await delete_messages_fast(message.bot, message.chat.id, old_anchor_id, current_msg_id)
 
     # Отправляем настройки
     await message.answer(settings_text, reply_markup=keyboard)
+
 
 @router.callback_query(F.data == "change_level")
 async def settings_change_level(callback: CallbackQuery, state: FSMContext):
@@ -946,7 +971,6 @@ async def set_translation_mode(callback: CallbackQuery, session: AsyncSession):
     await session.commit()
 
     mode_text = "🇩🇪→🇷🇺 Немецкий → Русский" if mode == "de_to_ru" else "🇷🇺→🇩🇪 Русский → Немецкий"
-
 
     await callback.message.edit_text(
         f"✅ Режим перевода изменён!\n\n"
