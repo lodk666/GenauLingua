@@ -260,9 +260,11 @@ async def show_statistics(message: Message, state: FSMContext, session: AsyncSes
                 QuizSession.completed_at.isnot(None)
             )
             .order_by(QuizSession.started_at.desc())
-            .limit(5)
         )
-        level_sessions = result.scalars().all()
+        all_level_sessions = result.scalars().all()
+
+        # Для детального показа берём только последние 5
+        level_sessions = all_level_sessions[:5]
 
         # Формируем текст статистики
         stats_text = f"📊 <b>Статистика: Уровень {user.level.value}</b>\n\n"
@@ -282,28 +284,28 @@ async def show_statistics(message: Message, state: FSMContext, session: AsyncSes
             progress_bar = create_progress_bar(learned_percent)
 
             stats_text += f"Всего слов: <b>{total}</b>\n"
-            stats_text += f"{progress_bar} {learned_percent:.0f}%\n\n"
-            stats_text += f"├─ ✅ Выучено: <b>{learned}</b> ({(learned / total * 100):.0f}%)\n"
-            stats_text += f"├─ 🔄 В процессе: <b>{in_progress}</b> ({(in_progress / total * 100):.0f}%)\n"
-            stats_text += f"├─ ❌ Сложные: <b>{struggling}</b> ({(struggling / total * 100):.0f}%)\n"
-            stats_text += f"└─ 🆕 Новых: <b>{new}</b> ({(new / total * 100):.0f}%)\n\n"
+            stats_text += f"{progress_bar} {learned_percent:.1f}%\n\n"
+            stats_text += f"├─ ✅ Выучено: <b>{learned}</b> ({(learned / total * 100):.1f}%)\n"
+            stats_text += f"├─ 🔄 В процессе: <b>{in_progress}</b> ({(in_progress / total * 100):.1f}%)\n"
+            stats_text += f"├─ ❌ Сложные: <b>{struggling}</b> ({(struggling / total * 100):.1f}%)\n"
+            stats_text += f"└─ 🆕 Новых: <b>{new}</b> ({(new / total * 100):.1f}%)\n\n"
         else:
             stats_text += "Слов для этого уровня не найдено.\n\n"
 
         # Блок 2: Статистика викторин по уровню
-        if level_sessions:
+        if all_level_sessions:
             stats_text += f"🏆 <b>Викторины (уровень {user.level.value}):</b>\n"
 
-            total_quizzes = len(level_sessions)
-            total_questions_level = sum(s.total_questions for s in level_sessions)
-            total_correct_level = sum(s.correct_answers for s in level_sessions)
+            total_quizzes = len(all_level_sessions)  # ← Все викторины
+            total_questions_level = sum(s.total_questions for s in all_level_sessions)
+            total_correct_level = sum(s.correct_answers for s in all_level_sessions)
             avg_percent = (total_correct_level / total_questions_level * 100) if total_questions_level > 0 else 0
             best_result = max(
-                (s.correct_answers / s.total_questions * 100) for s in level_sessions) if level_sessions else 0
+                (s.correct_answers / s.total_questions * 100) for s in all_level_sessions) if all_level_sessions else 0
 
             stats_text += f"├─ Пройдено: <b>{total_quizzes}</b> викторин\n"
-            stats_text += f"├─ Средний результат: <b>{avg_percent:.0f}%</b>\n"
-            stats_text += f"└─ Лучший результат: <b>{best_result:.0f}%</b>\n\n"
+            stats_text += f"├─ Средний результат: <b>{avg_percent:.1f}%</b>\n"
+            stats_text += f"└─ Лучший результат: <b>{best_result:.1f}%</b>\n\n"
         else:
             stats_text += f"🏆 <b>Викторины (уровень {user.level.value}):</b>\n"
             stats_text += "Ты ещё не проходил викторины на этом уровне.\n\n"
@@ -329,6 +331,10 @@ async def show_statistics(message: Message, state: FSMContext, session: AsyncSes
                     emoji = "📝"
 
                 stats_text += f"{emoji} {date_str} • {s.correct_answers}/{s.total_questions} ({percentage:.0f}%)\n"
+
+        # Добавляем пояснение
+        stats_text += "\n━━━━━━━━━━━━━━━━━\n"
+        stats_text += "💡 <b>Выучено</b> — 3 правильных ответа подряд по слову"
 
     # Создаём новый якорь СРАЗУ
     old_anchor_id, new_anchor_id = await ensure_anchor(message, session, user, emoji="📊")
@@ -469,11 +475,31 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
         errors=errors
     )
 
-    # Проверяем, закончились ли вопросы
-    if current_question >= total_questions:
+
+@router.callback_query(F.data == "next_question", QuizStates.answering)
+async def show_next_question(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    await callback.answer()
+    """Показ следующего вопроса"""
+    # Получаем данные из state
+    data = await state.get_data()
+    current_question = data['current_question']
+    total_questions = data['total_questions']
+    used_word_ids = data.get('used_word_ids', [])
+
+    # Генерируем следующий вопрос
+    current_question += 1
+
+    # Проверяем, не закончилась ли викторина
+    if current_question > total_questions:
+        # Викторина завершена - показываем результаты
+        session_id = data['session_id']
+        correct_answers = data['correct_answers']
+        errors = data.get('errors', [])
+        used_word_ids = data.get('used_word_ids', [])
+
         user = await session.get(User, callback.from_user.id)
 
-        # обновляем статистику
+        # Обновляем статистику пользователя
         user.quizzes_passed = (user.quizzes_passed or 0) + 1
         success_rate = int((correct_answers / total_questions) * 100)
         user.success_rate = success_rate
@@ -483,9 +509,8 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
 
         await session.commit()
 
-        # опционально: обновляем якорь с прогрессом после финала
+        # Обновляем якорь с прогрессом
         try:
-            data = await state.get_data()
             anchor_id = data.get("anchor_message_id")
             if anchor_id:
                 await callback.message.bot.edit_message_text(
@@ -503,7 +528,7 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
         except:
             pass
 
-        # Завершаем сессию
+        # Завершаем сессию в БД
         quiz_session = await session.get(QuizSession, session_id)
         quiz_session.correct_answers = correct_answers
         quiz_session.completed_at = datetime.utcnow()
@@ -540,7 +565,7 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
         if errors:
             result_text += f"\n\n❌ Ошибок: {len(errors)}"
 
-        # Удаляем последний ответ викторины
+        # Удаляем последнее сообщение
         try:
             await callback.message.delete()
         except:
@@ -553,28 +578,10 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
             reply_markup=get_results_keyboard(has_errors=bool(errors))
         )
 
-        # Сохраняем ошибки
+        # Сохраняем ошибки для повтора
         saved_errors = errors.copy()
         await state.clear()
         await state.update_data(saved_errors=saved_errors)
-
-
-@router.callback_query(F.data == "next_question", QuizStates.answering)
-async def show_next_question(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
-    await callback.answer()
-    """Показ следующего вопроса"""
-    # Получаем данные из state
-    data = await state.get_data()
-    current_question = data['current_question']
-    total_questions = data['total_questions']
-    used_word_ids = data.get('used_word_ids', [])
-
-    # Генерируем следующий вопрос
-    current_question += 1
-
-    # Проверяем, не закончилась ли викторина
-    if current_question > total_questions:
-        # ... (весь блок завершения остаётся как есть)
         return
 
     user = await session.get(User, callback.from_user.id)
@@ -749,7 +756,7 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
         user_id=user_id,
         level=user.level,
         translation_mode=user.translation_mode,
-        total_questions=25,
+        total_questions=len(errors),  # ← ИСПРАВЛЕНО: количество ошибок, а не 25
         correct_answers=0,
     )
 
