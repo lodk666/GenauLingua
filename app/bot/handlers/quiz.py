@@ -192,6 +192,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
         question_text = (
             f"📝 Вопрос 1/25\n\n"
             f"🇩🇪 <b>{word_display}</b>\n\n"
+            f"📝 {word.example_de}\n\n"
             f"Выбери правильный перевод:"
         )
 
@@ -305,7 +306,7 @@ async def show_statistics(message: Message, state: FSMContext, session: AsyncSes
             stats_text += f"└─ Лучший результат: <b>{best_result:.0f}%</b>\n\n"
         else:
             stats_text += f"🏆 <b>Викторины (уровень {user.level.value}):</b>\n"
-            stats_text += "Вы ещё не проходили викторины на этом уровне.\n\n"
+            stats_text += "Ты ещё не проходил викторины на этом уровне.\n\n"
 
         # Блок 3: Общая активность
         stats_text += "🔥 <b>Активность:</b>\n"
@@ -603,7 +604,7 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         if len(distractors) < 3:
             result = await session.execute(
                 select(Word).where(
-                    Word.cefr == user.level,
+                    Word.level == user.level,
                     Word.id != next_word_id,
                     Word.id.not_in([d.id for d in distractors])
                 )
@@ -613,29 +614,29 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
                 needed = min(3 - len(distractors), len(all_words))
                 distractors.extend(random.sample(all_words, needed))
 
-            # Формируем варианты ответов в зависимости от режима
-            user = await session.get(User, callback.from_user.id)
-            mode = user.translation_mode
+        # Формируем варианты ответов в зависимости от режима
+        user = await session.get(User, callback.from_user.id)
+        mode = user.translation_mode
 
-            if mode.value == "ru_to_de":
-                # RU→DE: показываем немецкие слова
-                options = []
-                word_display = next_word.word_de
-                if next_word.article and next_word.article != '-':
-                    word_display = f"{next_word.article} {next_word.word_de}"
-                options.append((next_word.id, word_display))
+        if mode.value == "ru_to_de":
+            # RU→DE: показываем немецкие слова
+            options = []
+            word_display = next_word.word_de
+            if next_word.article and next_word.article != '-':
+                word_display = f"{next_word.article} {next_word.word_de}"
+            options.append((next_word.id, word_display))
 
-                for d in distractors[:3]:
-                    distractor_display = d.word_de
-                    if d.article and d.article != '-':
-                        distractor_display = f"{d.article} {d.word_de}"
-                    options.append((d.id, distractor_display))
-            else:
-                # DE→RU: показываем русские переводы
-                options = [(next_word.id, next_word.translation_ru.capitalize())]
-                options.extend([(d.id, d.translation_ru.capitalize()) for d in distractors[:3]])
+            for d in distractors[:3]:
+                distractor_display = d.word_de
+                if d.article and d.article != '-':
+                    distractor_display = f"{d.article} {d.word_de}"
+                options.append((d.id, distractor_display))
+        else:
+            # DE→RU: показываем русские переводы
+            options = [(next_word.id, next_word.translation_ru.capitalize())]
+            options.extend([(d.id, d.translation_ru.capitalize()) for d in distractors[:3]])
 
-            random.shuffle(options)
+        random.shuffle(options)
 
         question = {
             'correct_word': next_word,
@@ -697,10 +698,13 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
     user = await session.get(User, callback.from_user.id)
     mode = user.translation_mode
 
+    # Определяем total для отображения (error_words или total_questions)
+    display_total = len(error_words) if error_words else total_questions
+
     if mode.value == "ru_to_de":
         # Режим RU→DE: показываем русский перевод + пример
         question_text = (
-            f"Вопрос {current_question}/{total_questions}\n\n"
+            f"Вопрос {current_question}/{display_total}\n\n"
             f"🏳️‍🌈 <b>{word.translation_ru.capitalize()}</b>\n\n"
             f"📝 {word.example_ru}\n\n"
             f"Выбери правильное слово:"
@@ -712,7 +716,7 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
             word_display = f"{word.article} {word.word_de}"
 
         question_text = (
-            f"📚 Вопрос {current_question}/{total_questions}\n\n"
+            f"📚 Вопрос {current_question}/{display_total}\n\n"
             f"🇩🇪 <b>{word_display}</b>\n\n"
             f"📝 {word.example_de}\n\n"
             f"Выбери правильный перевод:"
@@ -828,6 +832,7 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
             f"🔄 <b>Повтор ошибок</b>\n"
             f"📝 Вопрос 1/{len(errors)}\n\n"
             f"🇩🇪 <b>{word_display}</b>\n\n"
+            f"📝 {first_word.example_de}\n\n"
             f"Выбери правильный перевод:"
         )
 
@@ -930,6 +935,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
         question_text = (
             f"📝 Вопрос 1/25\n\n"
             f"🏳️‍🌈 <b>{word.translation_ru.capitalize()}</b>\n\n"
+            f"📝 {word.example_ru}\n\n"
             f"Выбери правильное слово:"
         )
     else:
@@ -940,6 +946,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
         question_text = (
             f"📝 Вопрос 1/25\n\n"
             f"🇩🇪 <b>{word_display}</b>\n\n"
+            f"📝 {word.example_de}\n\n"
             f"Выбери правильный перевод:"
         )
 

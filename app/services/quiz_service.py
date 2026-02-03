@@ -6,7 +6,8 @@ from app.database.models import Word, CEFRLevel, PartOfSpeech, UserWord, User
 from typing import Optional
 
 # ==================== КОНСТАНТЫ SRS ====================
-LEARNED_STREAK_THRESHOLD = 25  # Слово считается выученным после 25 правильных ответов подряд
+MIN_ATTEMPTS_FOR_LEARNED = 3  # Минимум 3 раза нужно показать слово
+LEARNED_SUCCESS_RATE = 90  # 90%+ правильных = выучено
 LEARNED_SHOW_PROBABILITY = 0.01  # 1% вероятность показа выученного слова
 
 # Распределение типов слов в викторине (25 вопросов)
@@ -261,7 +262,7 @@ async def get_learned_words(
         exclude_ids: list[int]
 ) -> Optional[Word]:
     """
-    Возвращает выученное слово (learned = True или success_rate > 90%)
+    Возвращает выученное слово (success_rate >= 90% и показано >= 3 раз)
     Показывается редко (1%), для закрепления
     """
     query = (
@@ -272,13 +273,9 @@ async def get_learned_words(
         ))
         .where(
             Word.level == level,
-            or_(
-                UserWord.learned == True,
-                and_(
-                    Word.times_shown > 0,
-                    (Word.times_correct * 100.0 / Word.times_shown) >= REVIEW_THRESHOLD
-                )
-            )
+            UserWord.learned == True,
+            Word.times_shown >= MIN_ATTEMPTS_FOR_LEARNED,
+            (Word.times_correct * 100.0 / Word.times_shown) >= LEARNED_SUCCESS_RATE
         )
     )
 
@@ -414,14 +411,19 @@ async def update_word_progress(
 
         if is_correct:
             user_word.correct_streak += 1
-
-            # Проверяем, достиг ли порога "выученного"
-            if user_word.correct_streak >= LEARNED_STREAK_THRESHOLD:
-                user_word.learned = True
         else:
             # Неправильный ответ - сбрасываем streak
             user_word.correct_streak = 0
+
+    # Проверяем статус "выученного" по проценту правильных ответов
+    if word and word.times_shown >= MIN_ATTEMPTS_FOR_LEARNED:
+        success_rate = (word.times_correct / word.times_shown) * 100
+        if success_rate >= LEARNED_SUCCESS_RATE:
+            user_word.learned = True
+        else:
             user_word.learned = False
+    else:
+        user_word.learned = False
 
     await session.commit()
 
