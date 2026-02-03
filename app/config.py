@@ -8,9 +8,7 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str
     DATABASE_URL_SYNC: str
-
-    # Admin
-    ADMIN_ID: int
+    ADMIN_USER: int
 
     model_config = SettingsConfigDict(
         env_file=".env",

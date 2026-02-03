@@ -14,6 +14,7 @@ from aiogram.enums import ParseMode
 from app.config import settings
 from app.bot.handlers.start import router as start_router
 from app.bot.handlers.quiz import router as quiz_router
+from app.bot.handlers.admin import router as admin_router  # ← ДОБАВИЛИ!
 from app.database.session import engine, AsyncSessionLocal
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -34,6 +35,7 @@ async def main():
     # Регистрация роутеров
     dp.include_router(start_router)
     dp.include_router(quiz_router)
+    dp.include_router(admin_router)  # ← ДОБАВИЛИ!
 
     # Middleware для передачи сессии БД в хэндлеры
     @dp.update.middleware()
