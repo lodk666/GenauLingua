@@ -167,6 +167,9 @@ async def get_struggling_words(
     Возвращает слово с низким success_rate (< 70%)
     Это слова, в которых пользователь допускает ошибки
     """
+    from datetime import timedelta
+    one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+
     query = (
         select(Word)
         .join(UserWord, and_(
@@ -177,7 +180,11 @@ async def get_struggling_words(
             Word.level == level,
             UserWord.learned == False,
             Word.times_shown > 0,  # Должно быть хоть раз показано
-            (Word.times_correct * 100.0 / Word.times_shown) < STRUGGLING_THRESHOLD
+            (Word.times_correct * 100.0 / Word.times_shown) < STRUGGLING_THRESHOLD,
+            or_(
+                UserWord.last_seen_at.is_(None),
+                UserWord.last_seen_at < one_hour_ago  # Не показывали последний час
+            )
         )
     )
 
@@ -229,6 +236,9 @@ async def get_review_words(
     Возвращает слово на повторение (success_rate 70-90%)
     Это слова, которые пользователь знает, но ещё не выучил идеально
     """
+    from datetime import timedelta
+    one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+
     query = (
         select(Word)
         .join(UserWord, and_(
@@ -242,6 +252,10 @@ async def get_review_words(
             and_(
                 (Word.times_correct * 100.0 / Word.times_shown) >= STRUGGLING_THRESHOLD,
                 (Word.times_correct * 100.0 / Word.times_shown) < REVIEW_THRESHOLD
+            ),
+            or_(
+                UserWord.last_seen_at.is_(None),
+                UserWord.last_seen_at < one_hour_ago  # Не показывали последний час
             )
         )
     )
@@ -379,7 +393,7 @@ async def update_word_progress(
         is_correct: Правильно ли ответил пользователь
         session: Сессия БД
     """
-    # Обновляем глобальную статистику слова
+    # Обновляем глобальную статистику слова (для аналитики)
     word = await session.get(Word, word_id)
     if word:
         word.times_shown += 1
@@ -415,13 +429,10 @@ async def update_word_progress(
             # Неправильный ответ - сбрасываем streak
             user_word.correct_streak = 0
 
-    # Проверяем статус "выученного" по проценту правильных ответов
-    if word and word.times_shown >= MIN_ATTEMPTS_FOR_LEARNED:
-        success_rate = (word.times_correct / word.times_shown) * 100
-        if success_rate >= LEARNED_SUCCESS_RATE:
-            user_word.learned = True
-        else:
-            user_word.learned = False
+    # Проверяем статус "выученного" по streak (серия правильных ответов подряд)
+    # Если ответил правильно 3 раза подряд - выучено!
+    if user_word.correct_streak >= MIN_ATTEMPTS_FOR_LEARNED:
+        user_word.learned = True
     else:
         user_word.learned = False
 
