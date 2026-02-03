@@ -14,7 +14,7 @@ from app.bot.keyboards import get_answer_keyboard, get_results_keyboard, get_mai
     get_translation_mode_keyboard
 from app.database.models import User, QuizSession, QuizQuestion, Word, CEFRLevel
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from app.services.quiz_service import generate_question
+from app.services.quiz_service import generate_question, update_word_progress, get_user_progress_stats
 from datetime import date, timedelta
 
 router = Router()
@@ -138,8 +138,22 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
     await session.flush()
     await session.commit()
 
-    # Генерируем первый вопрос
-    question = await generate_question(user.level, session, mode=user.translation_mode)
+    # Генерируем первый вопрос с учётом SRS
+    try:
+        question = await generate_question(
+            level=user.level.value,
+            session=session,
+            user_id=user_id,
+            exclude_ids=[],
+            mode=user.translation_mode
+        )
+    except Exception as e:
+        print(f"❌ Ошибка генерации вопроса: {e}")
+        await message.answer(
+            "❌ Произошла ошибка при подготовке викторины.\n"
+            "Попробуйте ещё раз через /start"
+        )
+        return
 
     if not question:
         await message.answer(
@@ -166,7 +180,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
     if mode.value == "ru_to_de":
         question_text = (
             f"Вопрос 1/25\n\n"
-            f"🇷🇺 <b>{word.translation_ru.capitalize()}</b>\n\n"
+            f"🏳️‍🌈 <b>{word.translation_ru.capitalize()}</b>\n\n"
             f"📝 {word.example_ru}\n\n"
             f"Выбери правильное слово:"
         )
@@ -207,7 +221,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
 @router.message(Command("stats"))
 @router.message(F.text == "📊 Статистика")
 async def show_statistics(message: Message, state: FSMContext, session: AsyncSession):
-    """Показ статистики пользователя"""
+    """Показ детальной статистики пользователя по текущему уровню"""
     user_id = message.from_user.id
     user = await session.get(User, user_id)
 
@@ -217,56 +231,103 @@ async def show_statistics(message: Message, state: FSMContext, session: AsyncSes
     except:
         pass
 
-    # Получаем все завершённые сессии пользователя
-    result = await session.execute(
-        select(QuizSession)
-        .where(
-            QuizSession.user_id == user_id,
-            QuizSession.completed_at.isnot(None)
-        )
-        .order_by(QuizSession.started_at.desc())
-        .limit(10)
-    )
-    sessions = result.scalars().all()
-
-    if not sessions:
+    if not user or not user.level:
         stats_text = (
-            "📊 <b>Статистика</b>\n\n"
-            "У тебя пока нет завершённых викторин.\n"
-            "Начни учить слова! 📚"
+            "⚠️ <b>Сначала выбери уровень!</b>\n\n"
+            "Используй команду /start чтобы начать."
         )
     else:
-        stats_text = "📊 <b>Твоя статистика</b>\n\n"
-        stats_text += f"Всего викторин: <b>{len(sessions)}</b>\n\n"
+        # Получаем статистику прогресса по словам для текущего уровня
+        try:
+            progress = await get_user_progress_stats(user_id, user.level.value, session)
+        except Exception as e:
+            print(f"⚠️ Ошибка получения статистики: {e}")
+            progress = {
+                'total_words': 0,
+                'seen_words': 0,
+                'learned_words': 0,
+                'struggling_words': 0,
+                'new_words': 0
+            }
 
-        total_questions = sum(s.total_questions for s in sessions)
-        total_correct = sum(s.correct_answers for s in sessions)
-        overall_percentage = (total_correct / total_questions * 100) if total_questions > 0 else 0
-
-        stats_text += (
-            f"📈 <b>Общий результат:</b>\n"
-            f"✅ Правильно: {total_correct}/{total_questions}\n"
-            f"📊 Процент: {overall_percentage:.1f}%\n\n"
-            f"━━━━━━━━━━━━━━━━━\n\n"
-            f"<b>Последние 10 викторин:</b>\n\n"
-        )
-
-        for i, s in enumerate(sessions, 1):
-            percentage = (s.correct_answers / s.total_questions * 100) if s.total_questions > 0 else 0
-            date_str = s.started_at.strftime("%d.%m.%Y %H:%M")
-
-            if percentage >= 80:
-                emoji = "🏆"
-            elif percentage >= 60:
-                emoji = "👍"
-            else:
-                emoji = "📝"
-
-            stats_text += (
-                f"{emoji} <b>#{i}</b> • {date_str}\n"
-                f"   Уровень: {s.level.value}\n"
-                f"   Результат: {s.correct_answers}/{s.total_questions} ({percentage:.0f}%)\n\n"
+        # Получаем завершённые викторины для текущего уровня
+        result = await session.execute(
+            select(QuizSession)
+            .where(
+                QuizSession.user_id == user_id,
+                QuizSession.level == user.level,
+                QuizSession.completed_at.isnot(None)
             )
+            .order_by(QuizSession.started_at.desc())
+            .limit(5)
+        )
+        level_sessions = result.scalars().all()
+
+        # Формируем текст статистики
+        stats_text = f"📊 <b>Статистика: Уровень {user.level.value}</b>\n\n"
+
+        # Блок 1: Прогресс по словам
+        stats_text += "📚 <b>Прогресс по словам:</b>\n"
+
+        total = progress['total_words']
+        learned = progress['learned_words']
+        seen = progress['seen_words']
+        struggling = progress['struggling_words']
+        new = progress['new_words']
+        in_progress = seen - learned  # Видел, но ещё не выучил
+
+        if total > 0:
+            learned_percent = (learned / total) * 100
+            progress_bar = create_progress_bar(learned_percent)
+
+            stats_text += f"Всего слов: <b>{total}</b>\n"
+            stats_text += f"{progress_bar} {learned_percent:.0f}%\n\n"
+            stats_text += f"├─ ✅ Выучено: <b>{learned}</b> ({(learned / total * 100):.0f}%)\n"
+            stats_text += f"├─ 🔄 В процессе: <b>{in_progress}</b> ({(in_progress / total * 100):.0f}%)\n"
+            stats_text += f"├─ ❌ Сложные: <b>{struggling}</b> ({(struggling / total * 100):.0f}%)\n"
+            stats_text += f"└─ 🆕 Новых: <b>{new}</b> ({(new / total * 100):.0f}%)\n\n"
+        else:
+            stats_text += "Слов для этого уровня не найдено.\n\n"
+
+        # Блок 2: Статистика викторин по уровню
+        if level_sessions:
+            stats_text += f"🏆 <b>Викторины (уровень {user.level.value}):</b>\n"
+
+            total_quizzes = len(level_sessions)
+            total_questions_level = sum(s.total_questions for s in level_sessions)
+            total_correct_level = sum(s.correct_answers for s in level_sessions)
+            avg_percent = (total_correct_level / total_questions_level * 100) if total_questions_level > 0 else 0
+            best_result = max(
+                (s.correct_answers / s.total_questions * 100) for s in level_sessions) if level_sessions else 0
+
+            stats_text += f"├─ Пройдено: <b>{total_quizzes}</b> викторин\n"
+            stats_text += f"├─ Средний результат: <b>{avg_percent:.0f}%</b>\n"
+            stats_text += f"└─ Лучший результат: <b>{best_result:.0f}%</b>\n\n"
+        else:
+            stats_text += f"🏆 <b>Викторины (уровень {user.level.value}):</b>\n"
+            stats_text += "Вы ещё не проходили викторины на этом уровне.\n\n"
+
+        # Блок 3: Общая активность
+        stats_text += "🔥 <b>Активность:</b>\n"
+        stats_text += f"└─ Стрик: <b>{user.streak_days}</b> дней подряд\n\n"
+
+        # Блок 4: Последние викторины
+        if level_sessions:
+            stats_text += "━━━━━━━━━━━━━━━━━\n"
+            stats_text += "<b>Последние викторины:</b>\n\n"
+
+            for i, s in enumerate(level_sessions, 1):
+                percentage = (s.correct_answers / s.total_questions * 100) if s.total_questions > 0 else 0
+                date_str = s.started_at.strftime("%d.%m %H:%M")
+
+                if percentage >= 80:
+                    emoji = "🏆"
+                elif percentage >= 60:
+                    emoji = "👍"
+                else:
+                    emoji = "📝"
+
+                stats_text += f"{emoji} {date_str} • {s.correct_answers}/{s.total_questions} ({percentage:.0f}%)\n"
 
     # Создаём новый якорь СРАЗУ
     old_anchor_id, new_anchor_id = await ensure_anchor(message, session, user, emoji="📊")
@@ -278,6 +339,13 @@ async def show_statistics(message: Message, state: FSMContext, session: AsyncSes
 
     # Отправляем статистику
     await message.answer(stats_text)
+
+
+def create_progress_bar(percent: float, length: int = 10) -> str:
+    """Создаёт визуальный прогресс-бар"""
+    filled = int((percent / 100) * length)
+    empty = length - filled
+    return f"[{'█' * filled}{'░' * empty}]"
 
 
 @router.callback_query(F.data.startswith("answer_"), QuizStates.answering)
@@ -332,6 +400,17 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
     session.add(session_item)
     await session.commit()
 
+    # Обновляем прогресс пользователя по слову (SRS)
+    try:
+        await update_word_progress(
+            user_id=callback.from_user.id,
+            word_id=correct_word_id,
+            is_correct=is_correct,
+            session=session
+        )
+    except Exception as e:
+        print(f"⚠️ Ошибка обновления прогресса: {e}")
+
     # Формируем правильный ответ для показа
     word_display = correct_word.word_de
     if correct_word.article and correct_word.article != '-':
@@ -348,33 +427,33 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
         if mode.value == "ru_to_de":
             response_text = (
                 f"✅ <b>Правильно!</b>\n\n"
-                f"🇷🇺 <b>{correct_word.translation_ru.capitalize()}</b> = 🇩🇪 <b>{word_display}</b>\n\n"
+                f"🏳️‍🌈 <b>{correct_word.translation_ru.capitalize()}</b> = 🇩🇪 <b>{word_display}</b>\n\n"
                 f"🇩🇪 {correct_word.example_de}\n\n"
-                f"🇷🇺 {correct_word.example_ru}"
+                f"🏳️‍🌈 {correct_word.example_ru}"
             )
         else:
             response_text = (
                 f"✅ <b>Правильно!</b>\n\n"
-                f"🇩🇪 <b>{word_display}</b> = 🇷🇺 <b>{correct_word.translation_ru.capitalize()}</b>\n\n"
+                f"🇩🇪 <b>{word_display}</b> = 🏳️‍🌈 <b>{correct_word.translation_ru.capitalize()}</b>\n\n"
                 f"🇩🇪 {correct_word.example_de}\n\n"
-                f"🇷🇺 {correct_word.example_ru}"
+                f"🏳️‍🌈 {correct_word.example_ru}"
             )
     else:
         if mode.value == "ru_to_de":
             response_text = (
                 f"❌ <b>Неправильно!</b>\n\n"
                 f"Правильный ответ:\n\n"
-                f"🇷🇺 <b>{correct_word.translation_ru.capitalize()}</b> = 🇩🇪 <b>{word_display}</b>\n\n"
+                f"🏳️‍🌈 <b>{correct_word.translation_ru.capitalize()}</b> = 🇩🇪 <b>{word_display}</b>\n\n"
                 f"🇩🇪 {correct_word.example_de}\n\n"
-                f"🇷🇺 {correct_word.example_ru}"
+                f"🏳️‍🌈 {correct_word.example_ru}"
             )
         else:
             response_text = (
                 f"❌ <b>Неправильно!</b>\n\n"
                 f"Правильный ответ:\n\n"
-                f"🇩🇪 <b>{word_display}</b> = 🇷🇺 <b>{correct_word.translation_ru.capitalize()}</b>\n\n"
+                f"🇩🇪 <b>{word_display}</b> = 🏳️‍🌈 <b>{correct_word.translation_ru.capitalize()}</b>\n\n"
                 f"🇩🇪 {correct_word.example_de}\n\n"
-                f"🇷🇺 {correct_word.example_ru}"
+                f"🏳️‍🌈 {correct_word.example_ru}"
             )
         errors.append(correct_word_id)
 
@@ -572,8 +651,18 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         max_attempts = 10
 
         while attempts < max_attempts:
-            question = await generate_question(user.level, session, exclude_ids=used_word_ids,
-                                               mode=user.translation_mode)
+            try:
+                question = await generate_question(
+                    level=user.level.value,
+                    session=session,
+                    user_id=callback.from_user.id,
+                    exclude_ids=used_word_ids,
+                    mode=user.translation_mode
+                )
+            except Exception as e:
+                print(f"❌ Ошибка генерации вопроса: {e}")
+                question = None
+
             if question:
                 break
             attempts += 1
@@ -612,7 +701,7 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         # Режим RU→DE: показываем русский перевод + пример
         question_text = (
             f"Вопрос {current_question}/{total_questions}\n\n"
-            f"🇷🇺 <b>{word.translation_ru.capitalize()}</b>\n\n"
+            f"🏳️‍🌈 <b>{word.translation_ru.capitalize()}</b>\n\n"
             f"📝 {word.example_ru}\n\n"
             f"Выбери правильное слово:"
         )
@@ -726,7 +815,7 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
         question_text = (
             f"🔄 Повтор ошибок\n\n"
             f"Вопрос 1/{len(errors)}\n\n"
-            f"🇷🇺 <b>{first_word.translation_ru.capitalize()}</b>\n\n"
+            f"🏳️‍🌈 <b>{first_word.translation_ru.capitalize()}</b>\n\n"
             f"📝 {first_word.example_ru}\n\n"
             f"Выбери правильное слово:"
         )
@@ -802,8 +891,18 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
     await session.flush()
     await session.commit()
 
-    # Генерируем первый вопрос
-    question = await generate_question(user.level, session, mode=user.translation_mode)
+    # Генерируем первый вопрос с учётом SRS
+    try:
+        question = await generate_question(
+            level=user.level.value,
+            session=session,
+            user_id=user_id,
+            exclude_ids=[],
+            mode=user.translation_mode
+        )
+    except Exception as e:
+        print(f"❌ Ошибка генерации вопроса: {e}")
+        question = None
 
     if not question:
         await message.answer(
@@ -830,7 +929,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
     if mode.value == "ru_to_de":
         question_text = (
             f"📝 Вопрос 1/25\n\n"
-            f"🇷🇺 <b>{word.translation_ru.capitalize()}</b>\n\n"
+            f"🏳️‍🌈 <b>{word.translation_ru.capitalize()}</b>\n\n"
             f"Выбери правильное слово:"
         )
     else:
@@ -878,9 +977,9 @@ async def show_settings(message: Message, state: FSMContext, session: AsyncSessi
     current_mode = user.translation_mode if user else "DE_TO_RU"
 
     if current_mode.value == "de_to_ru":
-        mode_text = "🇩🇪→🇷🇺 Немецкий → Русский"
+        mode_text = "🇩🇪→🏳️‍🌈 Немецкий → Русский"
     else:
-        mode_text = "🇷🇺→🇩🇪 Русский → Немецкий"
+        mode_text = "🏳️‍🌈→🇩🇪 Русский → Немецкий"
 
     settings_text = (
         f"⚙️ <b>Настройки</b>\n\n"
@@ -952,8 +1051,8 @@ async def settings_change_mode(callback: CallbackQuery, session: AsyncSession):
 
     await callback.message.edit_text(
         "🔄 <b>Выбери режим перевода:</b>\n\n"
-        "🇩🇪→🇷🇺 <b>DE-RU</b> — Немецкое слово → Русский перевод\n"
-        "🇷🇺→🇩🇪 <b>RU-DE</b> — Русский перевод → Немецкое слово",
+        "🇩🇪→🏳️‍🌈 <b>DE-RU</b> — Немецкое слово → Русский перевод\n"
+        "🏳️‍🌈→🇩🇪 <b>RU-DE</b> — Русский перевод → Немецкое слово",
         reply_markup=get_translation_mode_keyboard(current_mode)
     )
     await callback.answer()
@@ -970,7 +1069,7 @@ async def set_translation_mode(callback: CallbackQuery, session: AsyncSession):
     user.translation_mode = TranslationMode(mode)
     await session.commit()
 
-    mode_text = "🇩🇪→🇷🇺 Немецкий → Русский" if mode == "de_to_ru" else "🇷🇺→🇩🇪 Русский → Немецкий"
+    mode_text = "🇩🇪→🏳️‍🌈 Немецкий → Русский" if mode == "de_to_ru" else "🏳️‍🌈→🇩🇪 Русский → Немецкий"
 
     await callback.message.edit_text(
         f"✅ Режим перевода изменён!\n\n"
@@ -990,9 +1089,9 @@ async def back_to_settings(callback: CallbackQuery, session: AsyncSession):
     current_mode = user.translation_mode if user else "DE_TO_RU"
 
     if current_mode.value == "de_to_ru":
-        mode_text = "🇩🇪→🇷🇺 Немецкий → Русский"
+        mode_text = "🇩🇪→🏳️‍🌈 Немецкий → Русский"
     else:
-        mode_text = "🇷🇺→🇩🇪 Русский → Немецкий"
+        mode_text = "🏳️‍🌈→🇩🇪 Русский → Немецкий"
 
     settings_text = (
         f"⚙️ <b>Настройки</b>\n\n"
