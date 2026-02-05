@@ -53,6 +53,8 @@ class UserWord(Base):
 
     # прогресс по слову
     correct_streak = mapped_column(Integer, default=0, nullable=False)
+    times_shown = mapped_column(Integer, default=0, nullable=False)
+    times_correct = mapped_column(Integer, default=0, nullable=False)
     last_seen_at = mapped_column(DateTime, nullable=True)
 
     # считается “выучено”, когда достигнут порог streak
