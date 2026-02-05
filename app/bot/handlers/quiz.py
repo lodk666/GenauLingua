@@ -15,7 +15,8 @@ from app.bot.keyboards import get_answer_keyboard, get_results_keyboard, get_mai
 from app.database.enums import CEFRLevel
 from app.database.models import User, QuizSession, QuizQuestion, Word
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from app.services.quiz_service import generate_question, update_word_progress, get_user_progress_stats
+from app.services.quiz_service import generate_question, update_word_progress, get_user_progress_stats, \
+    get_user_progress_stats_all_levels
 from datetime import date, timedelta
 
 router = Router()
@@ -239,6 +240,19 @@ async def show_statistics(message: Message, state: FSMContext, session: AsyncSes
             "Используй команду /start чтобы начать."
         )
     else:
+        # Получаем статистику прогресса по словам (все уровни)
+        try:
+            overall_progress = await get_user_progress_stats_all_levels(user_id, session)
+        except Exception as e:
+            print(f"⚠️ Ошибка получения общей статистики: {e}")
+            overall_progress = {
+                'total_words': 0,
+                'seen_words': 0,
+                'learned_words': 0,
+                'struggling_words': 0,
+                'new_words': 0
+            }
+
         # Получаем статистику прогресса по словам для текущего уровня
         try:
             progress = await get_user_progress_stats(user_id, user.level, session)
@@ -268,10 +282,46 @@ async def show_statistics(message: Message, state: FSMContext, session: AsyncSes
         level_sessions = all_level_sessions[:5]
 
         # Формируем текст статистики
-        stats_text = f"📊 <b>Статистика: Уровень {user.level.value}</b>\n\n"
+        stats_text = f"📊 <b>Статистика</b>\n"
+        stats_text += f"🎯 Текущий уровень: <b>{user.level.value}</b>\n\n"
 
-        # Блок 1: Прогресс по словам
-        stats_text += "📚 <b>Прогресс по словам:</b>\n"
+        # Блок 0: Вся статистика (все уровни)
+        stats_text += "🌍 <b>Вся статистика (все уровни):</b>\n"
+
+        overall_total = overall_progress['total_words']
+        overall_learned = overall_progress['learned_words']
+        overall_seen = overall_progress['seen_words']
+        overall_struggling = overall_progress['struggling_words']
+        overall_new = overall_progress['new_words']
+        overall_in_progress = overall_seen - overall_learned
+
+        if overall_total > 0:
+            overall_learned_percent = (overall_learned / overall_total) * 100
+            overall_progress_bar = create_progress_bar(overall_learned_percent)
+
+            stats_text += f"Всего слов: <b>{overall_total}</b>\n"
+            stats_text += f"{overall_progress_bar} {overall_learned_percent:.1f}%\n\n"
+            stats_text += (
+                f"├─ ✅ Выучено: <b>{overall_learned}</b> "
+                f"({(overall_learned / overall_total * 100):.1f}%)\n"
+            )
+            stats_text += (
+                f"├─ 🔄 В процессе: <b>{overall_in_progress}</b> "
+                f"({(overall_in_progress / overall_total * 100):.1f}%)\n"
+            )
+            stats_text += (
+                f"├─ ❌ Сложные: <b>{overall_struggling}</b> "
+                f"({(overall_struggling / overall_total * 100):.1f}%)\n"
+            )
+            stats_text += (
+                f"└─ 🆕 Новых: <b>{overall_new}</b> "
+                f"({(overall_new / overall_total * 100):.1f}%)\n\n"
+            )
+        else:
+            stats_text += "Слов в базе не найдено.\n\n"
+
+        # Блок 1: Прогресс по словам (текущий уровень)
+        stats_text += f"📚 <b>Прогресс по словам (уровень {user.level.value}):</b>\n"
 
         total = progress['total_words']
         learned = progress['learned_words']
