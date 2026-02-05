@@ -12,9 +12,11 @@ from app.database.models import TranslationMode
 from app.bot.states import QuizStates
 from app.bot.keyboards import get_answer_keyboard, get_results_keyboard, get_main_menu_keyboard, get_level_keyboard, \
     get_translation_mode_keyboard
-from app.database.models import User, QuizSession, QuizQuestion, Word, CEFRLevel
+from app.database.enums import CEFRLevel
+from app.database.models import User, QuizSession, QuizQuestion, Word
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from app.services.quiz_service import generate_question, update_word_progress, get_user_progress_stats
+from app.services.quiz_service import generate_question, update_word_progress, get_user_progress_stats, \
+    get_user_progress_stats_all_levels
 from datetime import date, timedelta
 
 router = Router()
@@ -141,7 +143,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
     # Генерируем первый вопрос с учётом SRS
     try:
         question = await generate_question(
-            level=user.level.value,
+            level=user.level,
             session=session,
             user_id=user_id,
             exclude_ids=[],
@@ -238,9 +240,22 @@ async def show_statistics(message: Message, state: FSMContext, session: AsyncSes
             "Используй команду /start чтобы начать."
         )
     else:
+        # Получаем статистику прогресса по словам (все уровни)
+        try:
+            overall_progress = await get_user_progress_stats_all_levels(user_id, session)
+        except Exception as e:
+            print(f"⚠️ Ошибка получения общей статистики: {e}")
+            overall_progress = {
+                'total_words': 0,
+                'seen_words': 0,
+                'learned_words': 0,
+                'struggling_words': 0,
+                'new_words': 0
+            }
+
         # Получаем статистику прогресса по словам для текущего уровня
         try:
-            progress = await get_user_progress_stats(user_id, user.level.value, session)
+            progress = await get_user_progress_stats(user_id, user.level, session)
         except Exception as e:
             print(f"⚠️ Ошибка получения статистики: {e}")
             progress = {
@@ -267,10 +282,46 @@ async def show_statistics(message: Message, state: FSMContext, session: AsyncSes
         level_sessions = all_level_sessions[:5]
 
         # Формируем текст статистики
-        stats_text = f"📊 <b>Статистика: Уровень {user.level.value}</b>\n\n"
+        stats_text = f"📊 <b>Статистика</b>\n"
+        stats_text += f"🎯 Текущий уровень: <b>{user.level.value}</b>\n\n"
 
-        # Блок 1: Прогресс по словам
-        stats_text += "📚 <b>Прогресс по словам:</b>\n"
+        # Блок 0: Вся статистика (все уровни)
+        stats_text += "🌍 <b>Вся статистика (все уровни):</b>\n"
+
+        overall_total = overall_progress['total_words']
+        overall_learned = overall_progress['learned_words']
+        overall_seen = overall_progress['seen_words']
+        overall_struggling = overall_progress['struggling_words']
+        overall_new = overall_progress['new_words']
+        overall_in_progress = overall_seen - overall_learned
+
+        if overall_total > 0:
+            overall_learned_percent = (overall_learned / overall_total) * 100
+            overall_progress_bar = create_progress_bar(overall_learned_percent)
+
+            stats_text += f"Всего слов: <b>{overall_total}</b>\n"
+            stats_text += f"{overall_progress_bar} {overall_learned_percent:.1f}%\n\n"
+            stats_text += (
+                f"├─ ✅ Выучено: <b>{overall_learned}</b> "
+                f"({(overall_learned / overall_total * 100):.1f}%)\n"
+            )
+            stats_text += (
+                f"├─ 🔄 В процессе: <b>{overall_in_progress}</b> "
+                f"({(overall_in_progress / overall_total * 100):.1f}%)\n"
+            )
+            stats_text += (
+                f"├─ ❌ Сложные: <b>{overall_struggling}</b> "
+                f"({(overall_struggling / overall_total * 100):.1f}%)\n"
+            )
+            stats_text += (
+                f"└─ 🆕 Новых: <b>{overall_new}</b> "
+                f"({(overall_new / overall_total * 100):.1f}%)\n\n"
+            )
+        else:
+            stats_text += "Слов в базе не найдено.\n\n"
+
+        # Блок 1: Прогресс по словам (текущий уровень)
+        stats_text += f"📚 <b>Прогресс по словам (уровень {user.level.value}):</b>\n"
 
         total = progress['total_words']
         learned = progress['learned_words']
@@ -661,7 +712,7 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         while attempts < max_attempts:
             try:
                 question = await generate_question(
-                    level=user.level.value,
+                    level=user.level,
                     session=session,
                     user_id=callback.from_user.id,
                     exclude_ids=used_word_ids,
@@ -776,7 +827,7 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
         # Дополняем дистракторами из того же уровня
         result = await session.execute(
             select(Word).where(
-                Word.cefr == user.level,
+                Word.level == user.level,
                 Word.id != first_word_id,
                 Word.id.not_in([d.id for d in distractors])
             )
@@ -874,110 +925,6 @@ async def return_to_menu(callback: CallbackQuery, state: FSMContext):
     )
 
     await callback.answer()
-
-
-@router.message(F.text == "📚 Учить слова")
-async def start_quiz(message: Message, state: FSMContext, session: AsyncSession):
-    """Запуск викторины"""
-    user_id = message.from_user.id
-
-    # Получаем пользователя и его уровень
-    user = await session.get(User, user_id)
-
-    if not user or not user.level:
-        await message.answer(
-            "⚠️ Сначала выбери свой уровень с помощью команды /start"
-        )
-        return
-
-    # Создаём новую сессию
-    quiz_session = QuizSession(
-        user_id=user_id,
-        level=user.level,
-        translation_mode=user.translation_mode,
-        total_questions=25,
-        correct_answers=0,
-    )
-
-    session.add(quiz_session)
-    await session.flush()
-    await session.commit()
-
-    # Генерируем первый вопрос с учётом SRS
-    try:
-        question = await generate_question(
-            level=user.level.value,
-            session=session,
-            user_id=user_id,
-            exclude_ids=[],
-            mode=user.translation_mode
-        )
-    except Exception as e:
-        print(f"❌ Ошибка генерации вопроса: {e}")
-        question = None
-
-    if not question:
-        await message.answer(
-            "❌ К сожалению, для этого уровня пока нет слов.\n"
-            "Попробуй выбрать другой уровень."
-        )
-        return
-
-    # Сохраняем данные в state
-    await state.update_data(
-        session_id=quiz_session.id,
-        current_question=1,
-        total_questions=25,
-        correct_answers=0,
-        errors=[],
-        correct_word_id=question['correct_word'].id,
-        used_word_ids=[question['correct_word'].id]
-    )
-
-    # Формируем текст вопроса
-    word = question['correct_word']
-    mode = user.translation_mode
-
-    if mode.value == "ru_to_de":
-        question_text = (
-            f"📝 Вопрос 1/25\n\n"
-            f"🏳️‍🌈 <b>{word.translation_ru.capitalize()}</b>\n\n"
-            f"📝 {word.example_ru}\n\n"
-            f"Выбери правильное слово:"
-        )
-    else:
-        word_display = word.word_de
-        if word.article and word.article != '-':
-            word_display = f"{word.article} {word.word_de}"
-
-        question_text = (
-            f"📝 Вопрос 1/25\n\n"
-            f"🇩🇪 <b>{word_display}</b>\n\n"
-            f"📝 {word.example_de}\n\n"
-            f"Выбери правильный перевод:"
-        )
-
-    # Удаляем команду пользователя
-    try:
-        await message.delete()
-    except:
-        pass
-
-    # Создаём новый якорь СРАЗУ
-    old_anchor_id, new_anchor_id = await ensure_anchor(message, session, user, emoji="📚")
-
-    # Удаляем всё старое параллельно
-    if old_anchor_id:
-        current_msg_id = message.message_id
-        await delete_messages_fast(message.bot, message.chat.id, old_anchor_id, current_msg_id)
-
-    # Отправляем первый вопрос
-    await message.answer(
-        question_text,
-        reply_markup=get_answer_keyboard(question['options'])
-    )
-
-    await state.set_state(QuizStates.answering)
 
 
 @router.message(Command("settings"))
@@ -1132,7 +1079,7 @@ async def change_level(callback: CallbackQuery, state: FSMContext, session: Asyn
 
     # Обновляем уровень пользователя
     user = await session.get(User, user_id)
-    user.level = level
+    user.level = CEFRLevel(level)
     await session.commit()
 
     # Удаляем сообщение с выбором уровня

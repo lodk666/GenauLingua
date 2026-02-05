@@ -2,7 +2,8 @@ import random
 from datetime import datetime
 from sqlalchemy import select, func, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database.models import Word, CEFRLevel, PartOfSpeech, UserWord, User
+from app.database.enums import CEFRLevel
+from app.database.models import Word, PartOfSpeech, UserWord, User
 from typing import Optional
 
 # ==================== КОНСТАНТЫ SRS ====================
@@ -26,7 +27,7 @@ REVIEW_THRESHOLD = 90  # 70-90% = на повторение
 
 # ==================== ОСНОВНАЯ ФУНКЦИЯ ГЕНЕРАЦИИ ВОПРОСА ====================
 async def generate_question(
-        level: str,
+        level: CEFRLevel,
         session: AsyncSession,
         user_id: int,
         exclude_ids: list[int] = None,
@@ -112,7 +113,7 @@ async def generate_question(
 # ==================== ВЫБОР СЛОВА ПО ПРИОРИТЕТУ SRS ====================
 async def select_word_by_priority(
         user_id: int,
-        level: str,
+        level: CEFRLevel,
         session: AsyncSession,
         exclude_ids: list[int]
 ) -> Optional[Word]:
@@ -159,7 +160,7 @@ async def select_word_by_priority(
 # ==================== ПОЛУЧЕНИЕ СЛОВ ПО КАТЕГОРИЯМ ====================
 async def get_struggling_words(
         user_id: int,
-        level: str,
+        level: CEFRLevel,
         session: AsyncSession,
         exclude_ids: list[int]
 ) -> Optional[Word]:
@@ -179,8 +180,8 @@ async def get_struggling_words(
         .where(
             Word.level == level,
             UserWord.learned == False,
-            Word.times_shown > 0,  # Должно быть хоть раз показано
-            (Word.times_correct * 100.0 / Word.times_shown) < STRUGGLING_THRESHOLD,
+            UserWord.times_shown > 0,  # Должно быть хоть раз показано
+            (UserWord.times_correct * 100.0 / UserWord.times_shown) < STRUGGLING_THRESHOLD,
             or_(
                 UserWord.last_seen_at.is_(None),
                 UserWord.last_seen_at < one_hour_ago  # Не показывали последний час
@@ -199,7 +200,7 @@ async def get_struggling_words(
 
 async def get_new_words(
         user_id: int,
-        level: str,
+        level: CEFRLevel,
         session: AsyncSession,
         exclude_ids: list[int]
 ) -> Optional[Word]:
@@ -228,7 +229,7 @@ async def get_new_words(
 
 async def get_review_words(
         user_id: int,
-        level: str,
+        level: CEFRLevel,
         session: AsyncSession,
         exclude_ids: list[int]
 ) -> Optional[Word]:
@@ -248,10 +249,10 @@ async def get_review_words(
         .where(
             Word.level == level,
             UserWord.learned == False,
-            Word.times_shown > 0,
+            UserWord.times_shown > 0,
             and_(
-                (Word.times_correct * 100.0 / Word.times_shown) >= STRUGGLING_THRESHOLD,
-                (Word.times_correct * 100.0 / Word.times_shown) < REVIEW_THRESHOLD
+                (UserWord.times_correct * 100.0 / UserWord.times_shown) >= STRUGGLING_THRESHOLD,
+                (UserWord.times_correct * 100.0 / UserWord.times_shown) < REVIEW_THRESHOLD
             ),
             or_(
                 UserWord.last_seen_at.is_(None),
@@ -271,7 +272,7 @@ async def get_review_words(
 
 async def get_learned_words(
         user_id: int,
-        level: str,
+        level: CEFRLevel,
         session: AsyncSession,
         exclude_ids: list[int]
 ) -> Optional[Word]:
@@ -288,8 +289,8 @@ async def get_learned_words(
         .where(
             Word.level == level,
             UserWord.learned == True,
-            Word.times_shown >= MIN_ATTEMPTS_FOR_LEARNED,
-            (Word.times_correct * 100.0 / Word.times_shown) >= LEARNED_SUCCESS_RATE
+            UserWord.times_shown >= MIN_ATTEMPTS_FOR_LEARNED,
+            (UserWord.times_correct * 100.0 / UserWord.times_shown) >= LEARNED_SUCCESS_RATE
         )
     )
 
@@ -304,7 +305,7 @@ async def get_learned_words(
 
 async def get_any_word(
         user_id: int,
-        level: str,
+        level: CEFRLevel,
         session: AsyncSession,
         exclude_ids: list[int]
 ) -> Optional[Word]:
@@ -354,7 +355,7 @@ async def get_distractors(word: Word, session: AsyncSession) -> list[Word]:
 async def get_additional_distractors(
         correct_word: Word,
         current_distractors: list[Word],
-        level: str,
+        level: CEFRLevel,
         session: AsyncSession,
         count: int
 ) -> list[Word]:
@@ -415,6 +416,8 @@ async def update_word_progress(
             user_id=user_id,
             word_id=word_id,
             correct_streak=1 if is_correct else 0,
+            times_shown=1,
+            times_correct=1 if is_correct else 0,
             last_seen_at=datetime.utcnow(),
             learned=False
         )
@@ -422,9 +425,11 @@ async def update_word_progress(
     else:
         # Обновляем существующую
         user_word.last_seen_at = datetime.utcnow()
+        user_word.times_shown += 1
 
         if is_correct:
             user_word.correct_streak += 1
+            user_word.times_correct += 1
         else:
             # Неправильный ответ - сбрасываем streak
             user_word.correct_streak = 0
@@ -440,7 +445,7 @@ async def update_word_progress(
 
 
 # ==================== СТАТИСТИКА ====================
-async def get_user_progress_stats(user_id: int, level: str, session: AsyncSession) -> dict:
+async def get_user_progress_stats(user_id: int, level: CEFRLevel, session: AsyncSession) -> dict:
     """
     Возвращает статистику прогресса пользователя по уровню
 
@@ -490,8 +495,62 @@ async def get_user_progress_stats(user_id: int, level: str, session: AsyncSessio
         .where(
             Word.level == level,
             UserWord.learned == False,
-            Word.times_shown > 0,
-            (Word.times_correct * 100.0 / Word.times_shown) < STRUGGLING_THRESHOLD
+            UserWord.times_shown > 0,
+            (UserWord.times_correct * 100.0 / UserWord.times_shown) < STRUGGLING_THRESHOLD
+        )
+    )
+    struggling_words = struggling_result.scalar()
+
+    return {
+        'total_words': total_words or 0,
+        'seen_words': seen_words or 0,
+        'learned_words': learned_words or 0,
+        'struggling_words': struggling_words or 0,
+        'new_words': (total_words or 0) - (seen_words or 0)
+    }
+
+
+async def get_user_progress_stats_all_levels(user_id: int, session: AsyncSession) -> dict:
+    """
+    Возвращает статистику прогресса пользователя по всем уровням.
+
+    Returns:
+        {
+            'total_words': int,
+            'seen_words': int,
+            'learned_words': int,
+            'struggling_words': int,
+            'new_words': int
+        }
+    """
+    total_result = await session.execute(select(func.count(Word.id)))
+    total_words = total_result.scalar()
+
+    seen_result = await session.execute(
+        select(func.count(UserWord.word_id))
+        .where(UserWord.user_id == user_id)
+    )
+    seen_words = seen_result.scalar()
+
+    learned_result = await session.execute(
+        select(func.count(UserWord.word_id))
+        .where(
+            UserWord.user_id == user_id,
+            UserWord.learned == True
+        )
+    )
+    learned_words = learned_result.scalar()
+
+    struggling_result = await session.execute(
+        select(func.count(Word.id))
+        .join(UserWord, and_(
+            UserWord.word_id == Word.id,
+            UserWord.user_id == user_id
+        ))
+        .where(
+            UserWord.learned == False,
+            UserWord.times_shown > 0,
+            (UserWord.times_correct * 100.0 / UserWord.times_shown) < STRUGGLING_THRESHOLD
         )
     )
     struggling_words = struggling_result.scalar()
