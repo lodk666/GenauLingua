@@ -13,6 +13,7 @@ from datetime import date, timedelta
 
 from app.bot.states import QuizStates
 from app.bot.keyboards import get_level_keyboard, get_main_menu_keyboard
+from app.database.enums import CEFRLevel
 from app.database.models import User
 
 router = Router()
@@ -177,7 +178,7 @@ async def select_level(callback: CallbackQuery, state: FSMContext, session: Asyn
 
     # Сохраняем выбранный уровень
     user = await session.get(User, user_id)
-    user.level = level
+    user.level = CEFRLevel(level)
     await session.commit()
 
     # Удаляем сообщение с выбором уровня
