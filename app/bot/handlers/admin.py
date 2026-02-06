@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, distinct
 from datetime import datetime, timedelta, date
 from app.database.models import User, QuizSession, QuizQuestion, UserWord, Word
+from app.services.quiz_service import get_user_progress_stats, get_user_progress_stats_all_levels
 from app.config import settings
 
 router = Router()
@@ -142,6 +143,7 @@ async def admin_panel(message: Message, session: AsyncSession):
     admin_text += "/admin - эта панель\n"
     admin_text += "/admin_users - топ пользователей\n"
     admin_text += "/admin_stats - детальная статистика\n"
+    admin_text += "/admin_user <id|@username> - статистика пользователя\n"
 
     await message.answer(admin_text)
 
@@ -251,6 +253,115 @@ async def admin_detailed_stats(message: Message, session: AsyncSession):
         text += f"│  Показано: {shown} раз | Правильно: {success_rate:.0f}%\n"
 
     await message.answer(text)
+
+
+@router.message(Command("admin_user"))
+async def admin_user_details(message: Message, session: AsyncSession):
+    """Детальная статистика конкретного пользователя"""
+    if not is_admin(message.from_user.id):
+        return
+
+    try:
+        await message.delete()
+    except:
+        pass
+
+    parts = (message.text or "").split(maxsplit=1)
+    if len(parts) < 2:
+        await message.answer(
+            "ℹ️ Использование: /admin_user <id|@username>\n"
+            "Пример: /admin_user 123456789 или /admin_user @username"
+        )
+        return
+
+    raw_identifier = parts[1].strip()
+    identifier = raw_identifier.lstrip("@")
+
+    if identifier.isdigit():
+        user_result = await session.execute(
+            select(User).where(User.id == int(identifier))
+        )
+    else:
+        user_result = await session.execute(
+            select(User).where(func.lower(User.username) == identifier.lower())
+        )
+    user = user_result.scalar_one_or_none()
+
+    if not user:
+        await message.answer("❌ Пользователь не найден.")
+        return
+
+    overall_progress = await get_user_progress_stats_all_levels(user.id, session)
+    level_progress = await get_user_progress_stats(user.id, user.level, session)
+
+    completed_sessions_result = await session.execute(
+        select(QuizSession)
+        .where(
+            QuizSession.user_id == user.id,
+            QuizSession.completed_at.isnot(None)
+        )
+        .order_by(QuizSession.started_at.desc())
+    )
+    completed_sessions = completed_sessions_result.scalars().all()
+
+    total_quizzes = len(completed_sessions)
+    total_questions = sum(s.total_questions for s in completed_sessions)
+    total_correct = sum(s.correct_answers for s in completed_sessions)
+    avg_score = (total_correct / total_questions * 100) if total_questions > 0 else 0
+    best_score = max(
+        (s.correct_answers / s.total_questions * 100) for s in completed_sessions
+    ) if completed_sessions else 0
+
+    last_sessions = completed_sessions[:5]
+
+    header = (
+        "👤 <b>Пользователь</b>\n"
+        f"ID: <b>{user.id}</b>\n"
+        f"Username: <b>@{user.username or 'без username'}</b>\n"
+        f"Имя: <b>{user.first_name or '—'} {user.last_name or ''}</b>\n"
+        f"Уровень: <b>{user.level.value if user.level else '—'}</b>\n"
+        f"Последняя активность: <b>{user.last_active_date or '—'}</b>\n"
+        f"Стрик: <b>{user.streak_days}</b> дней\n\n"
+    )
+
+    overall_block = (
+        "🌍 <b>Вся статистика (все уровни):</b>\n"
+        f"Всего слов: <b>{overall_progress['total_words']}</b>\n"
+        f"├─ ✅ Выучено: <b>{overall_progress['learned_words']}</b>\n"
+        f"├─ 🔄 В процессе: <b>{overall_progress['seen_words'] - overall_progress['learned_words']}</b>\n"
+        f"├─ ❌ Сложные: <b>{overall_progress['struggling_words']}</b>\n"
+        f"└─ 🆕 Новых: <b>{overall_progress['new_words']}</b>\n\n"
+    )
+
+    level_block = (
+        f"🎯 <b>Текущий уровень ({user.level.value}):</b>\n"
+        f"Всего слов: <b>{level_progress['total_words']}</b>\n"
+        f"├─ ✅ Выучено: <b>{level_progress['learned_words']}</b>\n"
+        f"├─ 🔄 В процессе: <b>{level_progress['seen_words'] - level_progress['learned_words']}</b>\n"
+        f"├─ ❌ Сложные: <b>{level_progress['struggling_words']}</b>\n"
+        f"└─ 🆕 Новых: <b>{level_progress['new_words']}</b>\n\n"
+    )
+
+    quiz_block = (
+        "🏆 <b>Викторины:</b>\n"
+        f"├─ Пройдено: <b>{total_quizzes}</b>\n"
+        f"├─ Средний результат: <b>{avg_score:.1f}%</b>\n"
+        f"└─ Лучший результат: <b>{best_score:.1f}%</b>\n\n"
+    )
+
+    sessions_block = "🕓 <b>Последние сессии:</b>\n"
+    if last_sessions:
+        for s in last_sessions:
+            percent = (s.correct_answers / s.total_questions * 100) if s.total_questions else 0
+            date_str = s.started_at.strftime("%d.%m %H:%M")
+            sessions_block += (
+                f"• {date_str} | {s.level.value} | "
+                f"{s.correct_answers}/{s.total_questions} ({percent:.0f}%)\n"
+            )
+    else:
+        sessions_block += "— Сессий ещё нет.\n"
+
+    await message.answer(header + overall_block + level_block + quiz_block + sessions_block)
 
 
 @router.message(Command("broadcast"))
