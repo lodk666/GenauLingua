@@ -143,7 +143,7 @@ async def admin_panel(message: Message, session: AsyncSession):
     admin_text += "/admin - эта панель\n"
     admin_text += "/admin_users - топ пользователей\n"
     admin_text += "/admin_stats - детальная статистика\n"
-    admin_text += "/admin_user <id|@username> - статистика пользователя\n"
+    admin_text += "/admin_user &lt;id|@username&gt; - статистика пользователя\n"
 
     await message.answer(admin_text)
 
@@ -269,7 +269,7 @@ async def admin_user_details(message: Message, session: AsyncSession):
     parts = (message.text or "").split(maxsplit=1)
     if len(parts) < 2:
         await message.answer(
-            "ℹ️ Использование: /admin_user <id|@username>\n"
+            "ℹ️ Использование: /admin_user &lt;id|@username&gt;\n"
             "Пример: /admin_user 123456789 или /admin_user @username"
         )
         return
