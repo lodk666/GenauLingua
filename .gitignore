@@ -86,3 +86,7 @@ Thumbs.db
 *.db
 *.bak
 !example.env
+
+# Word databases (local only)
+Wordbase/
+app/scripts/*.xlsx
