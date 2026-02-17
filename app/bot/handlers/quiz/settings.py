@@ -19,6 +19,22 @@ from app.bot.keyboards import (
 
 router = Router()
 
+# ============================================================================
+# СЛОВАРИ (используются везде)
+# ============================================================================
+
+MODE_DICT = {
+    "de_to_ru": "🇩🇪 DE → 🏴 RU",
+    "ru_to_de": "🏴 RU → 🇩🇪 DE",
+    "de_to_uk": "🇩🇪 DE → 🇺🇦 UK",
+    "uk_to_de": "🇺🇦 UK → 🇩🇪 DE",
+}
+
+LANG_DICT = {
+    "ru": "🏴 Русский",
+    "uk": "🇺🇦 Українська",
+    "de": "🇩🇪 Deutsch",
+}
 
 # ============================================================================
 # УТИЛИТЫ
@@ -62,35 +78,18 @@ async def show_settings(message: Message, session: AsyncSession):
         await message.answer("❌ Пользователь не найден. Используй /start")
         return
 
-    # Получаем текущие настройки
     level = user.level.value if user.level else "Не выбран"
-
-    # Форматируем режим перевода
-    mode_dict = {
-        "de_to_ru": "DE → RU",
-        "ru_to_de": "RU → DE",
-        "de_to_uk": "DE → UK",
-        "uk_to_de": "UK → DE",
-    }
-    mode = mode_dict.get(user.translation_mode.value, user.translation_mode.value)
-
-    # Язык интерфейса
-    lang_dict = {
-        "ru": "🏴 Русский",
-        "uk": "🇺🇦 Українська",
-        "de": "🇩🇪 Deutsch",
-    }
-    interface_lang = lang_dict.get(user.interface_language, user.interface_language)
+    mode = MODE_DICT.get(user.translation_mode.value, user.translation_mode.value)
+    interface_lang = LANG_DICT.get(user.interface_language, user.interface_language)
 
     settings_text = (
-        "⚙️ <b>Настройки</b>\n\n"
+        "🦾 <b>Настройки</b>\n\n"
         f"📚 Уровень: <b>{level}</b>\n"
         f"🔄 Режим: <b>{mode}</b>\n"
         f"🌍 Язык интерфейса: <b>{interface_lang}</b>\n\n"
         "Выбери, что хочешь изменить:"
     )
 
-    # Создаём клавиатуру настроек (БЕЗ кнопки "Назад в меню")
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="📚 Изменить уровень", callback_data="settings_level")],
@@ -99,21 +98,49 @@ async def show_settings(message: Message, session: AsyncSession):
         ]
     )
 
-    # Удаляем команду пользователя
     try:
         await message.delete()
     except:
         pass
 
-    # Создаём новый якорь и удаляем старое
     old_anchor_id, new_anchor_id = await ensure_anchor(message, session, user, emoji="🦾")
 
     if old_anchor_id:
         current_msg_id = message.message_id
         await delete_messages_fast(message.bot, message.chat.id, old_anchor_id, current_msg_id)
 
-    # Отправляем настройки
     await message.answer(settings_text, reply_markup=keyboard)
+
+
+# ============================================================================
+# ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ CALLBACK
+# ============================================================================
+
+async def show_settings_callback(callback: CallbackQuery, session: AsyncSession):
+    """Показ настроек после изменения (для callback)"""
+    user = await session.get(User, callback.from_user.id)
+
+    level = user.level.value if user.level else "Не выбран"
+    mode = MODE_DICT.get(user.translation_mode.value, user.translation_mode.value)
+    interface_lang = LANG_DICT.get(user.interface_language, user.interface_language)
+
+    settings_text = (
+        "🦾 <b>Настройки</b>\n\n"
+        f"📚 Уровень: <b>{level}</b>\n"
+        f"🔄 Режим: <b>{mode}</b>\n"
+        f"🌍 Язык интерфейса: <b>{interface_lang}</b>\n\n"
+        "Выбери, что хочешь изменить:"
+    )
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📚 Изменить уровень", callback_data="settings_level")],
+            [InlineKeyboardButton(text="🔄 Режим перевода", callback_data="settings_mode")],
+            [InlineKeyboardButton(text="🌍 Язык интерфейса", callback_data="settings_language")]
+        ]
+    )
+
+    await callback.message.edit_text(settings_text, reply_markup=keyboard)
 
 
 # ============================================================================
@@ -131,16 +158,22 @@ async def change_level(callback: CallbackQuery, state: FSMContext):
         "• <b>A1</b> — Начальный (Привет, как дела?)\n"
         "• <b>A2</b> — Базовый (Простые диалоги)\n"
         "• <b>B1</b> — Средний (Повседневное общение)\n"
+        "• <b>B2</b> — Выше среднего\n"
+        "• <b>C1</b> — Продвинутый\n"
+        "• <b>C2</b> — Свободное владение\n"
     )
 
-    # Создаем клавиатуру с кнопкой "Назад"
-    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(text="A1", callback_data="level_a1"),
                 InlineKeyboardButton(text="A2", callback_data="level_a2"),
                 InlineKeyboardButton(text="B1", callback_data="level_b1")
+            ],
+            [
+                InlineKeyboardButton(text="B2 🔒", callback_data="level_locked"),
+                InlineKeyboardButton(text="C1 🔒", callback_data="level_locked"),
+                InlineKeyboardButton(text="C2 🔒", callback_data="level_locked")
             ],
             [InlineKeyboardButton(text="◀️ Назад", callback_data="back_to_settings")]
         ]
@@ -152,23 +185,24 @@ async def change_level(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data.startswith("level_"))
 async def set_level(callback: CallbackQuery, session: AsyncSession):
     """Установка нового уровня"""
-    # Извлекаем уровень из callback_data
     level_str = callback.data.split("_")[1]
+
+    if level_str == "locked":
+        await callback.answer("🔒 Этот уровень пока в разработке", show_alert=True)
+        return
+
     new_level = CEFRLevel(level_str.upper())
 
-    # Обновляем в БД
     user = await session.get(User, callback.from_user.id)
     user.level = new_level
     await session.commit()
 
-    # Удаляем сообщение с выбором уровня
     await callback.message.delete()
 
-    # Обновляем якорь на галочку ✅
     try:
         sent = await callback.bot.send_message(
             chat_id=callback.message.chat.id,
-            text="✅",
+            text="🦾",
             reply_markup=get_main_menu_keyboard()
         )
         user.anchor_message_id = sent.message_id
@@ -176,7 +210,6 @@ async def set_level(callback: CallbackQuery, session: AsyncSession):
     except:
         pass
 
-    # Показываем подтверждение
     await callback.bot.send_message(
         chat_id=callback.message.chat.id,
         text=f"✅ <b>Уровень изменён на {new_level.value}!</b>"
@@ -196,19 +229,15 @@ async def change_translation_mode(callback: CallbackQuery):
 
     text = (
         "🔄 <b>Режим перевода</b>\n\n"
-        "Выбери направление перевода:\n\n"
-        "• <b>DE → RU</b> — Немецкий → Русский\n"
-        "• <b>RU → DE</b> — Русский → Немецкий\n"
-        "• <b>DE → UK</b> — Немецкий → Украинский\n"
-        "• <b>UK → DE</b> — Украинский → Немецкий"
+        "Выбери направление перевода:"
     )
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="DE → RU", callback_data="mode_de_to_ru")],
-            [InlineKeyboardButton(text="RU → DE", callback_data="mode_ru_to_de")],
-            [InlineKeyboardButton(text="DE → UK", callback_data="mode_de_to_uk")],
-            [InlineKeyboardButton(text="UK → DE", callback_data="mode_uk_to_de")],
+            [InlineKeyboardButton(text="🇩🇪 → 🏴 Немецкий → Русский", callback_data="mode_de_to_ru")],
+            [InlineKeyboardButton(text="🏴 → 🇩🇪 Русский → Немецкий", callback_data="mode_ru_to_de")],
+            [InlineKeyboardButton(text="🇩🇪 → 🇺🇦 Немецкий → Украинский", callback_data="mode_de_to_uk")],
+            [InlineKeyboardButton(text="🇺🇦 → 🇩🇪 Украинский → Немецкий", callback_data="mode_uk_to_de")],
             [InlineKeyboardButton(text="◀️ Назад", callback_data="back_to_settings")]
         ]
     )
@@ -221,26 +250,16 @@ async def set_translation_mode(callback: CallbackQuery, session: AsyncSession):
     """Установка нового режима перевода"""
     await callback.answer()
 
-    # Извлекаем режим из callback_data
     mode_str = callback.data.split("_", 1)[1]
     new_mode = TranslationMode(mode_str)
 
-    # Обновляем в БД
     user = await session.get(User, callback.from_user.id)
     user.translation_mode = new_mode
     await session.commit()
 
-    mode_dict = {
-        "de_to_ru": "DE → RU",
-        "ru_to_de": "RU → DE",
-        "de_to_uk": "DE → UK",
-        "uk_to_de": "UK → DE",
-    }
-    mode_display = mode_dict.get(new_mode.value, new_mode.value)
-
+    mode_display = MODE_DICT.get(new_mode.value, new_mode.value)
     await callback.answer(f"✅ Режим изменён на {mode_display}", show_alert=True)
 
-    # Возвращаемся в настройки
     await show_settings_callback(callback, session)
 
 
@@ -275,70 +294,21 @@ async def set_interface_language(callback: CallbackQuery, session: AsyncSession)
     """Установка языка интерфейса"""
     await callback.answer()
 
-    # Извлекаем язык из callback_data
     lang_code = callback.data.split("_")[1]
 
-    # Обновляем в БД
     user = await session.get(User, callback.from_user.id)
     user.interface_language = lang_code
     await session.commit()
 
-    lang_dict = {
-        "ru": "🇷🇺 Русский",
-        "uk": "🇺🇦 Українська",
-        "de": "🇩🇪 Deutsch",
-    }
-    lang_display = lang_dict.get(lang_code, lang_code)
-
+    lang_display = LANG_DICT.get(lang_code, lang_code)
     await callback.answer(f"✅ Язык изменён на {lang_display}", show_alert=True)
 
-    # Возвращаемся в настройки
     await show_settings_callback(callback, session)
 
 
 # ============================================================================
-# ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+# НАВИГАЦИЯ
 # ============================================================================
-
-async def show_settings_callback(callback: CallbackQuery, session: AsyncSession):
-    """Показ настроек после изменения (для callback)"""
-    user = await session.get(User, callback.from_user.id)
-
-    level = user.level.value if user.level else "Не выбран"
-
-    mode_dict = {
-        "de_to_ru": "DE → RU",
-        "ru_to_de": "RU → DE",
-        "de_to_uk": "DE → UK",
-        "uk_to_de": "UK → DE",
-    }
-    mode = mode_dict.get(user.translation_mode.value, user.translation_mode.value)
-
-    lang_dict = {
-        "ru": "🏴 Русский",
-        "uk": "🇺🇦 Українська",
-        "de": "🇩🇪 Deutsch",
-    }
-    interface_lang = lang_dict.get(user.interface_language, user.interface_language)
-
-    settings_text = (
-        "⚙️ <b>Настройки</b>\n\n"
-        f"📚 Уровень: <b>{level}</b>\n"
-        f"🔄 Режим: <b>{mode}</b>\n"
-        f"🌍 Язык интерфейса: <b>{interface_lang}</b>\n\n"
-        "Выбери, что хочешь изменить:"
-    )
-
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="📚 Изменить уровень", callback_data="settings_level")],
-            [InlineKeyboardButton(text="🔄 Режим перевода", callback_data="settings_mode")],
-            [InlineKeyboardButton(text="🌍 Язык интерфейса", callback_data="settings_language")]
-        ]
-    )
-
-    await callback.message.edit_text(settings_text, reply_markup=keyboard)
-
 
 @router.callback_query(F.data == "back_to_settings")
 async def back_to_settings(callback: CallbackQuery, session: AsyncSession):
