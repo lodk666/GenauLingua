@@ -1,0 +1,235 @@
+enauLingua — Database Standard (Production Ready)
+Статус схемы
+
+База приведена к стабильной версии через Alembic:
+
+2e31b671aa69  initial_schema
+88d0cdddb6f3  add_uniques
+a699d3adb0db  add_timestamps_to_user_words
+3a55ad48f919  add_default_to_user_words_created_at
+
+
+Текущая версия — head.
+Схема считается production-готовой.
+
+Архитектурный принцип
+
+База данных — источник истины.
+
+целостность обеспечивает БД
+
+уникальность обеспечивает БД
+
+временные поля контролирует БД
+
+приложение не дублирует логику ограничений
+
+Любая бизнес-логика не должна нарушать ограничения схемы.
+
+Таблицы
+users
+
+Хранит Telegram-пользователей.
+
+Основные поля:
+
+id (PK)
+
+username
+
+first_name
+
+last_name
+
+last_active_date
+
+streak_days
+
+words_learned
+
+quizzes_passed
+
+words
+
+Единый словарь. Канонический источник данных.
+
+Обязательные поля:
+
+id (PK)
+
+word_de (NOT NULL)
+
+pos (ENUM partofspeech, NOT NULL)
+
+level (ENUM cefrlevel, NOT NULL)
+
+Опциональные:
+
+article
+
+translation_ru
+
+translation_uk
+
+example_de
+
+example_ru
+
+example_uk
+
+categories (varchar[])
+
+times_shown
+
+times_correct
+
+created_at
+
+Ограничения:
+
+UNIQUE (word_de, level)
+
+
+Правило: слово может существовать на разных уровнях, но не может дублироваться в пределах одного уровня.
+
+user_words
+
+Прогресс пользователя по конкретному слову.
+
+Структура:
+
+user_id (FK → users.id)
+
+word_id (FK → words.id)
+
+correct_streak
+
+times_shown
+
+times_correct
+
+last_seen_at
+
+learned
+
+created_at (NOT NULL DEFAULT now())
+
+updated_at (автообновление триггером)
+
+Ключ:
+
+PRIMARY KEY (user_id, word_id)
+
+
+Триггер:
+
+BEFORE UPDATE → updated_at = now()
+
+
+Приложение не управляет updated_at. Это делает база.
+
+quiz_sessions
+
+Сессия тестирования пользователя.
+
+id (PK)
+
+user_id (FK)
+
+started_at
+
+finished_at
+
+score
+
+quiz_questions
+
+Конкретные вопросы внутри сессии.
+
+id (PK)
+
+session_id (FK → quiz_sessions)
+
+word_id (FK → words)
+
+selected_answer
+
+is_correct
+
+Стандарты разработки
+
+Одна миграция — одна логическая задача.
+
+NOT NULL колонка добавляется только:
+
+либо с server_default,
+
+либо staged migration.
+
+Уникальности и индексы — отдельной миграцией.
+
+Любые функции/триггеры обязаны иметь корректный downgrade().
+
+Никогда не изменять старые миграции после релиза.
+
+Все временные поля управляются базой.
+
+Импорт словаря
+
+Минимальный обязательный формат:
+
+word_de
+pos
+level
+
+
+Рекомендуемый:
+
+word_de
+article
+pos
+level
+translation_ru
+translation_uk
+example_de
+example_ru
+example_uk
+categories
+
+
+Импорт должен использовать UPSERT по (word_de, level).
+
+Среда запуска
+
+Если бот работает в Docker:
+
+DB_HOST = postgres
+
+
+Если бот запускается локально:
+
+DB_HOST = localhost
+
+Definition of Done перед релизом
+
+Перед выпуском:
+
+alembic upgrade head проходит без ошибок
+
+UNIQUE(word_de, level) существует
+
+created_at имеет DEFAULT now()
+
+триггер updated_at существует
+
+импорт словаря не создаёт дублей
+
+бот запускается локально
+
+бот запускается в Docker
+
+Принцип развития
+
+Сначала схема → затем миграция → затем код → затем тест → затем деплой.
+
+Не наоборот.
