@@ -4,7 +4,7 @@ services:
     container_name: genaulingua_db
     environment:
       POSTGRES_USER: genau_user
-      POSTGRES_PASSWORD: genau_password
+      POSTGRES_PASSWORD: AA212121lodkZZ
       POSTGRES_DB: genaulingua_db
     ports:
       - "5432:5432"
@@ -14,12 +14,19 @@ services:
   app:
     build: .
     container_name: genaulingua_app
-    command: python -m app.main
     depends_on:
       - postgres
     env_file:
       - .env
-    restart: always
+    command: >
+      sh -c "
+      echo 'Waiting for postgres...' &&
+      sleep 5 &&
+      alembic upgrade head &&
+      python app/main.py
+      "
+    volumes:
+      - .:/app
 
 volumes:
   postgres_data:
