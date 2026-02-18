@@ -47,7 +47,7 @@ TEXTS = {
     "settings_title": "🦾 <b>Налаштування</b>",
     "settings_level": "📚 Рівень: <b>{level}</b>",
     "settings_mode": "🔄 Режим: <b>{mode}</b>",
-    "settings_language": "🌍 Мова інтерфейсу: <b>{lang}</b>",
+    "settings_language": "🌍 Мова інтерфейсу: <b>{language}</b>",
     "settings_choose": "Обери, що хочеш змінити:",
 
     "settings_btn_change_level": "📚 Змінити рівень",
@@ -63,7 +63,7 @@ TEXTS = {
     "settings_language_title": "🌍 <b>Мова інтерфейсу</b>",
     "settings_language_description": "Обери мову інтерфейсу бота:",
 
-    "language_changed": "✅ Мову змінено на {lang}",
+    "language_changed": "✅ Мову змінено на {language}",
     "level_not_selected": "Не обрано",
     "user_not_found": "❌ Користувача не знайдено. Використай /start",
 

@@ -1,17 +1,18 @@
 """
-Помощь и поддержка
+Помощь и поддержка с локализацией
 """
 
 import asyncio
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from sqlalchemy.ext.asyncio import AsyncSession
+from aiogram.filters import Command
 
 from app.database.models import User
+from app.bot.keyboards import get_main_menu_keyboard
+from app.locales import get_text
 
 router = Router()
-
-CHAT_URL = "t.me/genaulingua_chat"
 
 
 async def delete_messages_fast(bot, chat_id: int, start_id: int, end_id: int):
@@ -24,10 +25,10 @@ async def delete_messages_fast(bot, chat_id: int, start_id: int, end_id: int):
 
 
 async def ensure_anchor(message: Message, session: AsyncSession, user: User, emoji: str = "🏠"):
-    from app.bot.keyboards import get_main_menu_keyboard
     old_anchor_id = user.anchor_message_id
+    lang = user.interface_language or "ru"
     try:
-        sent = await message.answer(emoji, reply_markup=get_main_menu_keyboard())
+        sent = await message.answer(emoji, reply_markup=get_main_menu_keyboard(lang))
         new_anchor_id = sent.message_id
         user.anchor_message_id = new_anchor_id
         await session.commit()
@@ -38,13 +39,25 @@ async def ensure_anchor(message: Message, session: AsyncSession, user: User, emo
         return old_anchor_id, None
 
 
-def get_help_keyboard():
+def get_help_keyboard(lang: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="📖 Как пользоваться", callback_data="help_how_to_use")],
-            [InlineKeyboardButton(text="🚀 Скоро в боте", callback_data="help_roadmap")],
-            [InlineKeyboardButton(text="💬 Сообщество", callback_data="help_community")],
-            [InlineKeyboardButton(text="ℹ️ О боте", callback_data="help_about")],
+            [InlineKeyboardButton(
+                text=get_text("help_btn_how_to_use", lang),
+                callback_data="help_how_to_use"
+            )],
+            [InlineKeyboardButton(
+                text=get_text("help_btn_roadmap", lang),
+                callback_data="help_roadmap"
+            )],
+            [InlineKeyboardButton(
+                text=get_text("help_btn_community", lang),
+                callback_data="help_community"
+            )],
+            [InlineKeyboardButton(
+                text=get_text("help_btn_about", lang),
+                callback_data="help_about"
+            )],
         ]
     )
 
@@ -53,14 +66,17 @@ def get_help_keyboard():
 # ГЛАВНОЕ МЕНЮ ПОМОЩИ
 # ============================================================================
 
-@router.message(F.text == "❓ Помощь")
+@router.message(Command("help"))
+@router.message(F.text.in_(["❓ Помощь", "❓ Допомога"]))
 async def show_help(message: Message, session: AsyncSession):
+    """Показ меню помощи"""
     user = await session.get(User, message.from_user.id)
+    lang = user.interface_language if user else "ru"
 
     help_text = (
-        "❓ <b>Помощь — GenauLingua</b>\n\n"
-        "Здесь ты найдёшь инструкции, узнаешь что скоро появится в боте и как связаться с сообществом.\n\n"
-        "Выбери раздел:"
+        f"{get_text('help_title', lang)}\n\n"
+        f"{get_text('help_description', lang)}\n\n"
+        f"{get_text('help_choose', lang)}"
     )
 
     try:
@@ -68,13 +84,13 @@ async def show_help(message: Message, session: AsyncSession):
     except:
         pass
 
-    old_anchor_id, new_anchor_id = await ensure_anchor(message, session, user, emoji="❓")
+    if user:
+        old_anchor_id, new_anchor_id = await ensure_anchor(message, session, user, emoji="❓")
+        if old_anchor_id:
+            current_msg_id = message.message_id
+            await delete_messages_fast(message.bot, message.chat.id, old_anchor_id, current_msg_id)
 
-    if old_anchor_id:
-        current_msg_id = message.message_id
-        await delete_messages_fast(message.bot, message.chat.id, old_anchor_id, current_msg_id)
-
-    await message.answer(help_text, reply_markup=get_help_keyboard())
+    await message.answer(help_text, reply_markup=get_help_keyboard(lang))
 
 
 # ============================================================================
@@ -82,33 +98,22 @@ async def show_help(message: Message, session: AsyncSession):
 # ============================================================================
 
 @router.callback_query(F.data == "help_how_to_use")
-async def show_how_to_use(callback: CallbackQuery):
+async def show_how_to_use(callback: CallbackQuery, session: AsyncSession):
     await callback.answer()
 
+    user = await session.get(User, callback.from_user.id)
+    lang = user.interface_language if user else "ru"
+
     text = (
-        "📖 <b>Как пользоваться ботом</b>\n\n"
-
-        "1️⃣ <b>Настрой уровень и режим</b>\n"
-        "🦾 Настройки → выбери уровень A1–B1, режим перевода и язык.\n\n"
-
-        "2️⃣ <b>Учи слова каждый день</b>\n"
-        "📚 Учить слова → викторина из 25 слов.\n"
-        "Бот запоминает твои ошибки и чаще показывает сложные слова.\n\n"
-
-        "3️⃣ <b>Повторяй ошибки</b>\n"
-        "После викторины можешь сразу повторить слова в которых ошибся.\n\n"
-
-        "4️⃣ <b>Следи за прогрессом</b>\n"
-        "📊 Статистика → сколько выучено, история викторин, стрик.\n\n"
-
-        "━━━━━━━━━━━━━━━━━\n"
-        "💡 Слово <b>выучено</b> — если ответил правильно 3 раза подряд.\n"
-        "🔥 <b>Стрик</b> растёт если прошёл хотя бы 1 викторину в этот день.\n\n"
-        f"Вопросы? → {CHAT_URL}"
+        f"{get_text('help_how_to_use_title', lang)}\n\n"
+        f"{get_text('help_how_to_use_text', lang)}"
     )
 
     keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="◀️ Назад", callback_data="help_back")]]
+        inline_keyboard=[[InlineKeyboardButton(
+            text=get_text("btn_back", lang),
+            callback_data="help_back"
+        )]]
     )
 
     await callback.message.edit_text(text, reply_markup=keyboard)
@@ -119,36 +124,22 @@ async def show_how_to_use(callback: CallbackQuery):
 # ============================================================================
 
 @router.callback_query(F.data == "help_roadmap")
-async def show_roadmap(callback: CallbackQuery):
+async def show_roadmap(callback: CallbackQuery, session: AsyncSession):
     await callback.answer()
 
+    user = await session.get(User, callback.from_user.id)
+    lang = user.interface_language if user else "ru"
+
     text = (
-        "🚀 <b>Скоро в GenauLingua</b>\n\n"
-
-        "🏆 <b>Достижения</b>\n"
-        "Бейджи за прогресс — первая викторина, 7 дней подряд, 100 слов выучено, викторина на 100% и другие.\n\n"
-
-        "🥇 <b>Таблица лидеров</b>\n"
-        "Рейтинг среди всех пользователей — по словам, стрику и результатам викторин. Сравнивай себя с другими.\n\n"
-
-        "🎯 <b>Челленджи</b>\n"
-        "Еженедельные задания — пройди 7 викторин подряд, выучи 100 слов за неделю, набери 3 результата на 90%+.\n\n"
-
-        "🔔 <b>Напоминания</b>\n"
-        "Настрой время — бот напомнит позаниматься и покажет текущий стрик.\n\n"
-
-        "📚 <b>Уровни B2–C2</b>\n"
-        "Сейчас доступны A1–B1. В работе база для B2, C1 и C2.\n\n"
-
-        "🎤 <b>Произношение</b>\n"
-        "Озвучка слов — слушай как звучит немецкое слово.\n\n"
-
-        "━━━━━━━━━━━━━━━━━\n"
-        f"💬 Идеи и пожелания — пиши в чат:\n{CHAT_URL}"
+        f"{get_text('help_roadmap_title', lang)}\n\n"
+        f"{get_text('help_roadmap_text', lang)}"
     )
 
     keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="◀️ Назад", callback_data="help_back")]]
+        inline_keyboard=[[InlineKeyboardButton(
+            text=get_text("btn_back", lang),
+            callback_data="help_back"
+        )]]
     )
 
     await callback.message.edit_text(text, reply_markup=keyboard)
@@ -159,24 +150,22 @@ async def show_roadmap(callback: CallbackQuery):
 # ============================================================================
 
 @router.callback_query(F.data == "help_community")
-async def show_community(callback: CallbackQuery):
+async def show_community(callback: CallbackQuery, session: AsyncSession):
     await callback.answer()
 
+    user = await session.get(User, callback.from_user.id)
+    lang = user.interface_language if user else "ru"
+
     text = (
-        "💬 <b>Сообщество GenauLingua</b>\n\n"
-        f"👉 <b>{CHAT_URL}</b>\n\n"
-        "В чате:\n"
-        "📢 Первыми узнаёшь об обновлениях\n"
-        "🐛 Нашёл баг — пиши или присылай скриншот\n"
-        "📝 Ошибка в переводе — сообщай, исправим\n"
-        "💡 Идеи и пожелания — всё читаем и берём в работу\n"
-        "👥 Общение с другими учениками\n\n"
-        "━━━━━━━━━━━━━━━━━\n"
-        "Чем активнее сообщество — тем лучше становится бот. Не стесняйся! 🙌"
+        f"{get_text('help_community_title', lang)}\n\n"
+        f"{get_text('help_community_text', lang)}"
     )
 
     keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="◀️ Назад", callback_data="help_back")]]
+        inline_keyboard=[[InlineKeyboardButton(
+            text=get_text("btn_back", lang),
+            callback_data="help_back"
+        )]]
     )
 
     await callback.message.edit_text(text, reply_markup=keyboard)
@@ -187,25 +176,22 @@ async def show_community(callback: CallbackQuery):
 # ============================================================================
 
 @router.callback_query(F.data == "help_about")
-async def show_about(callback: CallbackQuery):
+async def show_about(callback: CallbackQuery, session: AsyncSession):
     await callback.answer()
 
+    user = await session.get(User, callback.from_user.id)
+    lang = user.interface_language if user else "ru"
+
     text = (
-        "ℹ️ <b>О боте</b>\n\n"
-        "🤖 <b>GenauLingua</b> — персональный помощник в изучении немецкого.\n\n"
-        "✨ <b>Что умеет сейчас:</b>\n"
-        "• База слов A1–B1 (3000+ слов)\n"
-        "• Умный подбор слов — SRS алгоритм\n"
-        "• Режимы DE→RU, RU→DE, DE→UA, UA→DE\n"
-        "• Повтор ошибок после викторины\n"
-        "• Статистика и стрик\n"
-        "• Интерфейс на русском и украинском\n\n"
-        "📅 <b>Обновлено:</b> Февраль 2026\n\n"
-        f"💬 Следи за обновлениями: {CHAT_URL}"
+        f"{get_text('help_about_title', lang)}\n\n"
+        f"{get_text('help_about_text', lang)}"
     )
 
     keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="◀️ Назад", callback_data="help_back")]]
+        inline_keyboard=[[InlineKeyboardButton(
+            text=get_text("btn_back", lang),
+            callback_data="help_back"
+        )]]
     )
 
     await callback.message.edit_text(text, reply_markup=keyboard)
@@ -216,16 +202,19 @@ async def show_about(callback: CallbackQuery):
 # ============================================================================
 
 @router.callback_query(F.data == "help_back")
-async def back_to_help(callback: CallbackQuery):
+async def back_to_help(callback: CallbackQuery, session: AsyncSession):
     await callback.answer()
 
+    user = await session.get(User, callback.from_user.id)
+    lang = user.interface_language if user else "ru"
+
     help_text = (
-        "❓ <b>Помощь — GenauLingua</b>\n\n"
-        "Здесь ты найдёшь инструкции, узнаешь что скоро появится в боте и как связаться с сообществом.\n\n"
-        "Выбери раздел:"
+        f"{get_text('help_title', lang)}\n\n"
+        f"{get_text('help_description', lang)}\n\n"
+        f"{get_text('help_choose', lang)}"
     )
 
-    await callback.message.edit_text(help_text, reply_markup=get_help_keyboard())
+    await callback.message.edit_text(help_text, reply_markup=get_help_keyboard(lang))
 
 
 @router.callback_query(F.data == "back_to_menu")
