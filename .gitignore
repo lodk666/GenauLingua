@@ -51,6 +51,8 @@ docs/_build/
 
 # ---- Framework specifics ----
 # Django / Flask / etc.
+postgres_data/
+logs/
 *.log
 local_settings.py
 db.sqlite3

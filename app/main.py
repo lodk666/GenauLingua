@@ -1,6 +1,5 @@
 """
 Главный файл запуска бота GenauLingua
-Обновлённая версия с модульной структурой
 """
 
 import sys
@@ -12,52 +11,60 @@ sys.path.insert(0, str(project_root))
 
 import asyncio
 import logging
+
 from aiogram import Bot, Dispatcher
-from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiogram.types import ErrorEvent
+from aiogram.fsm.storage.memory import MemoryStorage
 
 from app.config import settings
 from app.bot.handlers.start import router as start_router
-from app.bot.handlers.quiz import router as quiz_router  # ← НОВЫЙ МОДУЛЬ!
+from app.bot.handlers.quiz import router as quiz_router
 from app.bot.handlers.admin import router as admin_router
 from app.database.session import AsyncSessionLocal
+from app.core.logging import setup_logging
+from app.core.sentry import setup_sentry
 
-# Настройка логирования
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 async def main():
-    """Главная функция запуска бота"""
+    setup_logging()
+    setup_sentry()
 
-    # Инициализация бота и диспетчера
+    logger.info("🚀 Starting GenauLingua Bot...")
+
     bot = Bot(
         token=settings.BOT_TOKEN,
-        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
 
     dp = Dispatcher(storage=MemoryStorage())
 
-    # Регистрация роутеров
-    dp.include_router(start_router)  # Стартовое меню
-    dp.include_router(quiz_router)  # Модуль quiz (game + settings + stats + help)
-    dp.include_router(admin_router)  # Админка
+    # ✅ Global error handler (aiogram v3)
+    @dp.errors()
+    async def global_error_handler(event: ErrorEvent):
+        logger.exception("Unhandled error: %s", event.exception)
+        return True
 
-    # Middleware для передачи сессии БД в хэндлеры
+    # Routers
+    dp.include_router(start_router)
+    dp.include_router(quiz_router)
+    dp.include_router(admin_router)
+
+    # ✅ DB session middleware
     @dp.update.middleware()
     async def db_session_middleware(handler, event, data):
         async with AsyncSessionLocal() as session:
-            data['session'] = session
+            data["session"] = session
             return await handler(event, data)
 
-    # Запуск бота
-    logger.info("🚀 GenauLingua Bot запущен!")
-    logger.info("📦 Модульная структура загружена:")
-    logger.info("   ✅ quiz/game.py - Игровая логика")
-    logger.info("   ✅ quiz/settings.py - Настройки")
-    logger.info("   ✅ quiz/stats.py - Статистика")
-    logger.info("   ✅ quiz/help.py - Помощь")
+    logger.info("📦 Routers loaded:")
+    logger.info("   ✅ quiz/game.py")
+    logger.info("   ✅ quiz/settings.py")
+    logger.info("   ✅ quiz/stats.py")
+    logger.info("   ✅ quiz/help.py")
 
     await dp.start_polling(bot)
 
