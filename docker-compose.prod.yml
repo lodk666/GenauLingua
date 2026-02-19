@@ -4,7 +4,7 @@ services:
     container_name: genaulingua_db
     environment:
       POSTGRES_USER: genau_user
-      POSTGRES_PASSWORD: genau_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: genaulingua_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
