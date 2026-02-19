@@ -5,7 +5,7 @@ from app.config import settings
 # Создание движка БД
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=True,
+    echo=settings.ENV == "dev",
     future=True
 )
 
