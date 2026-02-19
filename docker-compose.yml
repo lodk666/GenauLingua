@@ -2,29 +2,33 @@ services:
   postgres:
     image: postgres:16
     container_name: genaulingua_db
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: genau_user
-      POSTGRES_PASSWORD: AA212121lodkZZ
-      POSTGRES_DB: genaulingua_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
 
   app:
     build: .
     container_name: genaulingua_app
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     env_file:
       - .env
     command: >
-      sh -c "
-      echo 'Waiting for postgres...' &&
-      sleep 5 &&
-      alembic upgrade head &&
-      python app/main.py
-      "
+      sh -c "alembic upgrade head &&
+             python app/main.py"
     volumes:
       - .:/app
 
