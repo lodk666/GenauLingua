@@ -23,10 +23,11 @@ ENV/
 env.bak/
 venv.bak/
 
-# ---- Environment files ----
+# Environment
 .env
-*.env
-.envrc
+.env.*
+!.env.example
+
 
 # ---- Tools / caches ----
 .tox/
