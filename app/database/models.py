@@ -93,11 +93,15 @@ class Word(Base):
     # Переводы
     translation_ru: Mapped[Optional[str]] = mapped_column(String(255))
     translation_uk: Mapped[Optional[str]] = mapped_column(String(255))
+    translation_en: Mapped[Optional[str]] = mapped_column(String(255))
+    translation_tr: Mapped[Optional[str]] = mapped_column(String(255))
     
     # Примеры использования
     example_de: Mapped[Optional[str]] = mapped_column(Text)
     example_ru: Mapped[Optional[str]] = mapped_column(Text)
     example_uk: Mapped[Optional[str]] = mapped_column(Text)
+    example_en: Mapped[Optional[str]] = mapped_column(Text)
+    example_tr: Mapped[Optional[str]] = mapped_column(Text)
     
     # Категории (массив строк)
     categories: Mapped[Optional[List[str]]] = mapped_column(
@@ -135,21 +139,27 @@ class Word(Base):
         return self.word_de
 
     def get_translation(self, language: str) -> Optional[str]:
-        """Получить перевод на указанный язык"""
         if language == "ru":
             return self.translation_ru
         elif language == "uk":
             return self.translation_uk
+        elif language == "en":
+            return self.translation_en
+        elif language == "tr":
+            return self.translation_tr
         return None
 
     def get_example(self, language: str) -> Optional[str]:
-        """Получить пример на указанном языке"""
         if language == "de":
             return self.example_de
         elif language == "ru":
             return self.example_ru
         elif language == "uk":
             return self.example_uk
+        elif language == "en":
+            return self.example_en
+        elif language == "tr":
+            return self.example_tr
         return None
 
 
