@@ -10,10 +10,14 @@ class CEFRLevel(enum.Enum):
 
 
 class TranslationMode(enum.Enum):
-    DE_TO_RU = "de_to_ru"
-    RU_TO_DE = "ru_to_de"
-    DE_TO_UK = "de_to_uk"  # Немецкий → Украинский
-    UK_TO_DE = "uk_to_de"  # Украинский → Немецкий
+    DE_TO_RU = "DE_TO_RU"
+    RU_TO_DE = "RU_TO_DE"
+    DE_TO_UK = "DE_TO_UK"
+    UK_TO_DE = "UK_TO_DE"
+    DE_TO_EN = "DE_TO_EN"  # <-- ЗАГЛАВНЫЕ
+    EN_TO_DE = "EN_TO_DE"
+    DE_TO_TR = "DE_TO_TR"
+    TR_TO_DE = "TR_TO_DE"
 
 
 class PartOfSpeech(enum.Enum):

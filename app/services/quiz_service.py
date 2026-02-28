@@ -53,8 +53,9 @@ async def generate_question(
         distractors.extend(additional)
 
     # Формируем варианты ответов в зависимости от режима
-    if mode.value in ("ru_to_de", "uk_to_de"):
-        # RU→DE или UK→DE: показываем немецкие слова как варианты
+    # Формируем варианты ответов в зависимости от режима
+    if mode.value in ("RU_TO_DE", "UK_TO_DE", "EN_TO_DE", "TR_TO_DE"):
+        # RU→DE / UK→DE / EN→DE / TR→DE: показываем немецкие слова как варианты
         options = []
         correct_display = correct_word.word_de
         if correct_word.article and correct_word.article != '-':
@@ -68,12 +69,22 @@ async def generate_question(
                 distractor_display = f"{d.article} {d.word_de}"
             options.append((d.id, distractor_display))
 
-    elif mode.value == "de_to_uk":
+    elif mode.value == "DE_TO_UK":
         # DE→UK: показываем украинские переводы как варианты
         options = [(correct_word.id, correct_word.translation_uk.capitalize())]
         options.extend([(d.id, d.translation_uk.capitalize()) for d in distractors[:3]])
 
-    else:  # de_to_ru
+    elif mode.value == "DE_TO_EN":
+        # DE→EN: показываем английские переводы как варианты
+        options = [(correct_word.id, correct_word.translation_en.capitalize())]
+        options.extend([(d.id, d.translation_en.capitalize()) for d in distractors[:3]])
+
+    elif mode.value == "DE_TO_TR":
+        # DE→TR: показываем турецкие переводы как варианты
+        options = [(correct_word.id, correct_word.translation_tr.capitalize())]
+        options.extend([(d.id, d.translation_tr.capitalize()) for d in distractors[:3]])
+
+    else:  # DE_TO_RU
         # DE→RU: показываем русские переводы как варианты
         options = [(correct_word.id, correct_word.translation_ru.capitalize())]
         options.extend([(d.id, d.translation_ru.capitalize()) for d in distractors[:3]])

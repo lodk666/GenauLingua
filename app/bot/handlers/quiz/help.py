@@ -67,7 +67,7 @@ def get_help_keyboard(lang: str) -> InlineKeyboardMarkup:
 # ============================================================================
 
 @router.message(Command("help"))
-@router.message(F.text.in_(["❓ Помощь", "❓ Допомога"]))
+@router.message(F.text.in_(["❓ Помощь", "❓ Допомога", "❓ Help", "❓ Yardım"]))
 async def show_help(message: Message, session: AsyncSession):
     """Показ меню помощи"""
     user = await session.get(User, message.from_user.id)
