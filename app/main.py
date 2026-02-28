@@ -22,9 +22,11 @@ from app.config import settings
 from app.bot.handlers.start import router as start_router
 from app.bot.handlers.quiz import router as quiz_router
 from app.bot.handlers.admin import router as admin_router
+from app.bot.handlers.reminders import router as reminders_router
 from app.database.session import AsyncSessionLocal
 from app.core.logging import setup_logging
 from app.core.sentry import setup_sentry
+from app.schedulers import setup_scheduler
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +53,7 @@ async def main():
     # Routers
     dp.include_router(start_router)
     dp.include_router(quiz_router)
+    dp.include_router(reminders_router)
     dp.include_router(admin_router)
 
     # ✅ DB session middleware
@@ -65,6 +68,11 @@ async def main():
     logger.info("   ✅ quiz/settings.py")
     logger.info("   ✅ quiz/stats.py")
     logger.info("   ✅ quiz/help.py")
+    logger.info("   ✅ reminder_scheduler.py")
+
+    # Запускаем планировщик напоминаний
+    scheduler = setup_scheduler(bot)
+    logger.info("⏰ Notification scheduler started")
 
     await dp.start_polling(bot)
 

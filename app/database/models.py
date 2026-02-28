@@ -3,7 +3,7 @@ from sqlalchemy import Date
 from typing import List, Optional
 
 from sqlalchemy import (
-    BigInteger, String, Boolean, DateTime, Integer, 
+    BigInteger, String, Boolean, DateTime, Integer,
     ForeignKey, Text, Enum as SQLEnum, Float
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -12,9 +12,9 @@ from app.database.enums import CEFRLevel, TranslationMode
 import enum
 
 
-
 class Base(DeclarativeBase):
     pass
+
 
 class User(Base):
     __tablename__ = "users"
@@ -33,10 +33,31 @@ class User(Base):
 
     # Новые поля и настройки
     level: Mapped[CEFRLevel] = mapped_column(SQLEnum(CEFRLevel), default=CEFRLevel.A1)
-    translation_mode: Mapped[TranslationMode] = mapped_column(SQLEnum(TranslationMode), default=TranslationMode.DE_TO_RU)
+    translation_mode: Mapped[TranslationMode] = mapped_column(SQLEnum(TranslationMode),
+                                                              default=TranslationMode.DE_TO_RU)
     interface_language: Mapped[str] = mapped_column(String(2), default="ru")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     anchor_message_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+
+    # === ЯЗЫКИ И ЛОКАЛИЗАЦИЯ ===
+    telegram_language: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+
+    # === TIMEZONE ===
+    timezone: Mapped[str] = mapped_column(String(50), default="Europe/Berlin")
+    utc_offset: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+
+    # === ВРЕМЯ АКТИВНОСТИ ===
+    first_quiz_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    last_active_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    # === НАПОМИНАНИЯ ===
+    notifications_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    notification_time: Mapped[str] = mapped_column(String(5), default="20:00")
+    notification_days: Mapped[List[int]] = mapped_column(ARRAY(Integer), default=[0, 1, 2, 3, 4, 5, 6])
+    last_notification_sent: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    # === НАСТРОЙКИ ВИКТОРИНЫ ===
+    quiz_word_count: Mapped[int] = mapped_column(Integer, default=25)
 
     # Связи
     quiz_sessions: Mapped[List["QuizSession"]] = relationship(
@@ -64,7 +85,6 @@ class UserWord(Base):
     word = relationship("Word", backref="learned_by")
 
 
-
 class PartOfSpeech(enum.Enum):
     """Части речи"""
     NOUN = "noun"
@@ -77,47 +97,48 @@ class PartOfSpeech(enum.Enum):
     CONJUNCTION = "conjunction"
     OTHER = "other"
 
+
 class Word(Base):
     __tablename__ = "words"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    
+
     # Немецкое слово
     word_de: Mapped[str] = mapped_column(String(255), index=True)
     article: Mapped[Optional[str]] = mapped_column(String(10))  # der/die/das
-    
+
     # Часть речи и уровень
     pos: Mapped[PartOfSpeech] = mapped_column(SQLEnum(PartOfSpeech))
     level: Mapped[CEFRLevel] = mapped_column(SQLEnum(CEFRLevel), index=True)
-    
+
     # Переводы
     translation_ru: Mapped[Optional[str]] = mapped_column(String(255))
     translation_uk: Mapped[Optional[str]] = mapped_column(String(255))
     translation_en: Mapped[Optional[str]] = mapped_column(String(255))
     translation_tr: Mapped[Optional[str]] = mapped_column(String(255))
-    
+
     # Примеры использования
     example_de: Mapped[Optional[str]] = mapped_column(Text)
     example_ru: Mapped[Optional[str]] = mapped_column(Text)
     example_uk: Mapped[Optional[str]] = mapped_column(Text)
     example_en: Mapped[Optional[str]] = mapped_column(Text)
     example_tr: Mapped[Optional[str]] = mapped_column(Text)
-    
+
     # Категории (массив строк)
     categories: Mapped[Optional[List[str]]] = mapped_column(
-        ARRAY(String), 
+        ARRAY(String),
         default=list
     )
-    
+
     # Статистика
     times_shown: Mapped[int] = mapped_column(Integer, default=0)
     times_correct: Mapped[int] = mapped_column(Integer, default=0)
-    
+
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, 
+        DateTime,
         default=datetime.utcnow
     )
-    
+
     # Relationships
     quiz_questions: Mapped[List["QuizQuestion"]] = relationship(
         back_populates="word",
@@ -168,28 +189,28 @@ class QuizSession(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
-        BigInteger, 
+        BigInteger,
         ForeignKey("users.id", ondelete="CASCADE"),
         index=True
     )
-    
+
     level: Mapped[CEFRLevel] = mapped_column(SQLEnum(CEFRLevel))
     translation_mode: Mapped[TranslationMode] = mapped_column(
         SQLEnum(TranslationMode)
     )
-    
+
     # Статистика сессии
     total_questions: Mapped[int] = mapped_column(Integer, default=0)
     correct_answers: Mapped[int] = mapped_column(Integer, default=0)
-    
+
     is_completed: Mapped[bool] = mapped_column(Boolean, default=False)
-    
+
     started_at: Mapped[datetime] = mapped_column(
-        DateTime, 
+        DateTime,
         default=datetime.utcnow
     )
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
-    
+
     # Relationships
     user: Mapped["User"] = relationship(back_populates="quiz_sessions")
     questions: Mapped[List["QuizQuestion"]] = relationship(
@@ -209,7 +230,7 @@ class QuizQuestion(Base):
     __tablename__ = "quiz_questions"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    
+
     session_id: Mapped[int] = mapped_column(
         ForeignKey("quiz_sessions.id", ondelete="CASCADE"),
         index=True
@@ -218,19 +239,19 @@ class QuizQuestion(Base):
         ForeignKey("words.id", ondelete="CASCADE"),
         index=True
     )
-    
+
     # Ответ пользователя
     user_answer: Mapped[Optional[str]] = mapped_column(String(255))
     is_correct: Mapped[Optional[bool]] = mapped_column(Boolean)
-    
+
     # Время ответа
     answered_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
-    
+
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, 
+        DateTime,
         default=datetime.utcnow
     )
-    
+
     # Relationships
     session: Mapped["QuizSession"] = relationship(back_populates="questions")
     word: Mapped["Word"] = relationship(back_populates="quiz_questions")
