@@ -70,6 +70,8 @@ TEXTS = {
     # Названия языков
     "lang_ru": "🏴 Русский",
     "lang_uk": "🇺🇦 Українська",
+    "lang_en": "🇬🇧 English",
+    "lang_tr": "🇹🇷 Türkçe",
 
     # Режимы перевода
     "mode_de_to_ru": "🇩🇪 DE → 🏴 RU",
