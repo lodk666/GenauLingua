@@ -84,6 +84,10 @@ async def show_settings(message: Message, session: AsyncSession):
             [InlineKeyboardButton(
                 text=get_text("settings_btn_change_language", lang),
                 callback_data="settings_language"
+            )],
+            [InlineKeyboardButton(
+                text="🔔 Напоминания",
+                callback_data="settings:notifications"
             )]
         ]
     )
@@ -132,6 +136,10 @@ async def show_settings_callback(callback: CallbackQuery, session: AsyncSession)
             [InlineKeyboardButton(
                 text=get_text("settings_btn_change_language", lang),
                 callback_data="settings_language"
+            )],
+            [InlineKeyboardButton(
+                text="🔔 Напоминания",
+                callback_data="settings:notifications"
             )]
         ]
     )
