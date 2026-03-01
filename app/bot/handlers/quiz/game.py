@@ -145,6 +145,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
         translation_mode=user.translation_mode,
         total_questions=25,
         correct_answers=0,
+        start_source='menu',  # Запущено из главного меню
     )
 
     session.add(quiz_session)
@@ -175,7 +176,8 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
         correct_answers=0,
         errors=[],
         correct_word_id=question["correct_word"].id,
-        used_word_ids=[question["correct_word"].id]
+        used_word_ids=[question["correct_word"].id],
+        question_shown_at=datetime.utcnow()  # Сохраняем время показа вопроса
     )
 
     word = question["correct_word"]
@@ -230,12 +232,20 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
     correct_word = await session.get(Word, correct_word_id)
     is_correct = (selected_word_id == correct_word_id)
 
+    # Считаем время ответа (если есть timestamp в state)
+    question_shown_at = data.get("question_shown_at")
+    response_time_seconds = None
+    if question_shown_at:
+        response_time = (datetime.utcnow() - question_shown_at).total_seconds()
+        response_time_seconds = int(response_time)
+
     # Логируем вопрос в историю сессии
     session_item = QuizQuestion(
         session_id=session_id,
         word_id=correct_word_id,
         is_correct=is_correct,
-        answered_at=datetime.utcnow()
+        answered_at=datetime.utcnow(),
+        response_time_seconds=response_time_seconds
     )
     session.add(session_item)
     await session.commit()
@@ -344,6 +354,13 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         quiz_session = await session.get(QuizSession, session_id)
         quiz_session.correct_answers = correct_answers
         quiz_session.completed_at = datetime.utcnow()
+        quiz_session.is_completed = True
+        quiz_session.exit_reason = 'completed'  # Успешно завершил
+        quiz_session.exit_at_question = total_questions  # Дошёл до конца
+
+        # Обновляем last_quiz_date у пользователя
+        user.last_quiz_date = date.today()
+
         await session.commit()
 
         # Обновляем стрик
@@ -442,7 +459,8 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         await state.update_data(
             current_question=current_question,
             correct_word_id=next_word_id,
-            current_error_index=current_error_index
+            current_error_index=current_error_index,
+            question_shown_at=datetime.utcnow()  # Время показа вопроса
         )
 
         display_total = len(error_words)
@@ -501,7 +519,8 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
     await state.update_data(
         current_question=current_question,
         correct_word_id=question["correct_word"].id,
-        used_word_ids=used_word_ids
+        used_word_ids=used_word_ids,
+        question_shown_at=datetime.utcnow()  # Время показа вопроса
     )
 
     word = question["correct_word"]
@@ -550,6 +569,7 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
         translation_mode=user.translation_mode,
         total_questions=len(errors),
         correct_answers=0,
+        start_source='repeat_errors',  # Запущено из повтора ошибок
     )
 
     session.add(quiz_session)
@@ -596,7 +616,8 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
         errors=[],
         correct_word_id=first_word_id,
         error_words=errors,
-        current_error_index=0
+        current_error_index=0,
+        question_shown_at=datetime.utcnow()  # Время показа вопроса
     )
 
     # текст вопроса
