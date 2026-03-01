@@ -42,6 +42,68 @@ TEXTS = {
     "level_locked": "🔒 This level is coming soon",
 
     # ============================================================================
+    # NOTIFICATIONS
+    # ============================================================================
+    "notif_title": "🔔 <b>Notification Settings</b>",
+    "notif_status": "Status: {status}",
+    "notif_status_on": "🔔 Enabled",
+    "notif_status_off": "🔕 Disabled",
+    "notif_time": "Time: {time}",
+    "notif_days": "Days: {days}",
+    "notif_timezone": "Timezone: {timezone}",
+    "notif_hint": "💡 Notifications will arrive at the specified time in your timezone.",
+    "notif_hint_off": "💡 Enable notifications to never forget your daily practice!",
+
+    "notif_btn_toggle_on": "🔔 Notifications: Enabled",
+    "notif_btn_toggle_off": "🔕 Notifications: Disabled",
+    "notif_btn_time": "🕐 Time: {time}",
+    "notif_btn_days": "📅 Select days",
+    "notif_btn_timezone": "🌍 Change timezone",
+
+    "notif_timezone_title": "🌍 <b>Select your timezone</b>",
+    "notif_timezone_current": "Current: {timezone}",
+    "notif_timezone_prompt": "Select a city in your timezone:",
+    "notif_timezone_more": "🌍 Select another city ▼",
+    "notif_timezone_back": "◀️ Back",
+    "notif_timezone_set": "✅ Timezone set: {city}",
+
+    "notif_time_title": "🕐 <b>Select notification time</b>",
+    "notif_time_current": "Current time: {time}",
+    "notif_time_timezone": "Timezone: {timezone}",
+    "notif_time_hint": "Notification will arrive daily at the selected time.",
+    "notif_time_set": "✅ Time set: {time}",
+
+    "notif_days_title": "📅 <b>Select notification days</b>",
+    "notif_days_hint": "Tap on a day to enable/disable it.\n✅ Green check - day enabled\n❌ Red cross - day disabled\n\nWhen done - tap 'Save'.",
+    "notif_days_all": "📅 All days",
+    "notif_days_weekdays": "🗓️ Weekdays (Mon-Fri)",
+    "notif_days_save": "💾 Save",
+    "notif_days_saved": "✅ Days saved!",
+    "notif_days_all_selected": "✅ All days selected",
+    "notif_days_weekdays_selected": "✅ Weekdays selected (Mon-Fri)",
+    "notif_days_none": "⚠️ Select at least one day for notifications!",
+
+    "notif_toggle_on": "🔔 Notifications enabled!",
+    "notif_toggle_off": "🔕 Notifications disabled",
+
+    "notif_message_title": "{emoji} <b>Time to practice!</b>",
+    "notif_message_streak": "🔥 Streak: {days} days",
+    "notif_message_words": "📊 Words learned: {count}",
+    "notif_message_cta": "💪 Keep your streak going!",
+    "notif_message_btn_start": "📚 Start quiz",
+    "notif_message_btn_disable": "🔕 Disable notifications",
+
+    "day_mon": "Mon",
+    "day_tue": "Tue",
+    "day_wed": "Wed",
+    "day_thu": "Thu",
+    "day_fri": "Fri",
+    "day_sat": "Sat",
+    "day_sun": "Sun",
+
+    "notif_btn_back": "◀️ Back to settings",
+
+    # ============================================================================
     # SETTINGS
     # ============================================================================
     "settings_title": "🦾 <b>Settings</b>",
@@ -53,6 +115,7 @@ TEXTS = {
     "settings_btn_change_level": "📚 Change level",
     "settings_btn_change_mode": "🔄 Translation mode",
     "settings_btn_change_language": "🌍 Interface language",
+    "settings_btn_notifications": "🔔 Notifications",
 
     "settings_level_title": "📚 <b>Choose level</b>",
     "settings_level_description": "Choose your current German level:\n\n• <b>A1</b> — Beginner (Hello, how are you?)\n• <b>A2</b> — Elementary (Simple dialogues)\n• <b>B1</b> — Intermediate (Everyday communication)",

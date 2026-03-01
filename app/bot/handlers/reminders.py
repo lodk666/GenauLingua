@@ -34,32 +34,32 @@ async def show_notifications_settings(callback: CallbackQuery, session: AsyncSes
     lang = user.interface_language or "ru"
 
     # Формируем текст с текущими настройками
-    status = "🔔 Включены" if user.notifications_enabled else "🔕 Выключены"
-    timezone_text = f"{user.timezone}" if user.timezone else "Не установлен"
+    status = get_text("notif_status_on", lang) if user.notifications_enabled else get_text("notif_status_off", lang)
+    timezone_text = f"{user.timezone}" if user.timezone else "—"
 
-    text = (
-        f"🔔 <b>Настройки напоминаний</b>\n\n"
-        f"Статус: {status}\n"
-    )
+    text = f"{get_text('notif_title', lang)}\n\n{get_text('notif_status', lang, status=status)}\n"
 
     if user.notifications_enabled:
         # Показываем детали только если напоминания включены
-        days_map = {0: "Пн", 1: "Вт", 2: "Ср", 3: "Чт", 4: "Пт", 5: "Сб", 6: "Вс"}
+        days_map = {
+            0: get_text("day_mon", lang), 1: get_text("day_tue", lang),
+            2: get_text("day_wed", lang), 3: get_text("day_thu", lang),
+            4: get_text("day_fri", lang), 5: get_text("day_sat", lang),
+            6: get_text("day_sun", lang)
+        }
         days_str = ", ".join([days_map[d] for d in sorted(user.notification_days)])
 
         # Убираем секунды если есть, показываем только HH:MM
         time_display = user.notification_time if len(user.notification_time) == 5 else user.notification_time[:5]
 
         text += (
-            f"Время: {time_display}\n"
-            f"Дни: {days_str}\n"
-            f"Часовой пояс: {timezone_text}\n\n"
-            f"💡 Напоминания будут приходить в указанное время по вашему часовому поясу."
+            f"{get_text('notif_time', lang, time=time_display)}\n"
+            f"{get_text('notif_days', lang, days=days_str)}\n"
+            f"{get_text('notif_timezone', lang, timezone=timezone_text)}\n\n"
+            f"{get_text('notif_hint', lang)}"
         )
     else:
-        text += (
-            f"\n💡 Включите напоминания, чтобы не забывать заниматься каждый день!"
-        )
+        text += f"\n{get_text('notif_hint_off', lang)}"
 
     keyboard = get_notifications_settings_keyboard(
         notifications_enabled=user.notifications_enabled,
@@ -84,16 +84,13 @@ async def toggle_notifications(callback: CallbackQuery, session: AsyncSession):
         # Выключаем напоминания
         user.notifications_enabled = False
         await session.commit()
-        await callback.answer("🔕 Напоминания выключены", show_alert=False)
+        await callback.answer(get_text("notif_toggle_off", lang), show_alert=False)
     else:
         # Включаем напоминания - сначала нужно настроить timezone
         if not user.timezone or user.timezone == "Europe/Berlin":
             # Если timezone не настроен - предлагаем выбрать
             await callback.answer()
-            text = (
-                f"🌍 <b>Выберите ваш часовой пояс</b>\n\n"
-                f"Это нужно для того, чтобы напоминания приходили в правильное время."
-            )
+            text = f"{get_text('notif_timezone_title', lang)}\n\n{get_text('notif_timezone_prompt', lang)}"
             keyboard = get_timezone_main_keyboard(lang)
             await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
             return
@@ -101,7 +98,7 @@ async def toggle_notifications(callback: CallbackQuery, session: AsyncSession):
             # Timezone уже настроен - просто включаем
             user.notifications_enabled = True
             await session.commit()
-            await callback.answer("🔔 Напоминания включены!", show_alert=False)
+            await callback.answer(get_text("notif_toggle_on", lang), show_alert=False)
 
     # Обновляем меню настроек
     await show_notifications_settings(callback, session)
@@ -120,9 +117,9 @@ async def change_timezone_start(callback: CallbackQuery, session: AsyncSession):
     lang = user.interface_language or "ru"
 
     text = (
-        f"🌍 <b>Выберите ваш часовой пояс</b>\n\n"
-        f"Текущий: {user.timezone}\n\n"
-        f"Выберите город в вашем часовом поясе:"
+        f"{get_text('notif_timezone_title', lang)}\n\n"
+        f"{get_text('notif_timezone_current', lang, timezone=user.timezone)}\n\n"
+        f"{get_text('notif_timezone_prompt', lang)}"
     )
 
     keyboard = get_timezone_main_keyboard(lang)
@@ -137,7 +134,7 @@ async def show_extended_cities(callback: CallbackQuery, session: AsyncSession):
     user = await session.get(User, callback.from_user.id)
     lang = user.interface_language or "ru"
 
-    text = f"🌍 <b>Выберите ваш город:</b>"
+    text = get_text('notif_timezone_title', lang)
 
     keyboard = get_timezone_extended_keyboard(lang)
     await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
@@ -151,10 +148,7 @@ async def back_to_main_timezones(callback: CallbackQuery, session: AsyncSession)
     user = await session.get(User, callback.from_user.id)
     lang = user.interface_language or "ru"
 
-    text = (
-        f"🌍 <b>Выберите ваш часовой пояс</b>\n\n"
-        f"Выберите город в вашем часовом поясе:"
-    )
+    text = f"{get_text('notif_timezone_title', lang)}\n\n{get_text('notif_timezone_prompt', lang)}"
 
     keyboard = get_timezone_main_keyboard(lang)
     await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
@@ -188,7 +182,7 @@ async def set_timezone(callback: CallbackQuery, session: AsyncSession):
 
     await session.commit()
 
-    await callback.answer(f"✅ Часовой пояс установлен: {city_name}", show_alert=False)
+    await callback.answer(get_text("notif_timezone_set", lang, city=city_name), show_alert=False)
 
     # Возвращаемся к настройкам напоминаний
     await show_notifications_settings(callback, session)
@@ -206,11 +200,13 @@ async def change_notification_time(callback: CallbackQuery, session: AsyncSessio
     user = await session.get(User, callback.from_user.id)
     lang = user.interface_language or "ru"
 
+    time_display = user.notification_time if len(user.notification_time) == 5 else user.notification_time[:5]
+
     text = (
-        f"🕐 <b>Выберите время напоминания</b>\n\n"
-        f"Текущее время: {user.notification_time}\n"
-        f"Часовой пояс: {user.timezone}\n\n"
-        f"Напоминание будет приходить каждый день в выбранное время."
+        f"{get_text('notif_time_title', lang)}\n\n"
+        f"{get_text('notif_time_current', lang, time=time_display)}\n"
+        f"{get_text('notif_time_timezone', lang, timezone=user.timezone)}\n\n"
+        f"{get_text('notif_time_hint', lang)}"
     )
 
     keyboard = get_notification_time_keyboard(lang)
@@ -229,10 +225,11 @@ async def set_notification_time(callback: CallbackQuery, session: AsyncSession):
         time_str = f"{time_str}:00"
 
     user = await session.get(User, callback.from_user.id)
+    lang = user.interface_language or "ru"
     user.notification_time = time_str
     await session.commit()
 
-    await callback.answer(f"✅ Время установлено: {time_str}", show_alert=False)
+    await callback.answer(get_text("notif_time_set", lang, time=time_str), show_alert=False)
 
     # Возвращаемся к настройкам напоминаний
     await show_notifications_settings(callback, session)
@@ -250,13 +247,7 @@ async def change_notification_days(callback: CallbackQuery, session: AsyncSessio
     user = await session.get(User, callback.from_user.id)
     lang = user.interface_language or "ru"
 
-    text = (
-        f"📅 <b>Выберите дни для напоминаний</b>\n\n"
-        f"Нажмите на день, чтобы включить/выключить его.\n"
-        f"✅ Зелёная галочка - день включен\n"
-        f"❌ Красный крестик - день выключен\n\n"
-        f"Когда закончите - нажмите 'Сохранить'."
-    )
+    text = get_text("notif_days_title", lang) + "\n\n" + get_text("notif_days_hint", lang)
 
     keyboard = get_notification_days_keyboard(
         selected_days=user.notification_days,
@@ -280,14 +271,14 @@ async def toggle_notification_day(callback: CallbackQuery, session: AsyncSession
         new_days = [0, 1, 2, 3, 4, 5, 6]
         user.notification_days = new_days
         await session.commit()
-        await callback.answer("✅ Выбраны все дни", show_alert=False)
+        await callback.answer(get_text("notif_days_all_selected", lang), show_alert=False)
 
     elif day_param == "weekdays":
         # Выбрать только будни (Пн-Пт)
         new_days = [0, 1, 2, 3, 4]
         user.notification_days = new_days
         await session.commit()
-        await callback.answer("✅ Выбраны будни (Пн-Пт)", show_alert=False)
+        await callback.answer(get_text("notif_days_weekdays_selected", lang), show_alert=False)
 
     else:
         # Переключить конкретный день
@@ -304,13 +295,7 @@ async def toggle_notification_day(callback: CallbackQuery, session: AsyncSession
         await callback.answer()
 
     # Обновляем клавиатуру
-    text = (
-        f"📅 <b>Выберите дни для напоминаний</b>\n\n"
-        f"Нажмите на день, чтобы включить/выключить его.\n"
-        f"✅ Зелёная галочка - день включен\n"
-        f"❌ Красный крестик - день выключен\n\n"
-        f"Когда закончите - нажмите 'Сохранить'."
-    )
+    text = get_text("notif_days_title", lang) + "\n\n" + get_text("notif_days_hint", lang)
 
     keyboard = get_notification_days_keyboard(
         selected_days=user.notification_days,
@@ -328,13 +313,14 @@ async def toggle_notification_day(callback: CallbackQuery, session: AsyncSession
 async def save_notification_days(callback: CallbackQuery, session: AsyncSession):
     """Сохранить выбранные дни и вернуться"""
     user = await session.get(User, callback.from_user.id)
+    lang = user.interface_language or "ru"
 
     # Проверяем что выбран хотя бы 1 день
     if not user.notification_days or len(user.notification_days) == 0:
-        await callback.answer("⚠️ Выберите хотя бы один день для напоминаний!", show_alert=True)
+        await callback.answer(get_text("notif_days_none", lang), show_alert=True)
         return
 
-    await callback.answer("✅ Дни сохранены!", show_alert=False)
+    await callback.answer(get_text("notif_days_saved", lang), show_alert=False)
 
     # Возвращаемся к настройкам напоминаний
     await show_notifications_settings(callback, session)

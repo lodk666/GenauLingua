@@ -42,6 +42,68 @@ TEXTS = {
     "level_locked": "🔒 Bu seviye yakında geliyor",
 
     # ============================================================================
+    # HATIRLATICILAR
+    # ============================================================================
+    "notif_title": "🔔 <b>Hatırlatıcı Ayarları</b>",
+    "notif_status": "Durum: {status}",
+    "notif_status_on": "🔔 Açık",
+    "notif_status_off": "🔕 Kapalı",
+    "notif_time": "Saat: {time}",
+    "notif_days": "Günler: {days}",
+    "notif_timezone": "Zaman dilimi: {timezone}",
+    "notif_hint": "💡 Hatırlatıcılar belirtilen saatte saat diliminize göre gelecek.",
+    "notif_hint_off": "💡 Günlük çalışmayı unutmamak için hatırlatıcıları açın!",
+
+    "notif_btn_toggle_on": "🔔 Hatırlatıcılar: Açık",
+    "notif_btn_toggle_off": "🔕 Hatırlatıcılar: Kapalı",
+    "notif_btn_time": "🕐 Saat: {time}",
+    "notif_btn_days": "📅 Günleri seç",
+    "notif_btn_timezone": "🌍 Zaman dilimini değiştir",
+
+    "notif_timezone_title": "🌍 <b>Zaman diliminizi seçin</b>",
+    "notif_timezone_current": "Şu anki: {timezone}",
+    "notif_timezone_prompt": "Zaman diliminizde bir şehir seçin:",
+    "notif_timezone_more": "🌍 Başka şehir seç ▼",
+    "notif_timezone_back": "◀️ Geri",
+    "notif_timezone_set": "✅ Zaman dilimi ayarlandı: {city}",
+
+    "notif_time_title": "🕐 <b>Hatırlatıcı saatini seçin</b>",
+    "notif_time_current": "Şu anki saat: {time}",
+    "notif_time_timezone": "Zaman dilimi: {timezone}",
+    "notif_time_hint": "Hatırlatıcı her gün seçilen saatte gelecek.",
+    "notif_time_set": "✅ Saat ayarlandı: {time}",
+
+    "notif_days_title": "📅 <b>Hatırlatıcı günlerini seçin</b>",
+    "notif_days_hint": "Günü açmak/kapatmak için dokunun.\n✅ Yeşil işaret - gün açık\n❌ Kırmızı çarpı - gün kapalı\n\nBitirdiğinizde - 'Kaydet'e basın.",
+    "notif_days_all": "📅 Tüm günler",
+    "notif_days_weekdays": "🗓️ Hafta içi (Pzt-Cum)",
+    "notif_days_save": "💾 Kaydet",
+    "notif_days_saved": "✅ Günler kaydedildi!",
+    "notif_days_all_selected": "✅ Tüm günler seçildi",
+    "notif_days_weekdays_selected": "✅ Hafta içi seçildi (Pzt-Cum)",
+    "notif_days_none": "⚠️ Hatırlatıcılar için en az bir gün seçin!",
+
+    "notif_toggle_on": "🔔 Hatırlatıcılar açıldı!",
+    "notif_toggle_off": "🔕 Hatırlatıcılar kapatıldı",
+
+    "notif_message_title": "{emoji} <b>Çalışma zamanı!</b>",
+    "notif_message_streak": "🔥 Seri: {days} gün",
+    "notif_message_words": "📊 Öğrenilen kelimeler: {count}",
+    "notif_message_cta": "💪 Serini kırma!",
+    "notif_message_btn_start": "📚 Quiz başlat",
+    "notif_message_btn_disable": "🔕 Hatırlatıcıları kapat",
+
+    "day_mon": "Pzt",
+    "day_tue": "Sal",
+    "day_wed": "Çar",
+    "day_thu": "Per",
+    "day_fri": "Cum",
+    "day_sat": "Cmt",
+    "day_sun": "Paz",
+
+    "notif_btn_back": "◀️ Ayarlara geri dön",
+
+    # ============================================================================
     # AYARLAR
     # ============================================================================
     "settings_title": "🦾 <b>Ayarlar</b>",
@@ -53,6 +115,7 @@ TEXTS = {
     "settings_btn_change_level": "📚 Seviye değiştir",
     "settings_btn_change_mode": "🔄 Çeviri modu",
     "settings_btn_change_language": "🌍 Arayüz dili",
+    "settings_btn_notifications": "🔔 Hatırlatıcılar",
 
     "settings_level_title": "📚 <b>Seviye seç</b>",
     "settings_level_description": "Mevcut Almanca seviyeni seç:\n\n• <b>A1</b> — Başlangıç (Merhaba, nasılsın?)\n• <b>A2</b> — Temel (Basit diyaloglar)\n• <b>B1</b> — Orta (Günlük iletişim)",
