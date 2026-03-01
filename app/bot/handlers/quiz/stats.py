@@ -4,7 +4,7 @@
 
 import asyncio
 from aiogram import Router, F
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -25,6 +25,18 @@ MODE_DICT = {
     "de_to_uk": "🇩🇪 DE → 🇺🇦 UK",
     "uk_to_de": "🇺🇦 UK → 🇩🇪 DE",
 }
+
+
+def get_stats_keyboard(lang: str) -> InlineKeyboardMarkup:
+    """Клавиатура под статистикой с кнопкой Рейтинг"""
+    button_text = "🏆 Рейтинг"
+
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text=button_text,
+            callback_data="show_leaderboard"
+        )]
+    ])
 
 
 async def delete_messages_fast(bot, chat_id: int, start_id: int, end_id: int):
@@ -51,8 +63,15 @@ async def ensure_anchor(message: Message, session: AsyncSession, user: User, emo
         return old_anchor_id, None
 
 
+@router.callback_query(F.data == "back_to_stats")
+async def back_to_stats_callback(callback: CallbackQuery, session: AsyncSession):
+    """Возврат к статистике из рейтинга"""
+    await callback.answer()
+    await show_statistics(callback.message, session)
+
+
 @router.message(Command("stats"))
-@router.message(F.text.in_(["📊 Статистика", "📊 Statistics", "📊 İstatistik"]))
+@router.message(F.text.in_(["📊 Статистика", "📊 Статистика", "📊 Statistics", "📊 İstatistikler"]))
 async def show_statistics(message: Message, session: AsyncSession):
     """Показ детальной статистики"""
     user_id = message.from_user.id
@@ -96,10 +115,7 @@ async def show_statistics(message: Message, session: AsyncSession):
     all_level_sessions = result.scalars().all()
     level_sessions = all_level_sessions[:5]
 
-    # ========================================================================
     # ФОРМИРУЕМ ТЕКСТ СТАТИСТИКИ
-    # ========================================================================
-
     stats_text = f"{get_text('stats_title', lang)}\n"
 
     # Блок 0: Вся база (все уровни)
@@ -181,4 +197,8 @@ async def show_statistics(message: Message, session: AsyncSession):
         current_msg_id = message.message_id
         await delete_messages_fast(message.bot, message.chat.id, old_anchor_id, current_msg_id)
 
-    await message.answer(stats_text)
+    # ОТПРАВЛЯЕМ С КНОПКОЙ РЕЙТИНГ
+    await message.answer(
+        stats_text,
+        reply_markup=get_stats_keyboard(lang)
+    )

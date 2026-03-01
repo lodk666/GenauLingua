@@ -192,7 +192,6 @@ async def set_level(callback: CallbackQuery, session: AsyncSession):
     user = await session.get(User, callback.from_user.id)
     lang = user.interface_language or "ru"
 
-    # Заглушка для locked уровней
     if level_str == "locked":
         await callback.answer(get_text("level_locked", lang), show_alert=True)
         return
@@ -203,7 +202,7 @@ async def set_level(callback: CallbackQuery, session: AsyncSession):
 
     await callback.message.delete()
 
-    # Обновляем якорь с новым языком
+    # Обновляем якорь с клавиатурой
     try:
         sent = await callback.bot.send_message(
             chat_id=callback.message.chat.id,
@@ -215,16 +214,12 @@ async def set_level(callback: CallbackQuery, session: AsyncSession):
     except:
         pass
 
-    await callback.bot.send_message(
-        chat_id=callback.message.chat.id,
-        text=get_text("level_selected", lang, level=new_level.value)
-    )
-
-    await callback.answer()
+    level_display = get_text(f"level_{level_str}", lang)
+    await callback.answer(f"✅ {level_display}", show_alert=True)
 
 
 # ============================================================================
-# ИЗМЕНЕНИЕ РЕЖИМА ПЕРЕВОДА
+# ИЗМЕНЕНИЕ РЕЖИМА ВИКТОРИНЫ
 # ============================================================================
 
 @router.callback_query(F.data == "settings_mode")
@@ -234,15 +229,15 @@ async def change_translation_mode(callback: CallbackQuery, session: AsyncSession
     user = await session.get(User, callback.from_user.id)
     lang = user.interface_language or "ru"
 
-    # Формируем текст с подсказками в зависимости от языка
-    if lang == "uk":
+    hints = ""
+    if lang == "ru":
+        hints = f"\n{get_text('settings_mode_hint_de_ru', lang)}\n{get_text('settings_mode_hint_ru_de', lang)}"
+    elif lang == "uk":
         hints = f"\n{get_text('settings_mode_hint_de_uk', lang)}\n{get_text('settings_mode_hint_uk_de', lang)}"
     elif lang == "en":
         hints = f"\n{get_text('settings_mode_hint_de_en', lang)}\n{get_text('settings_mode_hint_en_de', lang)}"
     elif lang == "tr":
         hints = f"\n{get_text('settings_mode_hint_de_tr', lang)}\n{get_text('settings_mode_hint_tr_de', lang)}"
-    else:  # ru
-        hints = f"\n{get_text('settings_mode_hint_de_ru', lang)}\n{get_text('settings_mode_hint_ru_de', lang)}"
 
     text = (
         f"{get_text('settings_mode_title', lang)}\n\n"
@@ -250,7 +245,6 @@ async def change_translation_mode(callback: CallbackQuery, session: AsyncSession
         f"{hints}"
     )
 
-    # Показываем только режимы для текущего языка интерфейса
     if lang == "uk":
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
@@ -360,12 +354,7 @@ async def set_interface_language(callback: CallbackQuery, session: AsyncSession)
 
     lang_display = get_text(f"lang_{new_lang}", new_lang)
 
-    await callback.answer(
-        get_text("language_changed", new_lang, language=lang_display),
-        show_alert=True
-    )
-
-    # Обновляем якорь с новым языком меню
+    # ОБНОВЛЯЕМ КЛАВИАТУРУ СРАЗУ
     try:
         await callback.bot.edit_message_reply_markup(
             chat_id=callback.message.chat.id,
@@ -374,6 +363,11 @@ async def set_interface_language(callback: CallbackQuery, session: AsyncSession)
         )
     except:
         pass
+
+    await callback.answer(
+        get_text("language_changed", new_lang, language=lang_display),
+        show_alert=True
+    )
 
     await show_settings_callback(callback, session)
 
@@ -395,63 +389,3 @@ async def back_to_main_menu(callback: CallbackQuery):
         await callback.message.delete()
     except:
         pass
-
-# ============================================================================
-# ИЗМЕНЕНИЕ ЯЗЫКА ИНТЕРФЕЙСА
-# ============================================================================
-
-@router.callback_query(F.data == "settings_language")
-async def change_interface_language(callback: CallbackQuery, session: AsyncSession):
-    await callback.answer()
-
-    user = await session.get(User, callback.from_user.id)
-    lang = user.interface_language or "ru"
-
-    text = (
-        f"{get_text('settings_language_title', lang)}\n\n"
-        f"{get_text('settings_language_description', lang)}"
-    )
-
-    # ВАЖНО: Убрали немецкий язык!
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="🇺🇦 Українська", callback_data="lang_uk")],
-            [InlineKeyboardButton(text="🏴 Русский", callback_data="lang_ru")],
-            [InlineKeyboardButton(
-                text=get_text("btn_back", lang),
-                callback_data="back_to_settings"
-            )]
-        ]
-    )
-
-    await callback.message.edit_text(text, reply_markup=keyboard)
-
-
-@router.callback_query(F.data.startswith("lang_"))
-async def set_interface_language(callback: CallbackQuery, session: AsyncSession):
-    new_lang = callback.data.split("_")[1]
-
-    user = await session.get(User, callback.from_user.id)
-    old_lang = user.interface_language or "ru"
-
-    user.interface_language = new_lang
-    await session.commit()
-
-    lang_display = get_text(f"lang_{new_lang}", new_lang)
-
-    await callback.answer(
-        get_text("language_changed", new_lang, language=lang_display),
-        show_alert=True
-    )
-
-    # Обновляем якорь с новым языком меню
-    try:
-        await callback.bot.edit_message_reply_markup(
-            chat_id=callback.message.chat.id,
-            message_id=user.anchor_message_id,
-            reply_markup=get_main_menu_keyboard(new_lang)
-        )
-    except:
-        pass
-
-    await show_settings_callback(callback, session)
