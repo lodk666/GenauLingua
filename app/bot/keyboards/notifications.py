@@ -4,7 +4,7 @@
 
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from app.utils.timezones import TIMEZONE_CITIES, get_main_cities, get_extended_cities
+from app.utils.timezones import TIMEZONE_CITIES, get_main_cities, get_extended_cities, get_city_name, get_utc_offset
 from app.locales import get_text
 
 
@@ -23,11 +23,11 @@ def get_timezone_main_keyboard(lang: str = "ru") -> InlineKeyboardMarkup:
     # Первый ряд: Лондон, Берлин
     builder.row(
         InlineKeyboardButton(
-            text="🇬🇧 Лондон (UTC+0)",
+            text=f"{get_city_name('london', lang)} (UTC{get_utc_offset('london')})",
             callback_data="tz:london"
         ),
         InlineKeyboardButton(
-            text="🇩🇪 Берлин (UTC+1)",
+            text=f"{get_city_name('berlin', lang)} (UTC{get_utc_offset('berlin')})",
             callback_data="tz:berlin"
         )
     )
@@ -35,11 +35,11 @@ def get_timezone_main_keyboard(lang: str = "ru") -> InlineKeyboardMarkup:
     # Второй ряд: Киев, Стамбул
     builder.row(
         InlineKeyboardButton(
-            text="🇺🇦 Київ (UTC+2)",
+            text=f"{get_city_name('kyiv', lang)} (UTC{get_utc_offset('kyiv')})",
             callback_data="tz:kyiv"
         ),
         InlineKeyboardButton(
-            text="🇹🇷 İstanbul (UTC+3)",
+            text=f"{get_city_name('istanbul', lang)} (UTC{get_utc_offset('istanbul')})",
             callback_data="tz:istanbul"
         )
     )
@@ -47,7 +47,7 @@ def get_timezone_main_keyboard(lang: str = "ru") -> InlineKeyboardMarkup:
     # Кнопка "Выбрать другой город"
     builder.row(
         InlineKeyboardButton(
-            text="🌍 Выбрать другой город ▼",
+            text=get_text("notif_timezone_more", lang),
             callback_data="tz:more_cities"
         )
     )
@@ -82,11 +82,11 @@ def get_timezone_extended_keyboard(lang: str = "ru") -> InlineKeyboardMarkup:
     for city1, city2 in city_pairs:
         builder.row(
             InlineKeyboardButton(
-                text=TIMEZONE_CITIES[city1][0],
+                text=get_city_name(city1, lang),
                 callback_data=f"tz:{city1}"
             ),
             InlineKeyboardButton(
-                text=TIMEZONE_CITIES[city2][0],
+                text=get_city_name(city2, lang),
                 callback_data=f"tz:{city2}"
             )
         )
@@ -94,7 +94,7 @@ def get_timezone_extended_keyboard(lang: str = "ru") -> InlineKeyboardMarkup:
     # Кнопка "Назад"
     builder.row(
         InlineKeyboardButton(
-            text="◀️ Назад",
+            text=get_text("notif_timezone_back", lang),
             callback_data="tz:back_to_main"
         )
     )
@@ -139,7 +139,7 @@ def get_notification_time_keyboard(lang: str = "ru") -> InlineKeyboardMarkup:
     # Кнопка "Назад"
     builder.row(
         InlineKeyboardButton(
-            text="◀️ Назад",
+            text=get_text("notif_timezone_back", lang),
             callback_data="settings:notifications"
         )
     )
@@ -160,10 +160,12 @@ def get_notification_days_keyboard(selected_days: list[int], lang: str = "ru") -
     """
     builder = InlineKeyboardBuilder()
 
-    # Дни недели
+    # Дни недели с локализацией
     days = [
-        (0, "Пн"), (1, "Вт"), (2, "Ср"), (3, "Чт"),
-        (4, "Пт"), (5, "Сб"), (6, "Вс")
+        (0, get_text("day_mon", lang)), (1, get_text("day_tue", lang)),
+        (2, get_text("day_wed", lang)), (3, get_text("day_thu", lang)),
+        (4, get_text("day_fri", lang)), (5, get_text("day_sat", lang)),
+        (6, get_text("day_sun", lang))
     ]
 
     # Первый ряд: Пн-Чт
@@ -187,11 +189,11 @@ def get_notification_days_keyboard(selected_days: list[int], lang: str = "ru") -
     # Быстрые кнопки
     builder.row(
         InlineKeyboardButton(
-            text="📅 Все дни",
+            text=get_text("notif_days_all", lang),
             callback_data="notif_day:all"
         ),
         InlineKeyboardButton(
-            text="🗓️ Будни (Пн-Пт)",
+            text=get_text("notif_days_weekdays", lang),
             callback_data="notif_day:weekdays"
         )
     )
@@ -199,7 +201,7 @@ def get_notification_days_keyboard(selected_days: list[int], lang: str = "ru") -
     # Кнопка "Сохранить"
     builder.row(
         InlineKeyboardButton(
-            text="💾 Сохранить",
+            text=get_text("notif_days_save", lang),
             callback_data="notif_save"
         )
     )
@@ -207,7 +209,7 @@ def get_notification_days_keyboard(selected_days: list[int], lang: str = "ru") -
     # Кнопка "Назад"
     builder.row(
         InlineKeyboardButton(
-            text="◀️ Назад",
+            text=get_text("notif_timezone_back", lang),
             callback_data="settings:notifications"
         )
     )
@@ -216,9 +218,9 @@ def get_notification_days_keyboard(selected_days: list[int], lang: str = "ru") -
 
 
 def get_notifications_settings_keyboard(
-    notifications_enabled: bool,
-    notification_time: str,
-    lang: str = "ru"
+        notifications_enabled: bool,
+        notification_time: str,
+        lang: str = "ru"
 ) -> InlineKeyboardMarkup:
     """
     Главное меню настроек напоминаний
@@ -233,13 +235,13 @@ def get_notifications_settings_keyboard(
     """
     builder = InlineKeyboardBuilder()
 
-    # Статус напоминаний
-    status_emoji = "🔔" if notifications_enabled else "🔕"
-    status_text = "Включено" if notifications_enabled else "Выключено"
+    # Статус напоминаний с локализацией
+    toggle_text = get_text("notif_btn_toggle_on", lang) if notifications_enabled else get_text("notif_btn_toggle_off",
+                                                                                               lang)
 
     builder.row(
         InlineKeyboardButton(
-            text=f"{status_emoji} Напоминания: {status_text}",
+            text=toggle_text,
             callback_data="notif_toggle"
         )
     )
@@ -250,21 +252,21 @@ def get_notifications_settings_keyboard(
         time_display = notification_time if len(notification_time) == 5 else notification_time[:5]
         builder.row(
             InlineKeyboardButton(
-                text=f"🕐 Время: {time_display}",
+                text=get_text("notif_btn_time", lang, time=time_display),
                 callback_data="notif_change_time"
             )
         )
 
         builder.row(
             InlineKeyboardButton(
-                text="📅 Выбрать дни",
+                text=get_text("notif_btn_days", lang),
                 callback_data="notif_change_days"
             )
         )
 
         builder.row(
             InlineKeyboardButton(
-                text="🌍 Изменить часовой пояс",
+                text=get_text("notif_btn_timezone", lang),
                 callback_data="notif_change_timezone"
             )
         )
@@ -272,7 +274,7 @@ def get_notifications_settings_keyboard(
     # Кнопка "Назад в настройки"
     builder.row(
         InlineKeyboardButton(
-            text="◀️ Назад в настройки",
+            text=get_text("notif_btn_back", lang),
             callback_data="back_to_settings"
         )
     )

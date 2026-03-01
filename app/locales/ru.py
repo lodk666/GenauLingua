@@ -42,6 +42,68 @@ TEXTS = {
     "level_locked": "🔒 Этот уровень пока в разработке",
 
     # ============================================================================
+    # НАПОМИНАНИЯ
+    # ============================================================================
+    "notif_title": "🔔 <b>Настройки напоминаний</b>",
+    "notif_status": "Статус: {status}",
+    "notif_status_on": "🔔 Включены",
+    "notif_status_off": "🔕 Выключены",
+    "notif_time": "Время: {time}",
+    "notif_days": "Дни: {days}",
+    "notif_timezone": "Часовой пояс: {timezone}",
+    "notif_hint": "💡 Напоминания будут приходить в указанное время по вашему часовому поясу.",
+    "notif_hint_off": "💡 Включите напоминания, чтобы не забывать заниматься каждый день!",
+
+    "notif_btn_toggle_on": "🔔 Напоминания: Включено",
+    "notif_btn_toggle_off": "🔕 Напоминания: Выключено",
+    "notif_btn_time": "🕐 Время: {time}",
+    "notif_btn_days": "📅 Выбрать дни",
+    "notif_btn_timezone": "🌍 Изменить часовой пояс",
+
+    "notif_timezone_title": "🌍 <b>Выберите ваш часовой пояс</b>",
+    "notif_timezone_current": "Текущий: {timezone}",
+    "notif_timezone_prompt": "Выберите город в вашем часовом поясе:",
+    "notif_timezone_more": "🌍 Выбрать другой город ▼",
+    "notif_timezone_back": "◀️ Назад",
+    "notif_timezone_set": "✅ Часовой пояс установлен: {city}",
+
+    "notif_time_title": "🕐 <b>Выберите время напоминания</b>",
+    "notif_time_current": "Текущее время: {time}",
+    "notif_time_timezone": "Часовой пояс: {timezone}",
+    "notif_time_hint": "Напоминание будет приходить каждый день в выбранное время.",
+    "notif_time_set": "✅ Время установлено: {time}",
+
+    "notif_days_title": "📅 <b>Выберите дни для напоминаний</b>",
+    "notif_days_hint": "Нажмите на день, чтобы включить/выключить его.\n✅ Зелёная галочка - день включен\n❌ Красный крестик - день выключен\n\nКогда закончите - нажмите 'Сохранить'.",
+    "notif_days_all": "📅 Все дни",
+    "notif_days_weekdays": "🗓️ Будни (Пн-Пт)",
+    "notif_days_save": "💾 Сохранить",
+    "notif_days_saved": "✅ Дни сохранены!",
+    "notif_days_all_selected": "✅ Выбраны все дни",
+    "notif_days_weekdays_selected": "✅ Выбраны будни (Пн-Пт)",
+    "notif_days_none": "⚠️ Выберите хотя бы один день для напоминаний!",
+
+    "notif_toggle_on": "🔔 Напоминания включены!",
+    "notif_toggle_off": "🔕 Напоминания выключены",
+
+    "notif_message_title": "{emoji} <b>Время заниматься!</b>",
+    "notif_message_streak": "🔥 Стрик: {days} дней подряд",
+    "notif_message_words": "📊 Выучено слов: {count}",
+    "notif_message_cta": "💪 Не прерывай свою серию!",
+    "notif_message_btn_start": "📚 Начать викторину",
+    "notif_message_btn_disable": "🔕 Отключить напоминания",
+
+    "day_mon": "Пн",
+    "day_tue": "Вт",
+    "day_wed": "Ср",
+    "day_thu": "Чт",
+    "day_fri": "Пт",
+    "day_sat": "Сб",
+    "day_sun": "Вс",
+
+    "notif_btn_back": "◀️ Назад в настройки",
+
+    # ============================================================================
     # НАСТРОЙКИ
     # ============================================================================
     "settings_title": "🦾 <b>Настройки</b>",
@@ -53,12 +115,21 @@ TEXTS = {
     "settings_btn_change_level": "📚 Изменить уровень",
     "settings_btn_change_mode": "🔄 Режим перевода",
     "settings_btn_change_language": "🌍 Язык интерфейса",
+    "settings_btn_notifications": "🔔 Напоминания",
 
     "settings_level_title": "📚 <b>Выбор уровня</b>",
     "settings_level_description": "Выбери свой текущий уровень владения немецким языком:\n\n• <b>A1</b> — Начальный (Привет, как дела?)\n• <b>A2</b> — Базовый (Простые диалоги)\n• <b>B1</b> — Средний (Повседневное общение)",
 
     "settings_mode_title": "🔄 <b>Режим перевода</b>",
     "settings_mode_description": "Выбери направление перевода:",
+    "settings_mode_hint_de_ru": "💡 DE→RU легче — можно угадать по логике",
+    "settings_mode_hint_ru_de": "💡 RU→DE сложнее — лучше закрепляет слова",
+    "settings_mode_hint_de_uk": "💡 DE→UK легче — можно угадать по логике",
+    "settings_mode_hint_uk_de": "💡 UK→DE сложнее — лучше закрепляет слова",
+    "settings_mode_hint_de_en": "💡 DE→EN easier — you can guess from context",
+    "settings_mode_hint_en_de": "💡 EN→DE harder — better memorization",
+    "settings_mode_hint_de_tr": "💡 DE→TR daha kolay — mantıkla tahmin edebilirsiniz",
+    "settings_mode_hint_tr_de": "💡 TR→DE daha zor — kelimeleri daha iyi pekiştirir",
 
     "settings_language_title": "🌍 <b>Язык интерфейса</b>",
     "settings_language_description": "Выбери язык интерфейса бота:",

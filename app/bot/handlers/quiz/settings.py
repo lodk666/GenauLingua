@@ -86,7 +86,7 @@ async def show_settings(message: Message, session: AsyncSession):
                 callback_data="settings_language"
             )],
             [InlineKeyboardButton(
-                text="🔔 Напоминания",
+                text=get_text("settings_btn_notifications", lang),
                 callback_data="settings:notifications"
             )]
         ]
@@ -138,7 +138,7 @@ async def show_settings_callback(callback: CallbackQuery, session: AsyncSession)
                 callback_data="settings_language"
             )],
             [InlineKeyboardButton(
-                text="🔔 Напоминания",
+                text=get_text("settings_btn_notifications", lang),
                 callback_data="settings:notifications"
             )]
         ]
@@ -234,9 +234,20 @@ async def change_translation_mode(callback: CallbackQuery, session: AsyncSession
     user = await session.get(User, callback.from_user.id)
     lang = user.interface_language or "ru"
 
+    # Формируем текст с подсказками в зависимости от языка
+    if lang == "uk":
+        hints = f"\n{get_text('settings_mode_hint_de_uk', lang)}\n{get_text('settings_mode_hint_uk_de', lang)}"
+    elif lang == "en":
+        hints = f"\n{get_text('settings_mode_hint_de_en', lang)}\n{get_text('settings_mode_hint_en_de', lang)}"
+    elif lang == "tr":
+        hints = f"\n{get_text('settings_mode_hint_de_tr', lang)}\n{get_text('settings_mode_hint_tr_de', lang)}"
+    else:  # ru
+        hints = f"\n{get_text('settings_mode_hint_de_ru', lang)}\n{get_text('settings_mode_hint_ru_de', lang)}"
+
     text = (
         f"{get_text('settings_mode_title', lang)}\n\n"
         f"{get_text('settings_mode_description', lang)}"
+        f"{hints}"
     )
 
     # Показываем только режимы для текущего языка интерфейса
