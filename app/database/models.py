@@ -49,6 +49,7 @@ class User(Base):
     # === ВРЕМЯ АКТИВНОСТИ ===
     first_quiz_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     last_active_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    last_quiz_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)  # Дата последней викторины
 
     # === НАПОМИНАНИЯ ===
     notifications_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -211,6 +212,12 @@ class QuizSession(Base):
     )
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
 
+    # === АНАЛИТИКА ===
+    start_source: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # 'menu', 'notification', 'command'
+    exit_reason: Mapped[Optional[str]] = mapped_column(String(50),
+                                                       nullable=True)  # 'completed', 'abandoned', 'back_button'
+    exit_at_question: Mapped[int] = mapped_column(Integer, default=0)  # На каком вопросе вышел
+
     # Relationships
     user: Mapped["User"] = relationship(back_populates="quiz_sessions")
     questions: Mapped[List["QuizQuestion"]] = relationship(
@@ -246,6 +253,7 @@ class QuizQuestion(Base):
 
     # Время ответа
     answered_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    response_time_seconds: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # Сколько секунд думал
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
