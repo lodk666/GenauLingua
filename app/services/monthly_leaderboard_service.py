@@ -591,4 +591,3 @@ async def get_lifetime_leaderboard(
                 'total': win_streak.total_wins if win_streak else 0
             } if win_streak else None
         })
-

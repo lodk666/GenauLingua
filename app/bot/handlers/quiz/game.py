@@ -21,7 +21,6 @@ from app.services.quiz_service import (
     update_word_progress,
     get_distractors,
 )
-from app.services.monthly_leaderboard_service import update_monthly_stats
 
 router = Router()
 
@@ -61,9 +60,6 @@ async def update_user_activity(session: AsyncSession, user_id: int):
     else:
         user.streak_days = 1
     user.last_active_date = today
-    # обновляем рекорд стрика
-    if (user.best_streak_days or 0) < (user.streak_days or 0):
-        user.best_streak_days = user.streak_days
     await session.commit()
 
 
@@ -87,7 +83,7 @@ def get_results_keyboard(has_errors: bool, lang: str = "ru") -> InlineKeyboardMa
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-@router.message(F.text.in_(["📚 Учить слова", "📚 Вчити слова", "📚 Learn words", "📚 Kelime öğren"]))
+@router.message(F.text.in_(["📚 Учить слова", "📚 Вчити слова"]))
 async def start_quiz(message: Message, state: FSMContext, session: AsyncSession):
     """Запуск викторины"""
     user_id = message.from_user.id
@@ -229,19 +225,22 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
             example = correct_word.example_ru if mode.value == "ru_to_de" else correct_word.example_uk
             flag = "🏴" if mode.value == "ru_to_de" else "🇺🇦"
 
-            feedback = (
-                f"✅ <b>{get_text('quiz_correct', lang)}</b>\n\n"
-                f"{flag} {translation.capitalize()}\n"
-                f"🇩🇪 {word_display}\n\n"
-                f"📝 {example}"
+            response_text = (
+                f"{get_text('quiz_correct', lang)}\n\n"
+                f"{flag} <b>{translation.capitalize()}</b> = 🇩🇪 <b>{word_display}</b>\n\n"
+                f"🇩🇪 {correct_word.example_de}\n\n"
+                f"{flag} {example}"
             )
         else:
             translation = correct_word.translation_ru if mode.value == "de_to_ru" else correct_word.translation_uk
-            feedback = (
-                f"✅ <b>{get_text('quiz_correct', lang)}</b>\n\n"
-                f"🇩🇪 {word_display}\n"
-                f"{'🏴' if mode.value == 'de_to_ru' else '🇺🇦'} {translation.capitalize()}\n\n"
-                f"📝 {correct_word.example_de}"
+            example = correct_word.example_ru if mode.value == "de_to_ru" else correct_word.example_uk
+            flag = "🏴" if mode.value == "de_to_ru" else "🇺🇦"
+
+            response_text = (
+                f"{get_text('quiz_correct', lang)}\n\n"
+                f"🇩🇪 <b>{word_display}</b> = {flag} <b>{translation.capitalize()}</b>\n\n"
+                f"🇩🇪 {correct_word.example_de}\n\n"
+                f"{flag} {example}"
             )
     else:
         errors.append(correct_word_id)
@@ -251,21 +250,24 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
             example = correct_word.example_ru if mode.value == "ru_to_de" else correct_word.example_uk
             flag = "🏴" if mode.value == "ru_to_de" else "🇺🇦"
 
-            feedback = (
-                f"❌ <b>{get_text('quiz_incorrect', lang)}</b>\n\n"
-                f"{get_text('quiz_correct_answer', lang)}\n"
-                f"{flag} {translation.capitalize()}\n"
-                f"🇩🇪 {word_display}\n\n"
-                f"📝 {example}"
+            response_text = (
+                f"{get_text('quiz_wrong', lang)}\n\n"
+                f"{get_text('quiz_correct_answer', lang)}\n\n"
+                f"{flag} <b>{translation.capitalize()}</b> = 🇩🇪 <b>{word_display}</b>\n\n"
+                f"🇩🇪 {correct_word.example_de}\n\n"
+                f"{flag} {example}"
             )
         else:
             translation = correct_word.translation_ru if mode.value == "de_to_ru" else correct_word.translation_uk
-            feedback = (
-                f"❌ <b>{get_text('quiz_incorrect', lang)}</b>\n\n"
-                f"{get_text('quiz_correct_answer', lang)}\n"
-                f"🇩🇪 {word_display}\n"
-                f"{'🏴' if mode.value == 'de_to_ru' else '🇺🇦'} {translation.capitalize()}\n\n"
-                f"📝 {correct_word.example_de}"
+            example = correct_word.example_ru if mode.value == "de_to_ru" else correct_word.example_uk
+            flag = "🏴" if mode.value == "de_to_ru" else "🇺🇦"
+
+            response_text = (
+                f"{get_text('quiz_wrong', lang)}\n\n"
+                f"{get_text('quiz_correct_answer', lang)}\n\n"
+                f"🇩🇪 <b>{word_display}</b> = {flag} <b>{translation.capitalize()}</b>\n\n"
+                f"🇩🇪 {correct_word.example_de}\n\n"
+                f"{flag} {example}"
             )
 
     await state.update_data(
@@ -273,16 +275,12 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
         errors=errors
     )
 
-    try:
-        await callback.message.delete()
-    except:
-        pass
-
-    await callback.message.answer(feedback, reply_markup=get_next_question_keyboard(lang))
+    await callback.message.edit_text(response_text, reply_markup=get_next_question_keyboard(lang))
+    await callback.answer()
 
 
-@router.callback_query(F.data == "next_question")
-async def next_question(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+@router.callback_query(F.data == "next_question", QuizStates.answering)
+async def show_next_question(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     """Показ следующего вопроса"""
     await callback.answer()
 
@@ -312,13 +310,25 @@ async def next_question(callback: CallbackQuery, state: FSMContext, session: Asy
         quiz_session = await session.get(QuizSession, session_id)
         quiz_session.correct_answers = correct_answers
         quiz_session.completed_at = datetime.utcnow()
+        quiz_session.is_completed = True
         await session.commit()
 
         # Обновляем стрик
         await update_user_activity(session, callback.from_user.id)
 
-        # ОБНОВЛЕНИЕ МЕСЯЧНОЙ СТАТИСТИКИ
-        await update_monthly_stats(callback.from_user.id, session, quiz_session_id=session_id)
+        # Обновляем месячную статистику
+        try:
+            from app.services.monthly_leaderboard_service import update_monthly_stats
+            await update_monthly_stats(
+                user_id=callback.from_user.id,
+                session=session,
+                quiz_session_id=quiz_session.id
+            )
+            print(f"✅ Месячная статистика обновлена для user_id={callback.from_user.id}")
+        except Exception as e:
+            print(f"⚠️ Ошибка обновления месячной статистики: {e}")
+            import traceback
+            traceback.print_exc()
 
         result_items = await session.execute(
             select(QuizQuestion, Word)
@@ -335,6 +345,7 @@ async def next_question(callback: CallbackQuery, state: FSMContext, session: Asy
                 wd = f"{word.article} {word.word_de}"
             icon = "✅" if item.is_correct else "❌"
 
+            # Перевод зависит от режима
             if user.translation_mode.value in ("de_to_ru", "ru_to_de"):
                 trans = word.translation_ru.capitalize()
             else:
@@ -347,7 +358,8 @@ async def next_question(callback: CallbackQuery, state: FSMContext, session: Asy
             f"{get_text('quiz_completed', lang)}\n\n"
             f"{get_text('quiz_result_correct', lang, correct=correct_answers, total=total_questions)}\n"
             f"{get_text('quiz_result_percentage', lang, percentage=f'{percentage:.1f}')}\n\n"
-            f"{get_text('quiz_result_details', lang)}\n" + "\n".join(details)
+            f"{get_text('quiz_result_details', lang)}\n"
+            + "\n".join(details)
         )
 
         if errors:
@@ -373,6 +385,7 @@ async def next_question(callback: CallbackQuery, state: FSMContext, session: Asy
     mode = user.translation_mode
 
     if error_words:
+        # Повтор ошибок
         current_error_index = data.get('current_error_index', 0) + 1
 
         if current_error_index >= len(error_words):
@@ -451,6 +464,7 @@ async def next_question(callback: CallbackQuery, state: FSMContext, session: Asy
         await callback.message.edit_text(question_text, reply_markup=get_answer_keyboard(options))
         return
 
+    # Обычная викторина
     question = None
     attempts = 0
 
