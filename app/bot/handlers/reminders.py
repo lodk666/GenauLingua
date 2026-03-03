@@ -216,16 +216,28 @@ async def change_notification_time(callback: CallbackQuery, session: AsyncSessio
 @router.callback_query(F.data.startswith("notif_time:"))
 async def set_notification_time(callback: CallbackQuery, session: AsyncSession):
     """Установить время напоминания"""
-    time_str = callback.data.split(":", 1)[1]  # Берем всё после первого ':'
-
-    # Убеждаемся что формат HH:MM (добавляем :00 если нет секунд)
-    if ':' not in time_str:
-        time_str = f"{time_str}:00"
-    elif len(time_str) == 2:  # если только "14"
-        time_str = f"{time_str}:00"
+    time_str = callback.data.split(":", 1)[1]  # "14:00" или "14"
 
     user = await session.get(User, callback.from_user.id)
     lang = user.interface_language or "ru"
+
+    # Нормализация формата времени
+    if len(time_str) <= 2:  # только часы ("14")
+        time_str = f"{time_str.zfill(2)}:00"  # → "14:00"
+    elif len(time_str) == 5 and ':' in time_str:  # уже HH:MM
+        # Проверяем валидность
+        try:
+            h, m = time_str.split(':')
+            hour = int(h)
+            minute = int(m)
+            if not (0 <= hour <= 23 and 0 <= minute <= 59):
+                raise ValueError("Неверное время")
+            time_str = f"{hour:02d}:{minute:02d}"  # Форматируем 09:05 вместо 9:5
+        except:
+            time_str = "20:00"  # Fallback на дефолт
+    else:
+        time_str = "20:00"  # Странный формат → дефолт
+
     user.notification_time = time_str
     await session.commit()
 
@@ -233,7 +245,6 @@ async def set_notification_time(callback: CallbackQuery, session: AsyncSession):
 
     # Возвращаемся к настройкам напоминаний
     await show_notifications_settings(callback, session)
-
 
 # ============================================================================
 # ИЗМЕНЕНИЕ ДНЕЙ НАПОМИНАНИЯ

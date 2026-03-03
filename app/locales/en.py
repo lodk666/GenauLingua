@@ -103,6 +103,22 @@ TEXTS = {
 
     "notif_btn_back": "◀️ Back to settings",
 
+    # Keys for enhanced notifications
+    "notif_default_name": "friend",
+    "notif_message_greeting": "🔥 <b>Time to practice, {name}!</b>",
+    "notif_message_progress_title": "📊 <b>Your progress:</b>",
+    "notif_progress_streak": "├ Streak: {days} days 🎯",
+    "notif_progress_quizzes": "├ Quizzes passed: {count}",
+    "notif_progress_words": "├ Words learned: {count}",
+    "notif_progress_accuracy": "└ Accuracy: {percent}%",
+
+    "notif_motivation_1": "Step by step you're reaching your goal!",
+    "notif_motivation_2": "Your streak is growing — keep it up!",
+    "notif_motivation_3": "Today is another step toward fluent German!",
+    "notif_motivation_4": "Small efforts every day = big results!",
+    "notif_motivation_5": "You're on the right path! Don't stop!",
+    "notif_motivation_6": "Each quiz brings you closer to your goal!",
+
     # ============================================================================
     # SETTINGS
     # ============================================================================
