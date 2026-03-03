@@ -39,10 +39,31 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     anchor_message_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
 
-    # Поля для месячного рейтинга
+    # === ЯЗЫКИ И ЛОКАЛИЗАЦИЯ ===
+    telegram_language: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+
+    # === TIMEZONE ===
+    timezone: Mapped[str] = mapped_column(String(50), default="Europe/Berlin")
+    utc_offset: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+
+    # === ВРЕМЯ АКТИВНОСТИ ===
+    first_quiz_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    last_active_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    last_quiz_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+
+    # === НАПОМИНАНИЯ ===
+    notifications_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    notification_time: Mapped[str] = mapped_column(String(5), default="20:00")
+    notification_days: Mapped[List[int]] = mapped_column(ARRAY(Integer), default=[0, 1, 2, 3, 4, 5, 6])
+    last_notification_sent: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    # === НАСТРОЙКИ ВИКТОРИНЫ ===
+    quiz_word_count: Mapped[int] = mapped_column(Integer, default=25)
+
+    # === МЕСЯЧНАЯ СИСТЕМА РЕЙТИНГА ===
     lifetime_score: Mapped[int] = mapped_column(Integer, default=0)
-    total_monthly_wins: Mapped[int] = mapped_column(Integer, default=0)
     best_streak_days: Mapped[int] = mapped_column(Integer, default=0)
+    total_monthly_wins: Mapped[int] = mapped_column(Integer, default=0)
 
     # Связи
     quiz_sessions: Mapped[List["QuizSession"]] = relationship(

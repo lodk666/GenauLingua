@@ -64,7 +64,7 @@ def get_stats_keyboard(lang: str = "ru") -> InlineKeyboardMarkup:
 
 
 @router.message(Command("stats"))
-@router.message(F.text.in_(["📊 Статистика", "📊 Статистика"]))  # ru/uk одинаково
+@router.message(F.text.in_(["📊 Статистика", "📊 Статистика", "📊 Statistics", "📊 İstatistikler"]))
 async def show_statistics(message: Message, session: AsyncSession):
     """Показ детальной статистики"""
     user_id = message.from_user.id

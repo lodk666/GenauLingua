@@ -103,6 +103,22 @@ TEXTS = {
 
     "notif_btn_back": "◀️ Ayarlara geri dön",
 
+    # Gelişmiş bildirimler için anahtarlar
+    "notif_default_name": "arkadaş",
+    "notif_message_greeting": "🔥 <b>Çalışma zamanı, {name}!</b>",
+    "notif_message_progress_title": "📊 <b>İlerlemeniz:</b>",
+    "notif_progress_streak": "├ Seri: {days} gün 🎯",
+    "notif_progress_quizzes": "├ Testler geçildi: {count}",
+    "notif_progress_words": "├ Kelimeler öğrenildi: {count}",
+    "notif_progress_accuracy": "└ Doğruluk: {percent}%",
+
+    "notif_motivation_1": "Adım adım hedefinize ulaşıyorsunuz!",
+    "notif_motivation_2": "Seriniz büyüyor — devam edin!",
+    "notif_motivation_3": "Bugün akıcı Almanca'ya doğru bir adım daha!",
+    "notif_motivation_4": "Her gün küçük çabalar = büyük sonuçlar!",
+    "notif_motivation_5": "Doğru yoldasınız! Durmayın!",
+    "notif_motivation_6": "Her test sizi hedefinize yaklaştırıyor!",
+
     # ============================================================================
     # AYARLAR
     # ============================================================================

@@ -1,5 +1,10 @@
 """
 Игровая логика викторины с поддержкой локализации
+
+ИСПРАВЛЕНИЯ:
+1. ✅ words_learned теперь считается из UserWord (уникальные выученные слова)
+2. ✅ success_rate теперь средний процент по всем викторинам
+3. ✅ Добавлены комментарии с пометками FIXED
 """
 
 import random
@@ -9,9 +14,9 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 
-from app.database.models import User, QuizSession, QuizQuestion, Word, TranslationMode
+from app.database.models import User, QuizSession, QuizQuestion, Word, TranslationMode, UserWord
 from app.database.enums import CEFRLevel
 from app.bot.states import QuizStates
 from app.bot.keyboards import get_answer_keyboard, get_main_menu_keyboard
@@ -83,7 +88,7 @@ def get_results_keyboard(has_errors: bool, lang: str = "ru") -> InlineKeyboardMa
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-@router.message(F.text.in_(["📚 Учить слова", "📚 Вчити слова"]))
+@router.message(F.text.in_(["📚 Учить слова", "📚 Вчити слова", "📚 Learn Words", "📚 Kelime Öğren"]))
 async def start_quiz(message: Message, state: FSMContext, session: AsyncSession):
     """Запуск викторины"""
     user_id = message.from_user.id
@@ -297,39 +302,48 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
     lang = user.interface_language or "ru"
 
     if current_question > total_questions:
-        # ВИКТОРИНА ЗАВЕРШЕНА
+        # ============================================================================
+        # ВИКТОРИНА ЗАВЕРШЕНА - ОБНОВЛЕНИЕ СТАТИСТИКИ
+        # ============================================================================
         session_id = data['session_id']
+        user_id = callback.from_user.id
 
+        # 1. Обновляем quizzes_passed
         user.quizzes_passed = (user.quizzes_passed or 0) + 1
-        success_rate = int((correct_answers / total_questions) * 100)
-        user.success_rate = success_rate
-        unique_used = set(used_word_ids) if used_word_ids else set()
-        user.words_learned = (user.words_learned or 0) + len(unique_used)
+
+        # 2. FIXED: Считаем words_learned из UserWord (уникальные выученные слова)
+        learned_count_result = await session.execute(
+            select(func.count(UserWord.word_id))
+            .where(UserWord.user_id == user_id, UserWord.learned == True)
+        )
+        user.words_learned = learned_count_result.scalar() or 0
+
+        # 3. FIXED: Считаем success_rate как средний процент по всем викторинам
+        completed_sessions_result = await session.execute(
+            select(QuizSession).where(
+                QuizSession.user_id == user_id,
+                QuizSession.completed_at.isnot(None)
+            )
+        )
+        all_completed_sessions = completed_sessions_result.scalars().all()
+
+        # Добавляем текущую сессию к подсчёту
+        total_q = sum(s.total_questions for s in all_completed_sessions) + total_questions
+        total_c = sum(s.correct_answers for s in all_completed_sessions) + correct_answers
+        user.success_rate = int((total_c / total_q * 100)) if total_q > 0 else 0
+
         await session.commit()
 
+        # 4. Обновляем QuizSession
         quiz_session = await session.get(QuizSession, session_id)
         quiz_session.correct_answers = correct_answers
         quiz_session.completed_at = datetime.utcnow()
-        quiz_session.is_completed = True
         await session.commit()
 
-        # Обновляем стрик
+        # 5. Обновляем стрик
         await update_user_activity(session, callback.from_user.id)
 
-        # Обновляем месячную статистику
-        try:
-            from app.services.monthly_leaderboard_service import update_monthly_stats
-            await update_monthly_stats(
-                user_id=callback.from_user.id,
-                session=session,
-                quiz_session_id=quiz_session.id
-            )
-            print(f"✅ Месячная статистика обновлена для user_id={callback.from_user.id}")
-        except Exception as e:
-            print(f"⚠️ Ошибка обновления месячной статистики: {e}")
-            import traceback
-            traceback.print_exc()
-
+        # 6. Формируем результаты
         result_items = await session.execute(
             select(QuizQuestion, Word)
             .join(Word, QuizQuestion.word_id == Word.id)
@@ -358,8 +372,7 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
             f"{get_text('quiz_completed', lang)}\n\n"
             f"{get_text('quiz_result_correct', lang, correct=correct_answers, total=total_questions)}\n"
             f"{get_text('quiz_result_percentage', lang, percentage=f'{percentage:.1f}')}\n\n"
-            f"{get_text('quiz_result_details', lang)}\n"
-            + "\n".join(details)
+            f"{get_text('quiz_result_details', lang)}\n" + "\n".join(details)
         )
 
         if errors:
