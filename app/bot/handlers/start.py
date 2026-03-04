@@ -3,7 +3,7 @@
 """
 
 import asyncio
-
+from datetime import date, timedelta
 from aiogram import Router, F
 from aiogram.filters import CommandStart
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.states import QuizStates
 from app.bot.keyboards import get_main_menu_keyboard
-from app.database.enums import CEFRLevel, TranslationMode
+from app.database.enums import CEFRLevel
 from app.database.models import User
 from app.locales import get_text
 
@@ -23,63 +23,8 @@ MODE_DICT = {
     "ru_to_de": "🏴 RU → 🇩🇪 DE",
     "de_to_uk": "🇩🇪 DE → 🇺🇦 UK",
     "uk_to_de": "🇺🇦 UK → 🇩🇪 DE",
-    "de_to_en": "🇩🇪 DE → 🇬🇧 EN",
-    "en_to_de": "🇬🇧 EN → 🇩🇪 DE",
-    "de_to_tr": "🇩🇪 DE → 🇹🇷 TR",
-    "tr_to_de": "🇹🇷 TR → 🇩🇪 DE",
 }
 
-FLAG_BY_LANG = {
-    "de": "🇩🇪",
-    "ru": "🏴",
-    "uk": "🇺🇦",
-    "en": "🇬🇧",
-    "tr": "🇹🇷",
-}
-
-LABEL_BY_LANG = {
-    "de": "DE",
-    "ru": "RU",
-    "uk": "UK",
-    "en": "EN",
-    "tr": "TR",
-}
-
-# Автоматический режим перевода по языку интерфейса
-LANG_TO_MODE = {
-    "ru": TranslationMode.DE_TO_RU,
-    "uk": TranslationMode.DE_TO_UK,
-    "en": TranslationMode.DE_TO_EN,
-    "tr": TranslationMode.DE_TO_TR,
-}
-
-def format_mode(mode_value: str) -> str:
-    """
-    Красивый вывод режима для любых вариантов:
-    🇩🇪 DE → 🇹🇷 TR
-    Работает и с 'de_to_tr', и с 'DE_TO_TR'.
-    """
-    if not mode_value:
-        return ""
-
-    raw = str(mode_value).lower()  # 'DE_TO_TR' -> 'de_to_tr'
-
-    # 1) если есть в словаре — берём готовую красивую строку
-    if raw in MODE_DICT:
-        return MODE_DICT[raw]
-
-    # 2) универсальный разбор 'xx_to_yy'
-    parts = raw.split("_to_")
-    if len(parts) != 2:
-        return str(mode_value)
-
-    src, dst = parts
-    src_flag = FLAG_BY_LANG.get(src, "")
-    dst_flag = FLAG_BY_LANG.get(dst, "")
-    src_lbl = LABEL_BY_LANG.get(src, src.upper())
-    dst_lbl = LABEL_BY_LANG.get(dst, dst.upper())
-
-    return f"{src_flag} {src_lbl} → {dst_flag} {dst_lbl}"
 
 async def delete_messages_fast(bot, chat_id: int, start_id: int, end_id: int):
     tasks = []
@@ -88,6 +33,7 @@ async def delete_messages_fast(bot, chat_id: int, start_id: int, end_id: int):
     results = await asyncio.gather(*tasks, return_exceptions=True)
     deleted = sum(1 for r in results if not isinstance(r, Exception))
     print(f"   🧹 Удалено {deleted}/{len(tasks)} сообщений")
+
 
 async def ensure_anchor(message: Message, session: AsyncSession, user: User, emoji: str = "🤖"):
     old_anchor_id = user.anchor_message_id
@@ -104,22 +50,19 @@ async def ensure_anchor(message: Message, session: AsyncSession, user: User, emo
 
 
 def get_language_selection_keyboard() -> InlineKeyboardMarkup:
-    """Клавиатура выбора языка при первом старте — 4 языка"""
+    """Клавиатура выбора языка при первом старте"""
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(text="🇺🇦 Українська", callback_data="select_lang_uk"),
-                InlineKeyboardButton(text="🏴 Русский", callback_data="select_lang_ru"),
-            ],
-            [
-                InlineKeyboardButton(text="🇬🇧 English", callback_data="select_lang_en"),
-                InlineKeyboardButton(text="🇹🇷 Türkçe", callback_data="select_lang_tr"),
+                InlineKeyboardButton(text="🏴 Русский", callback_data="select_lang_ru")
             ]
         ]
     )
 
+
 def get_level_keyboard(lang: str) -> InlineKeyboardMarkup:
-    """Клавиатура выбора уровня"""
+    """Клавиатура выбора уровня с поддержкой locked уровней"""
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -138,6 +81,7 @@ def get_level_keyboard(lang: str) -> InlineKeyboardMarkup:
 
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
+    """Обработчик команды /start"""
     user_id = message.from_user.id
 
     await state.clear()
@@ -158,13 +102,16 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
         session.add(user)
         await session.commit()
 
-    if not user.interface_language:
+    # ========================================================================
+    # ПРОВЕРКА: Если язык не выбран — показываем выбор языка
+    # ========================================================================
+    if not user.interface_language or user.interface_language == "reset":
         language_selection_text = (
             "🇩🇪 <b>GenauLingua</b>\n\n"
-            "🇺🇦 Оберіть мову інтерфейсу\n"
-            "🏴 Выберите язык интерфейса\n"
-            "🇬🇧 Choose interface language\n"
-            "🇹🇷 Arayüz dilini seçin"
+            "Перед початком оберіть мову інтерфейсу.\n"
+            "Перед началом выберите язык интерфейса.\n\n"
+            "💡 <i>Змінити можна буде в налаштуваннях</i>\n"
+            "💡 <i>Изменить можно будет в настройках</i>"
         )
 
         await message.answer(
@@ -173,6 +120,7 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
         )
         return
 
+    # Язык уже выбран — продолжаем обычный flow
     lang = user.interface_language
     first_name = message.from_user.first_name or "друг"
 
@@ -192,7 +140,7 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
     )
 
     if user.level:
-        mode = format_mode(user.translation_mode.value)
+        mode = MODE_DICT.get(user.translation_mode.value, user.translation_mode.value)
         welcome_text += get_text('welcome_your_level', lang, level=user.level.value, mode=mode) + "\n\n"
         welcome_text += get_text('welcome_call_to_action', lang)
 
@@ -221,19 +169,25 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
 
 @router.callback_query(F.data.startswith("select_lang_"))
 async def select_language(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
-    lang = callback.data.split("_")[2]  # ru, uk, en, tr
+    """Обработчик выбора языка"""
+    lang = callback.data.split("_")[2]  # ru или uk
 
     user = await session.get(User, callback.from_user.id)
     user.interface_language = lang
 
-    # Автоматически выставляем режим викторины по языку
-    user.translation_mode = LANG_TO_MODE.get(lang, TranslationMode.DE_TO_RU)
+    # Автоматически ставим режим викторины по языку
+    from app.database.enums import TranslationMode
+    if lang == "uk":
+        user.translation_mode = TranslationMode.DE_TO_UK
+    else:  # ru
+        user.translation_mode = TranslationMode.DE_TO_RU
 
     await session.commit()
 
     await callback.message.delete()
 
-    first_name = callback.from_user.first_name or "friend"
+    # Показываем приветствие на выбранном языке
+    first_name = callback.from_user.first_name or ("друг" if lang == "ru" else "друже")
 
     welcome_text = (
         f"{get_text('welcome_title', lang, name=first_name)}\n\n"
@@ -272,8 +226,10 @@ async def select_language(callback: CallbackQuery, state: FSMContext, session: A
 
 @router.callback_query(F.data.startswith("level_"))
 async def select_level(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    """Обработчик выбора уровня"""
     level = callback.data.split("_")[1]
 
+    # Заглушка для locked уровней
     if level == "locked":
         user = await session.get(User, callback.from_user.id)
         lang = user.interface_language or "ru"
