@@ -1,149 +1,286 @@
-enauLingua — Database Standard (Production Ready)
-Статус схемы
+# 📋 История миграций Alembic - GenauLingua
 
-База приведена к стабильной версии через Alembic:
+Полный список миграций базы данных в хронологическом порядке.
 
-2e31b671aa69  initial_schema
-88d0cdddb6f3  add_uniques
-a699d3adb0db  add_timestamps_to_user_words
-3a55ad48f919  add_default_to_user_words_created_at
+---
+
+## 🗂️ Список миграций
+
+### 1. `2e31b671aa69` - Initial Schema
+**Файл:** `2e31b671aa69_initial_schema.py`  
+**Дата:** Начальная миграция
+**Описание:** Базовая структура БД
 
+**Создано:**
+- ✅ `users` - Пользователи бота
+- ✅ `words` - Словарь немецких слов
+- ✅ `quiz_sessions` - Сессии квизов
+- ✅ `quiz_questions` - Вопросы в квизах
+- ✅ `user_words` - Связь пользователь-слово (изучение)
 
-Текущая версия — head.
-Схема считается production-готовой.
+---
 
-Архитектурный принцип
-
-База данных — источник истины.
-
-целостность обеспечивает БД
-
-уникальность обеспечивает БД
-
-временные поля контролирует БД
-
-приложение не дублирует логику ограничений
-
-Любая бизнес-логика не должна нарушать ограничения схемы.
-
-Таблицы
-users
-
-Хранит Telegram-пользователей.
-
-Основные поля:
-
-id (PK)
-
-username
-
-first_name
-
-last_name
-
-last_active_date
-
-streak_days
-
-words_learned
-
-quizzes_passed
-
-words
-
-Единый словарь. Канонический источник данных.
-
-Обязательные поля:
-
-id (PK)
-
-word_de (NOT NULL)
-
-pos (ENUM partofspeech, NOT NULL)
-
-level (ENUM cefrlevel, NOT NULL)
-
-Опциональные:
-
-article
-
-translation_ru
-
-translation_uk
-
-example_de
-
-example_ru
-
-example_uk
-
-categories (varchar[])
-
-times_shown
-
-times_correct
-
-created_at
-
-Ограничения:
-
-UNIQUE (word_de, level)
-
-
-Правило: слово может существовать на разных уровнях, но не может дублироваться в пределах одного уровня.
-
-user_words
-
-Прогресс пользователя по конкретному слову.
-
-Структура:
-
-user_id (FK → users.id)
-
-word_id (FK → words.id)
-
-correct_streak
-
-times_shown
-
-times_correct
-
-last_seen_at
-
-learned
-
-created_at (NOT NULL DEFAULT now())
-
-updated_at (автообновление триггером)
-
-Ключ:
-
-PRIMARY KEY (user_id, word_id)
-
-
-Триггер:
-
-BEFORE UPDATE → updated_at = now()
-
-
-Приложение не управляет updated_at. Это делает база.
-
-quiz_sessions
-
-Сессия тестирования пользователя.
-
-id (PK)
-
-user_id (FK)
-
-started_at
-
-finished_at
-
-score
-
-quiz_questions
-
+### 2. `88d0cdddb6f3` - Add Unique Constraints
+**Файл:** `88d0cdddb6f3_add_uniques.py`
+**Дата:** После initial
+**Описание:** Добавление уникальных ограничений
+
+**Изменения:**
+- ✅ UNIQUE constraint на `users.telegram_id`
+- ✅ UNIQUE constraint на `words.german`
+- ✅ UNIQUE constraint на `user_words(user_id, word_id)`
+
+---
+
+### 3. `a699d3adb0db` - Add Timestamps to User Words
+**Файл:** `a699d3adb0db_add_timestamps_to_user_words.py`
+**Дата:** После uniques
+**Описание:** Временные метки для отслеживания изучения слов
+
+**Добавлено в `user_words`:**
+- ✅ `created_at` - Когда слово добавлено
+- ✅ `last_reviewed_at` - Последний раз просмотрено
+- ✅ `next_review_at` - Следующий раз для повторения (SRS)
+- ✅ Триггеры для автоматического обновления timestamps
+
+---
+
+### 4. `3a55ad48f919` - Add Default to User Words Created At
+**Файл:** `3a55ad48f919_add_default_to_user_words_created_at.py`
+**Дата:** После timestamps
+**Описание:** Дефолтное значение для created_at
+
+**Изменения:**
+- ✅ `user_words.created_at` теперь имеет `DEFAULT NOW()`
+
+---
+
+### 5. `b1c2d3e4f5a6` - Add EN/TR Translations
+**Файл:** `b1c2d3e4f5a6_add_en_tr_translations.py`
+**Дата:** После defaults
+**Описание:** Поддержка английского и турецкого языков
+
+**Добавлено в `words`:**
+- ✅ `english` - Английский перевод
+- ✅ `turkish` - Турецкий перевод
+
+---
+
+### 6. `c2d3e4f5a6b7` - Add EN/TR Translation Modes
+**Файл:** `c2d3e4f5a6b7_add_en_tr_translation_modes.py`
+**Дата:** После EN/TR translations
+**Описание:** Выбор языка интерфейса и перевода
+
+**Добавлено в `users`:**
+- ✅ `interface_language` - Язык интерфейса (RU/UK/EN/TR)
+- ✅ `translation_mode` - Язык перевода слов (RU/UK/EN/TR)
+
+---
+
+### 7. `d4e5f6g7h8i9` - Add Notifications and Timezone Fields
+**Файл:** `d4e5f6g7h8i9_add_notifications_and_timezone_fields.py`
+**Дата:** После translation modes
+**Описание:** Настройки уведомлений и таймзоны
+
+**Добавлено в `users`:**
+- ✅ `notifications_enabled` - Включены ли уведомления
+- ✅ `notification_time` - Время уведомлений
+- ✅ `timezone` - Часовой пояс пользователя
+- ✅ `quiz_mode` - Режим квиза (normal/reverse)
+- ✅ `words_per_quiz` - Количество слов в квизе
+
+---
+
+### 8. `e5f6g7h8i9j0` - Add Analytics Fields
+**Файл:** `e5f6g7h8i9j0_add_analytics_fields.py`
+**Дата:** После notifications
+**Описание:** Поля для статистики и аналитики
+
+**Добавлено в `users`:**
+- ✅ `total_quizzes` - Всего квизов пройдено
+- ✅ `total_questions` - Всего вопросов отвечено
+- ✅ `correct_answers` - Правильных ответов
+- ✅ `success_rate` - Процент успеха
+- ✅ `current_streak` - Текущая серия дней
+- ✅ `best_streak` - Лучшая серия дней
+- ✅ `last_quiz_date` - Дата последнего квиза
+- ✅ `words_learned` - Выученных слов
+
+**Добавлено в `quiz_sessions`:**
+- ✅ `quiz_type` - Тип квиза (normal/reverse)
+
+---
+
+### 9. `36f18cbb9329` - Add Monthly System ⭐ (ТЕКУЩАЯ)
+**Файл:** `36f18cbb9329_add_monthly_system.py`
+**Дата:** 2025-03-04
+**Описание:** Система месячных соревнований и достижений
+
+**Созданные таблицы:**
+
+#### `monthly_seasons`
+Месячные сезоны (периоды соревнований)
+- `id` - ID сезона
+- `year` - Год
+- `month` - Месяц (1-12)
+- `is_active` - Активен ли сезон
+- `created_at` - Когда создан
+
+#### `monthly_stats`
+Статистика пользователя за месяц
+- `id` - ID записи
+- `user_id` - ID пользователя
+- `season_id` - ID сезона
+- `quizzes_completed` - Пройдено квизов
+- `reverse_quizzes_completed` - Пройдено реверс-квизов
+- `words_learned` - Выучено слов
+- `streak_days` - Дней подряд
+- `monthly_score` - Очки за месяц
+- `average_success_rate` - Средний % успеха
+- `last_activity` - Последняя активность
+
+#### `monthly_quiz_events`
+Идемпотентное отслеживание квизов (предотвращение двойного подсчёта)
+- `id` - ID события
+- `quiz_session_id` - ID сессии квиза (UNIQUE)
+- `user_id` - ID пользователя
+- `season_id` - ID сезона
+- `created_at` - Когда создано
+
+#### `win_streaks`
+Серии побед пользователя
+- `id` - ID записи
+- `user_id` - ID пользователя (UNIQUE)
+- `current_streak` - Текущая серия месяцев
+- `best_streak` - Лучшая серия месяцев
+- `total_wins` - Всего побед за всё время
+- `last_win_date` - Дата последней победы
+
+#### `monthly_awards`
+Награды за месяц
+- `id` - ID награды
+- `season_id` - ID сезона
+- `user_id` - ID пользователя
+- `rank` - Место (1, 2, 3)
+- `award_type` - Тип награды (gold/silver/bronze)
+- `lifetime_bonus` - Пожизненный бонус к очкам
+- `created_at` - Когда создано
+
+**Добавлено в `users`:**
+- ✅ `lifetime_score` - Пожизненные очки (сумма всех месяцев)
+- ✅ `best_streak_days` - Лучшая дневная серия за всё время
+- ✅ `total_monthly_wins` - Всего месячных побед
+
+**Индексы:**
+- `idx_monthly_stats_user` - Быстрый поиск по user_id
+- `idx_monthly_stats_season` - Быстрый поиск по season_id
+- `idx_monthly_stats_score` - Сортировка по очкам
+
+**Формула подсчёта очков:**
+```python
+score = (
+    quizzes_completed * 10 +
+    reverse_quizzes_completed * 5 +
+    words_learned * 2 +
+    streak_days * 3 +
+    bonus  # 90%+ = +50, 80%+ = +30, 70%+ = +15
+)
+```
+
+---
+
+## 🔄 Применение миграций
+
+### Проверить текущую версию:
+```bash
+alembic current
+```
+
+### Применить все миграции:
+```bash
+alembic upgrade head
+```
+
+### Откатить на одну версию назад:
+```bash
+alembic downgrade -1
+```
+
+### Откатить до конкретной версии:
+```bash
+alembic downgrade <revision_id>
+```
+
+### История миграций:
+```bash
+alembic history
+```
+
+---
+
+## 📊 Текущая схема БД
+
+### Основные таблицы:
+1. `users` - Пользователи (с аналитикой)
+2. `words` - Словарь (RU/UK/EN/TR переводы)
+3. `quiz_sessions` - Сессии квизов
+4. `quiz_questions` - Вопросы
+5. `user_words` - Изучение слов (SRS)
+
+### Месячная система:
+6. `monthly_seasons` - Сезоны
+7. `monthly_stats` - Статистика за месяц
+8. `monthly_quiz_events` - События (идемпотентность)
+9. `win_streaks` - Серии побед
+10. `monthly_awards` - Награды
+
+---
+
+## 🛠️ Разработка новых миграций
+
+### Создать новую миграцию:
+```bash
+alembic revision -m "описание_изменений"
+```
+
+### Автогенерация миграции:
+```bash
+alembic revision --autogenerate -m "описание"
+```
+
+### Правила именования:
+- Используй snake_case: `add_user_preferences`
+- Будь конкретным: `add_notifications_fields`, не `update_users`
+- Версии генерируются автоматически
+
+---
+
+## ⚠️ Важные заметки
+
+1. **Никогда не редактируй applied миграции** - создавай новую
+2. **Тестируй откат** - каждая миграция должна иметь `downgrade()`
+3. **Backup перед production** - всегда делай бекап БД
+4. **Проверяй индексы** - для больших таблиц обязательны
+5. **NULL vs NOT NULL** - продумывай дефолтные значения
+
+---
+
+## 🔍 Диагностика
+
+### Проверить что таблицы созданы:
+```bash
+python -c "from sqlalchemy import create_engine, inspect; engine = create_engine('postgresql://genau_user:genau_password@localhost:5432/genaulingua_db'); print('\n'.join(inspect(engine).get_table_names()))"
+```
+
+### Проверить версию миграции в БД:
+```bash
+python -c "from sqlalchemy import create_engine, text; engine = create_engine('postgresql://genau_user:genau_password@localhost:5432/genaulingua_db'); print(engine.connect().execute(text('SELECT version_num FROM alembic_version')).scalar())"
+```
+
+---
+
+**Последнее обновление:** 2025-03-04
+**Текущая версия:** `36f18cbb9329` (Add Monthly System)
 Конкретные вопросы внутри сессии.
 
 id (PK)

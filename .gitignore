@@ -93,3 +93,15 @@ Thumbs.db
 # Local word datasets
 Wordsbase/
 app/scripts/*.xlsx
+
+# ==============================================================================
+# DIAGNOSTICS
+# ==============================================================================
+# Папка с инструментами диагностики БД (содержит чувствительные данные)
+diagnostics/
+diagnostics_*.log
+diagnostics_*.txt
+
+# Исключения: документация остаётся в Git
+!diagnostics/README.md
+!diagnostics/.gitkeep

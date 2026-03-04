@@ -16,6 +16,7 @@ from app.services.quiz_service import (
     get_user_progress_stats,
     get_user_progress_stats_all_levels,
 )
+from app.services.monthly_leaderboard_service import get_user_monthly_rank, get_current_season
 
 router = Router()
 
@@ -143,7 +144,26 @@ async def show_statistics(message: Message, session: AsyncSession):
     stats_text += get_text("stats_new", lang, count=new) + "\n"
     stats_text += get_text("stats_difficult", lang, count=difficult) + "\n\n"
 
-    # Блок 2: Викторины
+    # Блок 2: Месячный рейтинг
+    try:
+        season = await get_current_season(session)
+        monthly_rank = await get_user_monthly_rank(user_id, session)
+
+        if season and monthly_rank:
+            month_names_ru = ["", "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+                             "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"]
+            month_names_uk = ["", "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
+                             "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"]
+
+            month_name = month_names_ru[season.month] if lang == "ru" else month_names_uk[season.month]
+
+            stats_text += f"\n🏆 <b>{month_name} {season.year}</b>\n"
+            stats_text += f"📍 Место: #{monthly_rank['rank']} из {monthly_rank['total_users']}\n"
+            stats_text += f"⭐ Очки: {monthly_rank['monthly_score']}\n\n"
+    except Exception as e:
+        print(f"⚠️ Ошибка месячного рейтинга: {e}")
+
+    # Блок 3: Викторины
     if all_level_sessions:
         stats_text += get_text("stats_quizzes_title", lang, level=user.level.value) + "\n"
 
@@ -160,11 +180,11 @@ async def show_statistics(message: Message, session: AsyncSession):
         stats_text += get_text("stats_quizzes_title", lang, level=user.level.value) + "\n"
         stats_text += get_text("stats_quizzes_none", lang) + "\n\n"
 
-    # Блок 3: Активность
+    # Блок 4: Активность
     stats_text += get_text("stats_activity_title", lang) + "\n"
     stats_text += get_text("stats_streak", lang, days=user.streak_days) + "\n\n"
 
-    # Блок 4: Последние викторины
+    # Блок 5: Последние викторины
     if level_sessions:
         stats_text += "━━━━━━━━━━━━━━━━━\n"
         stats_text += get_text("stats_recent_title", lang) + "\n\n"
