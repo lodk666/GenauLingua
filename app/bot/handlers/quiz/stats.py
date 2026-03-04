@@ -1,5 +1,6 @@
 """
 Статистика и прогресс пользователя с локализацией
+УЛУЧШЕННАЯ ВЕРСИЯ — информативная, понятная, интересная
 """
 
 import asyncio
@@ -16,15 +17,26 @@ from app.services.quiz_service import (
     get_user_progress_stats,
     get_user_progress_stats_all_levels,
 )
-from app.services.monthly_leaderboard_service import get_user_monthly_rank, get_current_season
 
 router = Router()
 
 MODE_DICT = {
-    "de_to_ru": "🇩🇪 DE → 🏴 RU",
-    "ru_to_de": "🏴 RU → 🇩🇪 DE",
-    "de_to_uk": "🇩🇪 DE → 🇺🇦 UK",
-    "uk_to_de": "🇺🇦 UK → 🇩🇪 DE",
+    "de_to_ru": "🇩🇪 → 🏴",
+    "ru_to_de": "🏴 → 🇩🇪",
+    "de_to_uk": "🇩🇪 → 🇺🇦",
+    "uk_to_de": "🇺🇦 → 🇩🇪",
+    "de_to_en": "🇩🇪 → 🇬🇧",
+    "en_to_de": "🇬🇧 → 🇩🇪",
+    "de_to_tr": "🇩🇪 → 🇹🇷",
+    "tr_to_de": "🇹🇷 → 🇩🇪",
+    "DE_TO_RU": "🇩🇪 → 🏴",
+    "RU_TO_DE": "🏴 → 🇩🇪",
+    "DE_TO_UK": "🇩🇪 → 🇺🇦",
+    "UK_TO_DE": "🇺🇦 → 🇩🇪",
+    "DE_TO_EN": "🇩🇪 → 🇬🇧",
+    "EN_TO_DE": "🇬🇧 → 🇩🇪",
+    "DE_TO_TR": "🇩🇪 → 🇹🇷",
+    "TR_TO_DE": "🇹🇷 → 🇩🇪",
 }
 
 
@@ -57,17 +69,46 @@ def get_stats_keyboard(lang: str = "ru") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(
-                text="🏆 Мой рейтинг" if lang == "ru" else "🏆 Мій рейтинг",
+                text="🏆 Мой рейтинг" if lang == "ru" else "🏆 Мій рейтинг" if lang == "uk" else "🏆 My rank" if lang == "en" else "🏆 Sıralamam",
                 callback_data="show_my_rating"
             )]
         ]
     )
 
 
+def create_progress_bar(current: int, total: int, length: int = 10) -> str:
+    """Создать визуальный прогресс-бар"""
+    if total == 0:
+        return "░" * length + " 0%"
+
+    percentage = min(100, int((current / total) * 100))
+    filled = int((current / total) * length)
+    empty = length - filled
+
+    bar = "▓" * filled + "░" * empty
+    return f"{bar} {percentage}%"
+
+
+def get_achievement_emoji(percentage: float) -> str:
+    """Получить эмодзи достижения по проценту"""
+    if percentage >= 95:
+        return "🏆"
+    elif percentage >= 85:
+        return "🥇"
+    elif percentage >= 75:
+        return "🥈"
+    elif percentage >= 60:
+        return "🥉"
+    else:
+        return "📝"
+
+
 @router.message(Command("stats"))
 @router.message(F.text.in_(["📊 Статистика", "📊 Статистика", "📊 Statistics", "📊 İstatistikler"]))
 async def show_statistics(message: Message, session: AsyncSession):
-    """Показ детальной статистики"""
+    print("🟢 STATS.PY: show_statistics() вызвана")
+    user_id = message.from_user.id
+    """Показ детальной статистики — УЛУЧШЕННАЯ ВЕРСИЯ"""
     user_id = message.from_user.id
     user = await session.get(User, user_id)
 
@@ -107,104 +148,113 @@ async def show_statistics(message: Message, session: AsyncSession):
         .order_by(QuizSession.started_at.desc())
     )
     all_level_sessions = result.scalars().all()
-    level_sessions = all_level_sessions[:5]
 
     # ========================================================================
-    # ФОРМИРУЕМ ТЕКСТ СТАТИСТИКИ
+    # ФОРМИРУЕМ НОВЫЙ УЛУЧШЕННЫЙ ТЕКСТ СТАТИСТИКИ
     # ========================================================================
 
-    stats_text = f"{get_text('stats_title', lang)}\n"
+    stats_text = f"📊 <b>Твоя статистика</b>\n\n" if lang in ["ru", "uk"] else f"📊 <b>Your statistics</b>\n\n"
 
-    # Блок 0: Вся база (все уровни)
-    overall_total = overall_progress['total_words']
-    overall_learned = overall_progress['learned_words']
-    overall_in_progress = overall_progress['seen_words'] - overall_learned
-    overall_new = overall_progress['new_words']
-    overall_difficult = overall_progress['struggling_words']
-
-    word_form = pluralize(overall_total, ("слово", "слова", "слів") if lang == "uk" else ("слово", "слова", "слов"))
-    stats_text += f"📚 Вся база ({overall_total} {word_form})\n" if lang == "ru" else f"📚 Вся база ({overall_total} {word_form})\n"
-    stats_text += get_text("stats_learned", lang, count=overall_learned) + "\n"
-    stats_text += get_text("stats_in_progress", lang, count=overall_in_progress) + "\n"
-    stats_text += get_text("stats_new", lang, count=overall_new) + "\n"
-    stats_text += get_text("stats_difficult", lang, count=overall_difficult) + "\n\n"
-
-    # Блок 1: Текущий уровень + режим
-    mode = MODE_DICT.get(user.translation_mode.value, user.translation_mode.value)
+    # Текущий уровень
+    mode = MODE_DICT.get(user.translation_mode.value, "🇩🇪 → 🏴")
     total = progress['total_words']
     learned = progress['learned_words']
+
+    # Прогресс-бар для текущего уровня
+    progress_bar = create_progress_bar(learned, total, length=12)
+
+    stats_text += f"🎯 <b>{user.level.value}</b> · {mode}\n"
+    stats_text += f"{progress_bar}\n"
+    stats_text += f"└─ Выучено <b>{learned}</b> из {total}\n\n"
+
+    # Детализация слов (компактно в одну строку)
     in_progress = progress['seen_words'] - learned
     new = progress['new_words']
     difficult = progress['struggling_words']
 
-    word_form = pluralize(total, ("слово", "слова", "слів") if lang == "uk" else ("слово", "слова", "слов"))
-    stats_text += f"\n🎯 <b>Рівень {user.level.value}</b> ({total} {word_form})\n" if lang == "uk" else f"\n🎯 <b>Уровень {user.level.value}</b> ({total} {word_form})\n"
-    stats_text += get_text("stats_learned", lang, count=learned) + "\n"
-    stats_text += get_text("stats_in_progress", lang, count=in_progress) + "\n"
-    stats_text += get_text("stats_new", lang, count=new) + "\n"
-    stats_text += get_text("stats_difficult", lang, count=difficult) + "\n\n"
+    stats_text += f"🔄 В процессе: {in_progress}  ·  🆕 Новых: {new}  ·  ⚠️ Сложных: {difficult}\n\n"
 
-    # Блок 2: Месячный рейтинг
-    try:
-        season = await get_current_season(session)
-        monthly_rank = await get_user_monthly_rank(user_id, session)
+    # ДОСТИЖЕНИЯ
+    overall_learned = overall_progress['learned_words']
 
-        if season and monthly_rank:
-            month_names_ru = ["", "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
-                             "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"]
-            month_names_uk = ["", "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
-                             "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"]
+    if overall_learned >= 500:
+        words_emoji = "🏆"
+    elif overall_learned >= 200:
+        words_emoji = "🥇"
+    elif overall_learned >= 100:
+        words_emoji = "🥈"
+    elif overall_learned >= 50:
+        words_emoji = "🥉"
+    else:
+        words_emoji = "⭐"
 
-            month_name = month_names_ru[season.month] if lang == "ru" else month_names_uk[season.month]
+    streak_text = f"{user.streak_days} дней подряд" if lang == "ru" else f"{user.streak_days} днів поспіль" if lang == "uk" else f"{user.streak_days} days in a row"
 
-            stats_text += f"\n🏆 <b>{month_name} {season.year}</b>\n"
-            stats_text += f"📍 Место: #{monthly_rank['rank']} из {monthly_rank['total_users']}\n"
-            stats_text += f"⭐ Очки: {monthly_rank['monthly_score']}\n\n"
-    except Exception as e:
-        print(f"⚠️ Ошибка месячного рейтинга: {e}")
+    stats_text += f"{words_emoji} <b>Твои достижения</b>\n" if lang in ["ru", "uk"] else f"{words_emoji} <b>Your achievements</b>\n"
+    stats_text += f"├─ Выучено слов: <b>{overall_learned}</b>\n" if lang in ["ru", "uk"] else f"├─ Words learned: <b>{overall_learned}</b>\n"
+    stats_text += f"└─ Стрик: <b>{streak_text}</b>\n\n"
 
-    # Блок 3: Викторины
+    # ВИКТОРИНЫ
     if all_level_sessions:
-        stats_text += get_text("stats_quizzes_title", lang, level=user.level.value) + "\n"
-
         total_quizzes = len(all_level_sessions)
         total_questions = sum(s.total_questions for s in all_level_sessions)
         total_correct = sum(s.correct_answers for s in all_level_sessions)
         avg_percent = (total_correct / total_questions * 100) if total_questions > 0 else 0
         best_result = max((s.correct_answers / s.total_questions * 100) for s in all_level_sessions) if all_level_sessions else 0
 
-        stats_text += get_text("stats_quizzes_passed", lang, count=total_quizzes) + "\n"
-        stats_text += get_text("stats_quizzes_avg", lang, percentage=f"{avg_percent:.1f}") + "\n"
-        stats_text += get_text("stats_quizzes_best", lang, percentage=f"{best_result:.1f}") + "\n\n"
+        achievement_emoji = get_achievement_emoji(avg_percent)
+
+        stats_text += f"{achievement_emoji} <b>Викторины ({user.level.value})</b>\n"
+        stats_text += f"├─ Пройдено: <b>{total_quizzes}</b>\n"
+        stats_text += f"├─ Средний результат: <b>{avg_percent:.0f}%</b>\n"
+        stats_text += f"└─ Лучший результат: <b>{best_result:.0f}%</b>\n\n"
     else:
-        stats_text += get_text("stats_quizzes_title", lang, level=user.level.value) + "\n"
-        stats_text += get_text("stats_quizzes_none", lang) + "\n\n"
+        stats_text += f"📝 <b>Викторины ({user.level.value})</b>\n"
+        stats_text += "└─ Пока нет пройденных викторин\n\n"
 
-    # Блок 4: Активность
-    stats_text += get_text("stats_activity_title", lang) + "\n"
-    stats_text += get_text("stats_streak", lang, days=user.streak_days) + "\n\n"
+    # ПОСЛЕДНИЕ ВИКТОРИНЫ
+    if all_level_sessions:
+        stats_text += "📈 <b>Последние викторины</b>\n"
 
-    # Блок 5: Последние викторины
-    if level_sessions:
-        stats_text += "━━━━━━━━━━━━━━━━━\n"
-        stats_text += get_text("stats_recent_title", lang) + "\n\n"
-
-        for i, s in enumerate(level_sessions, 1):
+        for s in all_level_sessions[:3]:
             percentage = (s.correct_answers / s.total_questions * 100) if s.total_questions > 0 else 0
-            date_str = s.started_at.strftime("%d.%m %H:%M")
+            date_str = s.started_at.strftime("%d.%m")
+            emoji = get_achievement_emoji(percentage)
+            stats_text += f"{emoji} {date_str} — {s.correct_answers}/{s.total_questions} ({percentage:.0f}%)\n"
 
-            if percentage >= 80:
-                emoji = "🏆"
-            elif percentage >= 60:
-                emoji = "👍"
-            else:
-                emoji = "📝"
+        stats_text += "\n"
 
-            stats_text += f"{emoji} {date_str} • {s.correct_answers}/{s.total_questions} ({percentage:.0f}%)\n"
+    # ОБЩИЙ ПРОГРЕСС
+    overall_total = overall_progress['total_words']
 
-    # Пояснение
-    stats_text += "\n━━━━━━━━━━━━━━━━━\n"
-    stats_text += get_text("stats_learned_explanation", lang)
+    if overall_total > 0:
+        overall_bar = create_progress_bar(overall_learned, overall_total, length=12)
+
+        stats_text += "🌍 <b>Общий прогресс</b>\n"
+        stats_text += f"{overall_bar}\n"
+        stats_text += f"└─ Выучено <b>{overall_learned}</b> из {overall_total} слов\n\n"
+
+    # МОТИВАЦИЯ
+    if learned == 0:
+        cta = "💪 Начни учить слова — первый шаг самый важный!" if lang in ["ru", "uk"] else "💪 Start learning — the first step is the most important!"
+    elif learned < total * 0.3:
+        cta = "🚀 Отличное начало! Продолжай в том же духе!" if lang in ["ru", "uk"] else "🚀 Great start! Keep going!"
+    elif learned < total * 0.7:
+        cta = "🔥 Ты на полпути! Не останавливайся!" if lang in ["ru", "uk"] else "🔥 Halfway there! Don't stop!"
+    else:
+        cta = "🏆 Почти у цели! Ты молодец!" if lang in ["ru", "uk"] else "🏆 Almost there! Great job!"
+
+    stats_text += f"{cta}\n\n"
+
+    # ПОЯСНЕНИЕ
+    explanation_text = {
+        "ru": "—————————————————————\nСлово выучено = 3 правильных ответа подряд",
+        "uk": "—————————————————————\nСлово вивчено = 3 правильних відповіді поспіль",
+        "en": "—————————————————————\nWord learned = 3 correct answers in a row",
+        "tr": "—————————————————————\nÖğrenildi = üst üste 3 doğru cevap"
+    }
+
+    stats_text += explanation_text.get(lang, explanation_text["ru"])
 
     # Создаём якорь и очищаем старое
     old_anchor_id, new_anchor_id = await ensure_anchor(message, session, user, emoji="📊")
