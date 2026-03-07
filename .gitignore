@@ -105,3 +105,8 @@ diagnostics_*.txt
 # Исключения: документация остаётся в Git
 !diagnostics/README.md
 !diagnostics/.gitkeep
+
+# Scripts (diagnostics, broadcasts, one-time utilities)
+app/scripts/*
+!app/scripts/README.md
+!app/scripts/rebuild_words_from_excel.py
