@@ -1,8 +1,5 @@
 """
-Таблица лидеров — топ-10 игроков
-Вход через кнопку «📊 Таблица лидеров» из «Мой рейтинг»
-Вкладки: Месяц / За всё время
-Кнопка: Назад к рейтингу
+Таблица лидеров — топ-10 игроков — ЛОКАЛИЗОВАНО
 """
 
 from aiogram import Router, F
@@ -21,25 +18,13 @@ from app.bot.handlers.leaderboard.utils import (
     get_user_title,
     get_leaderboard_keyboard_text
 )
+from app.locales import get_text
 
 router = Router()
 
 
-# ============================================================================
-# КЛАВИАТУРА
-# ============================================================================
-
 def get_table_keyboard(lang: str, current_tab: str = "monthly") -> InlineKeyboardMarkup:
-    """Клавиатура таблицы: вкладки + назад"""
     texts = get_leaderboard_keyboard_text(lang, current_tab)
-
-    back_text = {
-        "ru": "◀️ Назад к рейтингу",
-        "uk": "◀️ Назад до рейтингу",
-        "en": "◀️ Back to rating",
-        "tr": "◀️ Sıralamaya geri dön"
-    }.get(lang, "◀️ Назад к рейтингу")
-
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -47,28 +32,23 @@ def get_table_keyboard(lang: str, current_tab: str = "monthly") -> InlineKeyboar
                 InlineKeyboardButton(text=texts['alltime'], callback_data="table_alltime")
             ],
             [
-                InlineKeyboardButton(text=back_text, callback_data="rating_monthly")
+                InlineKeyboardButton(
+                    text=get_text("btn_back_to_rating", lang),
+                    callback_data="rating_monthly"
+                )
             ]
         ]
     )
 
 
-# ============================================================================
-# ФОРМАТИРОВАНИЕ
-# ============================================================================
-
 def _rank_emoji(rank: int) -> str:
-    if rank == 1:
-        return "🥇"
-    elif rank == 2:
-        return "🥈"
-    elif rank == 3:
-        return "🥉"
+    if rank == 1: return "🥇"
+    elif rank == 2: return "🥈"
+    elif rank == 3: return "🥉"
     return f"{rank}."
 
 
 def _shorten_name(name: str, max_len: int = 15) -> str:
-    """Обрезать длинное имя чтобы таблица не ломалась"""
     if len(name) <= max_len:
         return name
     first = name.split()[0]
@@ -77,24 +57,16 @@ def _shorten_name(name: str, max_len: int = 15) -> str:
     return first[:max_len - 1] + "…"
 
 
-def build_monthly_table(
-    leaderboard: list,
-    user_rank: dict,
-    season,
-    user_id: int,
-    lang: str
-) -> str:
-    """Таблица лидеров за месяц"""
-
+def build_monthly_table(leaderboard: list, user_rank: dict, season, user_id: int, lang: str) -> str:
     month_name = format_month_name(season.month, lang)
+    pts = get_text("table_points", lang)
 
-    text = f"📊 <b>Таблица лидеров — {month_name} {season.year}</b>\n\n"
+    text = get_text("table_title_monthly", lang, month=month_name, year=season.year) + "\n\n"
 
     if not leaderboard:
-        text += "Пока никто не участвует.\nПройди викторину первым! 💪\n"
+        text += get_text("table_empty", lang) + "\n"
         return text
 
-    # Топ-10
     user_in_top = False
     for entry in leaderboard:
         rank = entry["rank"]
@@ -102,24 +74,18 @@ def build_monthly_table(
         score = entry["monthly_score"]
         emoji = _rank_emoji(rank)
 
-        # Титул для 4+ мест
         title = ""
         if rank > 3:
-            title_emoji = get_user_title(
-                entry.get("win_streak"),
-                entry.get("monthly_words", 0)
-            )
-            if title_emoji:
-                title = f" {title_emoji}"
+            t = get_user_title(entry.get("win_streak"), entry.get("monthly_words", 0))
+            if t: title = f" {t}"
 
         is_me = entry["user_id"] == user_id
         if is_me:
             user_in_top = True
-            text += f"{emoji} <b>{name}{title}</b> — {score} баллов\n"
+            text += f"{emoji} <b>{name}{title}</b> — {score} {pts}\n"
         else:
-            text += f"{emoji} {name}{title} — {score} баллов\n"
+            text += f"{emoji} {name}{title} — {score} {pts}\n"
 
-    # Если юзер не в топ-10 — показываем его отдельно
     text += "\n" + "━" * 17 + "\n"
 
     if user_rank:
@@ -128,55 +94,44 @@ def build_monthly_table(
         total = user_rank.get('total_users', 1)
 
         if user_in_top:
-            text += f"📍 Ты: <b>#{rank}</b> из {total}\n"
+            text += get_text("table_you_in_top", lang, rank=rank, total=total) + "\n"
         else:
-            text += f"📍 Ты: <b>#{rank}</b> из {total} — {score} баллов\n"
+            text += get_text("table_you_not_in_top", lang, rank=rank, total=total, score=score) + "\n"
     else:
-        text += "📍 Ты ещё не в рейтинге\n"
+        text += get_text("table_you_not_ranked", lang) + "\n"
 
     return text
 
 
-def build_alltime_table(
-    leaderboard: list,
-    user: User,
-    lang: str
-) -> str:
-    """Таблица лидеров за всё время"""
+def build_alltime_table(leaderboard: list, user: User, lang: str) -> str:
+    user_id = user.id
+    pts = get_text("table_points", lang)
 
-    text = "📊 <b>Таблица лидеров — За всё время</b>\n\n"
+    text = get_text("table_title_alltime", lang) + "\n\n"
 
     if not leaderboard:
-        text += "Пока нет данных.\nПройди викторину первым! 💪\n"
+        text += get_text("table_empty", lang) + "\n"
         return text
 
-    user_id = user.id
     user_in_top = False
-
     for entry in leaderboard:
         rank = entry["rank"]
         name = _shorten_name(entry["display_name"])
         score = entry["lifetime_score"]
         emoji = _rank_emoji(rank)
 
-        # Титул для 4+ мест
         title = ""
         if rank > 3:
-            title_emoji = get_user_title(
-                entry.get("win_streak"),
-                entry.get("words_learned", 0)
-            )
-            if title_emoji:
-                title = f" {title_emoji}"
+            t = get_user_title(entry.get("win_streak"), entry.get("words_learned", 0))
+            if t: title = f" {t}"
 
         is_me = entry["user_id"] == user_id
         if is_me:
             user_in_top = True
-            text += f"{emoji} <b>{name}{title}</b> — {score} баллов\n"
+            text += f"{emoji} <b>{name}{title}</b> — {score} {pts}\n"
         else:
-            text += f"{emoji} {name}{title} — {score} баллов\n"
+            text += f"{emoji} {name}{title} — {score} {pts}\n"
 
-    # Позиция юзера
     text += "\n" + "━" * 17 + "\n"
 
     user_rank_num = None
@@ -186,88 +141,73 @@ def build_alltime_table(
             break
 
     lifetime = user.lifetime_score or 0
+    total = len(leaderboard)
 
     if user_rank_num:
         if user_in_top:
-            text += f"📍 Ты: <b>#{user_rank_num}</b>\n"
+            text += get_text("table_you_in_top", lang, rank=user_rank_num, total=total) + "\n"
         else:
-            text += f"📍 Ты: <b>#{user_rank_num}</b> — {lifetime} баллов\n"
+            text += get_text("table_you_not_in_top", lang, rank=user_rank_num, total=total, score=lifetime) + "\n"
     else:
         if lifetime > 0:
-            text += f"📍 Ты: за пределами топ-10 — {lifetime} баллов\n"
+            text += get_text("table_you_outside", lang, score=lifetime) + "\n"
         else:
-            text += "📍 Ты ещё не в рейтинге\n"
+            text += get_text("table_you_not_ranked", lang) + "\n"
 
     return text
 
 
-# ============================================================================
-# HANDLERS
-# ============================================================================
-
 @router.callback_query(F.data == "leaderboard_table_monthly")
 async def show_table_monthly(callback: CallbackQuery, session: AsyncSession):
-    """Вход в таблицу из «Мой рейтинг» (вкладка Месяц)"""
     await callback.answer()
-
     user = await session.get(User, callback.from_user.id)
     lang = user.interface_language if user else "ru"
     season = await get_current_season(session)
 
     if not season:
-        await callback.message.edit_text("❌ Рейтинг не активен")
+        await callback.message.edit_text(get_text("rating_not_active", lang))
         return
 
     leaderboard = await get_monthly_leaderboard(session, season_id=season.id, limit=10)
     user_rank = await get_user_monthly_rank(user.id, session, season_id=season.id)
     text = build_monthly_table(leaderboard, user_rank, season, user.id, lang)
-
     await callback.message.edit_text(text, reply_markup=get_table_keyboard(lang, "monthly"))
 
 
 @router.callback_query(F.data == "leaderboard_table_alltime")
 async def show_table_alltime(callback: CallbackQuery, session: AsyncSession):
-    """Вход в таблицу из «Мой рейтинг» (вкладка За всё время)"""
     await callback.answer()
-
     user = await session.get(User, callback.from_user.id)
     lang = user.interface_language if user else "ru"
 
     leaderboard = await get_lifetime_leaderboard(session, limit=10)
     text = build_alltime_table(leaderboard, user, lang)
-
     await callback.message.edit_text(text, reply_markup=get_table_keyboard(lang, "alltime"))
 
 
 @router.callback_query(F.data == "table_monthly")
 async def switch_table_to_monthly(callback: CallbackQuery, session: AsyncSession):
-    """Переключить таблицу на Месяц"""
     await callback.answer()
-
     user = await session.get(User, callback.from_user.id)
     lang = user.interface_language if user else "ru"
     season = await get_current_season(session)
 
     if not season:
-        await callback.message.edit_text("❌ Рейтинг не активен")
+        await callback.message.edit_text(get_text("rating_not_active", lang))
         return
 
     leaderboard = await get_monthly_leaderboard(session, season_id=season.id, limit=10)
     user_rank = await get_user_monthly_rank(user.id, session, season_id=season.id)
     text = build_monthly_table(leaderboard, user_rank, season, user.id, lang)
-
     await callback.message.edit_text(text, reply_markup=get_table_keyboard(lang, "monthly"))
 
 
 @router.callback_query(F.data == "table_alltime")
 async def switch_table_to_alltime(callback: CallbackQuery, session: AsyncSession):
-    """Переключить таблицу на За всё время"""
     await callback.answer()
-
     user = await session.get(User, callback.from_user.id)
     lang = user.interface_language if user else "ru"
 
     leaderboard = await get_lifetime_leaderboard(session, limit=10)
     text = build_alltime_table(leaderboard, user, lang)
-
     await callback.message.edit_text(text, reply_markup=get_table_keyboard(lang, "alltime"))

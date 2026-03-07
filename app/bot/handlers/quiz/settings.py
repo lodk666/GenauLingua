@@ -336,6 +336,7 @@ async def change_interface_language(callback: CallbackQuery, session: AsyncSessi
 
 @router.callback_query(F.data.startswith("lang_"))
 async def set_interface_language(callback: CallbackQuery, session: AsyncSession):
+    print(f"🔵 lang_ callback received: {callback.data}")  # ← добавь эту строку
     new_lang = callback.data.split("_")[1]
 
     user = await session.get(User, callback.from_user.id)

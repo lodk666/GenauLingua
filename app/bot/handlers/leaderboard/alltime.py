@@ -1,6 +1,6 @@
 """
 Мой рейтинг — вкладка «За всё время»
-Персональная карточка lifetime достижений
+Персональная карточка lifetime — ЛОКАЛИЗОВАНО
 """
 
 from aiogram import Router, F
@@ -10,14 +10,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models import User
 from app.services.monthly_leaderboard_service import get_lifetime_leaderboard
 from app.bot.handlers.leaderboard.utils import get_leaderboard_keyboard_text
+from app.locales import get_text
 
 router = Router()
 
 
 def get_rating_keyboard(lang: str, current_tab: str = "alltime") -> InlineKeyboardMarkup:
-    """Клавиатура Мой рейтинг: вкладки + кнопка таблицы"""
     texts = get_leaderboard_keyboard_text(lang, current_tab)
-
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -26,10 +25,7 @@ def get_rating_keyboard(lang: str, current_tab: str = "alltime") -> InlineKeyboa
             ],
             [
                 InlineKeyboardButton(
-                    text="📊 Таблица лидеров" if lang == "ru"
-                    else "📊 Таблиця лідерів" if lang == "uk"
-                    else "📊 Leaderboard" if lang == "en"
-                    else "📊 Liderlik Tablosu",
+                    text=get_text("btn_leaderboard_table", lang),
                     callback_data="leaderboard_table_alltime"
                 )
             ]
@@ -37,19 +33,12 @@ def get_rating_keyboard(lang: str, current_tab: str = "alltime") -> InlineKeyboa
     )
 
 
-def build_alltime_card(
-    user: User,
-    leaderboard: list,
-    lang: str
-) -> str:
-    """Персональная карточка за всё время"""
-
+def build_alltime_card(user: User, leaderboard: list, lang: str) -> str:
     user_id = user.id
 
-    # ═══════════════ ЗАГОЛОВОК ═══════════════
-    text = "🏆 <b>Мой рейтинг — За всё время</b>\n\n"
+    text = get_text("rating_title_alltime", lang) + "\n\n"
 
-    # ═══════════════ ПОЗИЦИЯ ═══════════════
+    # Позиция
     user_rank_num = None
     if leaderboard:
         for entry in leaderboard:
@@ -62,50 +51,40 @@ def build_alltime_card(
     words_learned = user.words_learned or 0
 
     if user_rank_num:
-        text += f"📍 Позиция: <b>#{user_rank_num}</b>\n"
+        text += get_text("rating_position_alltime", lang, rank=user_rank_num) + "\n"
     else:
-        text += f"📍 Позиция: <b>—</b>\n"
+        text += get_text("rating_position_none", lang) + "\n"
 
-    text += f"💎 Баллы: <b>{lifetime_score}</b>\n\n"
+    text += get_text("rating_points", lang, score=lifetime_score) + "\n\n"
 
-    # ═══════════════ ДОСТИЖЕНИЯ ═══════════════
-    text += f"⭐ <b>Твои достижения:</b>\n"
-    text += f"├ Побед (1 место): {total_wins}\n"
-    text += f"└ Выучено слов: {words_learned}\n"
+    # Достижения
+    text += get_text("rating_achievements", lang) + "\n"
+    text += get_text("rating_wins", lang, count=total_wins) + "\n"
+    text += get_text("rating_total_words", lang, count=words_learned) + "\n"
 
-    # ═══════════════ МОТИВАЦИЯ ═══════════════
+    # Мотивация
     if total_wins == 0 and lifetime_score == 0:
-        text += "\n🚀 Начни учить слова — первый шаг самый важный!\n"
+        text += "\n" + get_text("rating_motivation_start", lang) + "\n"
     elif total_wins == 0:
-        text += "\n🎯 Продолжай — первая победа уже близко!\n"
+        text += "\n" + get_text("rating_motivation_continue", lang) + "\n"
     elif total_wins >= 3:
-        text += "\n🔥 Ты настоящий чемпион!\n"
+        text += "\n" + get_text("rating_motivation_champion", lang) + "\n"
 
-    # ═══════════════ ПОЯСНЕНИЕ ═══════════════
+    # Пояснение
     text += "\n━━━━━━━━━━━━━━━━━\n"
-    text += "🌟 <b>Lifetime баллы — это:</b>\n"
-    text += "• Все баллы за все месяцы\n"
-    text += "• +100 за 🥇 · +50 за 🥈 · +25 за 🥉\n"
+    text += get_text("rating_lifetime_title", lang) + "\n"
+    text += get_text("rating_lifetime_desc", lang) + "\n"
 
     return text
 
 
-# ============================================================================
-# ПЕРЕКЛЮЧЕНИЕ ВКЛАДКИ: За всё время
-# ============================================================================
-
 @router.callback_query(F.data == "rating_alltime")
 async def switch_to_alltime(callback: CallbackQuery, session: AsyncSession):
-    """Вкладка За всё время — ТОЛЬКО edit"""
     await callback.answer()
-
     user = await session.get(User, callback.from_user.id)
     lang = user.interface_language if user else "ru"
 
     leaderboard = await get_lifetime_leaderboard(session, limit=10)
     text = build_alltime_card(user, leaderboard, lang)
 
-    await callback.message.edit_text(
-        text,
-        reply_markup=get_rating_keyboard(lang, "alltime")
-    )
+    await callback.message.edit_text(text, reply_markup=get_rating_keyboard(lang, "alltime"))

@@ -231,7 +231,7 @@ TEXTS = {
 
     "help_how_to_use_title": "📖 <b>How to use the bot</b>",
     "help_how_to_use_text": """1️⃣ <b>Set your level and mode</b>
-🦾 Settings → choose level A1–B1, translation mode and language.
+🦾 Settings → choose level A1–B1, translation mode and interface language.
 
 2️⃣ <b>Learn words every day</b>
 📚 Learn words → quiz with 25 words.
@@ -243,6 +243,14 @@ After the quiz you can immediately repeat the words you got wrong.
 4️⃣ <b>Track your progress</b>
 📊 Statistics → how many learned, quiz history, streak.
 
+5️⃣ <b>Compete with others</b>
+🏆 My rating → your monthly and all-time points.
+📊 Leaderboard → top-10 among all participants.
+
+6️⃣ <b>Set up reminders</b>
+🦾 Settings → 🔔 Notifications → choose time, days and timezone.
+The bot will remind you to practice and show your current streak.
+
 ━━━━━━━━━━━━━━━━━
 💡 A word is <b>learned</b> when you answer correctly 3 times in a row.
 🔥 <b>Streak</b> grows if you complete at least 1 quiz per day.
@@ -253,20 +261,17 @@ Questions? → t.me/genaulingua_chat""",
     "help_roadmap_text": """🏆 <b>Achievements</b>
 Badges for progress — first quiz, 7 days in a row, 100 words learned, 100% quiz and more.
 
-🥇 <b>Leaderboard</b>
-Rankings among all users — by words, streak and quiz results.
-
-🎯 <b>Challenges</b>
-Weekly tasks — complete 7 quizzes in a row, learn 100 words in a week, score 90%+ three times.
-
-🔔 <b>Reminders</b>
-Set a time — the bot will remind you to practice and show your current streak.
+🗂️ <b>Word categories</b>
+Learn words by topic — food, transport, work, travel and more.
 
 📚 <b>Levels B2–C2</b>
 Currently A1–B1 available. B2, C1 and C2 are in progress.
 
-🎤 <b>Pronunciation</b>
-Word audio — listen to how German words sound.
+📖 <b>30,000 words</b>
+Expanding the word base to 30,000 with translations in all 4 languages.
+
+🔄 <b>New learning modes</b>
+More formats for learning words — beyond quizzes.
 
 ━━━━━━━━━━━━━━━━━
 💬 Ideas and suggestions — write in chat:
@@ -288,15 +293,84 @@ The more active the community — the better the bot gets. Don't be shy! 🙌"""
     "help_about_title": "ℹ️ <b>About the bot</b>",
     "help_about_text": """🤖 <b>GenauLingua</b> — your personal German learning assistant.
 
-✨ <b>Current features:</b>
+✨ <b>Features:</b>
 • Word base A1–B1 (3000+ words)
 • Smart word selection — SRS algorithm
-• Modes DE→EN, EN→DE, DE→RU, DE→UA
+• 4 languages: DE↔RU, DE↔UA, DE↔EN, DE↔TR
 • Repeat mistakes after quiz
-• Statistics and streak
+• Statistics, streak and progress bar
+• Monthly rating and leaderboard
+• Flexible notification reminders
 • Interface in English, Russian, Ukrainian, Turkish
 
-📅 <b>Updated:</b> February 2026
+📅 <b>Updated:</b> March 2026
 
 💬 Follow updates: t.me/genaulingua_chat""",
+
+    # ============================================================================
+    # RATING
+    # ============================================================================
+    "rating_title_monthly": "🏆 <b>My rating — {month} {year}</b>",
+    "rating_not_active": "❌ Rating is not active yet.",
+    "rating_not_in_ranking": "📍 You're not in the ranking yet",
+    "rating_start_quiz": "🚀 Take your first quiz!",
+    "rating_position": "📍 Position: <b>#{rank}</b> of {total}",
+    "rating_points": "💎 Points: <b>{score}</b>",
+    "rating_your_month": "⭐ <b>Your {month}:</b>",
+    "rating_quizzes": "├ Quizzes: {count}",
+    "rating_words_learned": "├ Words learned: {count}",
+    "rating_streak": "├ Streak: {count} days",
+    "rating_avg_result": "└ Average result: {percent}%",
+    "rating_goal": "🎯 To #{rank} ({name}): {diff} more points",
+    "rating_scoring_title": "💡 <b>How to earn points:</b>",
+    "rating_scoring_quiz": "• Completed quiz → +10",
+    "rating_scoring_reverse": "• Reverse mode → +5",
+    "rating_scoring_word": "• Word learned → +2",
+    "rating_scoring_streak": "• Day streak → +3",
+    "rating_scoring_bonus": "• 90%+ accuracy → +50 bonus",
+
+    "rating_title_alltime": "🏆 <b>My rating — All Time</b>",
+    "rating_position_alltime": "📍 Position: <b>#{rank}</b>",
+    "rating_position_none": "📍 Position: <b>—</b>",
+    "rating_achievements": "⭐ <b>Your achievements:</b>",
+    "rating_wins": "├ Wins (1st place): {count}",
+    "rating_total_words": "└ Words learned: {count}",
+    "rating_motivation_start": "🚀 Start learning — the first step is the most important!",
+    "rating_motivation_continue": "🎯 Keep going — your first win is near!",
+    "rating_motivation_champion": "🔥 You're a true champion!",
+    "rating_lifetime_title": "🌟 <b>Lifetime points:</b>",
+    "rating_lifetime_desc": "• All points from all months\n• +100 for 🥇 · +50 for 🥈 · +25 for 🥉",
+
+    "table_title_monthly": "📊 <b>Leaderboard — {month} {year}</b>",
+    "table_title_alltime": "📊 <b>Leaderboard — All Time</b>",
+    "table_empty": "No participants yet.\nBe the first to take a quiz! 💪",
+    "table_you_in_top": "📍 You: <b>#{rank}</b> of {total}",
+    "table_you_not_in_top": "📍 You: <b>#{rank}</b> of {total} — {score} points",
+    "table_you_outside": "📍 You: outside top-10 — {score} points",
+    "table_you_not_ranked": "📍 You're not ranked yet",
+    "table_points": "points",
+    "btn_leaderboard_table": "📊 Leaderboard",
+    "btn_back_to_rating": "◀️ Back to rating",
+
+    # STATISTICS
+    "stats_header": "📊 <b>Your statistics</b>",
+    "stats_learned_of": "└─ Learned <b>{learned}</b> of {total}",
+    "stats_details": "🔄 In progress: {progress}  ·  🆕 New: {new}  ·  ⚠️ Difficult: {difficult}",
+    "stats_achievements_title": "<b>Your achievements</b>",
+    "stats_words_count": "├─ Words learned: <b>{count}</b>",
+    "stats_streak_line": "└─ Streak: <b>{days} days in a row</b>",
+    "stats_quizzes_header": "<b>Quizzes ({level})</b>",
+    "stats_quizzes_passed_line": "├─ Completed: <b>{count}</b>",
+    "stats_quizzes_avg_line": "├─ Average result: <b>{percent}%</b>",
+    "stats_quizzes_best_line": "└─ Best result: <b>{percent}%</b>",
+    "stats_quizzes_empty": "└─ No quizzes completed yet",
+    "stats_recent_header": "📈 <b>Recent quizzes</b>",
+    "stats_overall_header": "🌍 <b>Overall progress</b>",
+    "stats_overall_learned": "└─ Learned <b>{learned}</b> of {total} words",
+    "stats_cta_start": "💪 Start learning — the first step is the most important!",
+    "stats_cta_begin": "🚀 Great start! Keep going!",
+    "stats_cta_halfway": "🔥 Halfway there! Don't stop!",
+    "stats_cta_almost": "🏆 Almost there! Great job!",
+    "stats_explanation": "—————————————————————\nWord learned = 3 correct answers in a row",
+    "stats_btn_rating": "🏆 My rating",
 }
