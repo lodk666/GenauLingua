@@ -81,7 +81,11 @@ async def main():
     async def db_session_middleware(handler, event, data):
         async with AsyncSessionLocal() as session:
             data["session"] = session
-            return await handler(event, data)
+            try:
+                return await handler(event, data)
+            except Exception:
+                await session.rollback()
+                raise
 
     logger.info("📦 Routers loaded:")
     logger.info("   ✅ leaderboard/monthly.py")
