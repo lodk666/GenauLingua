@@ -262,6 +262,11 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
     errors = data['errors']
 
     correct_word = await session.get(Word, correct_word_id)
+    if not correct_word:
+        await callback.answer("❌ Error", show_alert=True)
+        await state.clear()
+        return
+
     is_correct = (selected_word_id == correct_word_id)
 
     session_item = QuizQuestion(
@@ -550,6 +555,11 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
 
     first_word_id = errors[0]
     first_word = await session.get(Word, first_word_id)
+
+    if not first_word:
+        await callback.message.answer(get_text("quiz_error_next", lang))
+        await callback.answer()
+        return
 
     distractors = await get_distractors(first_word, session)
 
