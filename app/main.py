@@ -26,7 +26,6 @@ from app.bot.handlers.reminders import router as reminders_router
 # РЕЙТИНГИ
 from app.bot.handlers.leaderboard.monthly import router as monthly_router
 from app.bot.handlers.leaderboard.alltime import router as alltime_router
-from app.bot.handlers.leaderboard.personal import router as personal_router
 from app.bot.handlers.leaderboard.leaderboard_table import router as table_router
 
 # КВИЗЫ ПО ОТДЕЛЬНОСТИ (НЕ ЧЕРЕЗ quiz_router!)
@@ -65,7 +64,6 @@ async def main():
     # Рейтинги ПЕРВЫМИ (чтобы перехватить show_my_rating)
     dp.include_router(monthly_router)
     dp.include_router(alltime_router)
-    dp.include_router(personal_router)
     dp.include_router(table_router)
 
     # Потом всё остальное
@@ -90,7 +88,6 @@ async def main():
     logger.info("📦 Routers loaded:")
     logger.info("   ✅ leaderboard/monthly.py")
     logger.info("   ✅ leaderboard/alltime.py")
-    logger.info("   ✅ leaderboard/personal.py")
     logger.info("   ✅ leaderboard/leaderboard_table.py")
     logger.info("   ✅ start.py")
     logger.info("   ✅ quiz/game.py")

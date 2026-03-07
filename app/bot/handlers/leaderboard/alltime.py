@@ -4,34 +4,15 @@
 """
 
 from aiogram import Router, F
-from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import User
 from app.services.monthly_leaderboard_service import get_lifetime_leaderboard
-from app.bot.handlers.leaderboard.utils import get_leaderboard_keyboard_text
+from app.bot.handlers.leaderboard.monthly import get_rating_keyboard
 from app.locales import get_text
 
 router = Router()
-
-
-def get_rating_keyboard(lang: str, current_tab: str = "alltime") -> InlineKeyboardMarkup:
-    texts = get_leaderboard_keyboard_text(lang, current_tab)
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(text=texts['monthly'], callback_data="rating_monthly"),
-                InlineKeyboardButton(text=texts['alltime'], callback_data="rating_alltime")
-            ],
-            [
-                InlineKeyboardButton(
-                    text=get_text("btn_leaderboard_table", lang),
-                    callback_data="leaderboard_table_alltime"
-                )
-            ]
-        ]
-    )
-
 
 def build_alltime_card(user: User, leaderboard: list, lang: str) -> str:
     user_id = user.id

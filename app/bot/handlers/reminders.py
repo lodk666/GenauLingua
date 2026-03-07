@@ -13,8 +13,8 @@ from app.bot.keyboards.notifications import (
     get_notification_time_keyboard,
     get_notification_days_keyboard,
     get_notifications_settings_keyboard,
-    get_quiz_word_count_keyboard,
 )
+
 from app.utils.timezones import get_timezone, get_utc_offset, get_city_name
 from app.locales import get_text
 
@@ -335,46 +335,3 @@ async def save_notification_days(callback: CallbackQuery, session: AsyncSession)
 
     # Возвращаемся к настройкам напоминаний
     await show_notifications_settings(callback, session)
-
-
-# ============================================================================
-# НАСТРОЙКА КОЛИЧЕСТВА СЛОВ В ВИКТОРИНЕ
-# ============================================================================
-
-@router.callback_query(F.data == "settings:quiz_count")
-async def change_quiz_word_count(callback: CallbackQuery, session: AsyncSession):
-    """Показать выбор количества слов"""
-    await callback.answer()
-
-    user = await session.get(User, callback.from_user.id)
-    lang = user.interface_language or "ru"
-
-    text = (
-        f"📊 <b>Количество слов в викторине</b>\n\n"
-        f"Текущее: {user.quiz_word_count} слов\n\n"
-        f"Выберите удобное для вас количество:"
-    )
-
-    keyboard = get_quiz_word_count_keyboard(
-        current_count=user.quiz_word_count,
-        lang=lang
-    )
-
-    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
-
-
-@router.callback_query(F.data.startswith("quiz_count:"))
-async def set_quiz_word_count(callback: CallbackQuery, session: AsyncSession):
-    """Установить количество слов"""
-    count = int(callback.data.split(":")[1])
-
-    user = await session.get(User, callback.from_user.id)
-    user.quiz_word_count = count
-    await session.commit()
-
-    await callback.answer(f"✅ Установлено: {count} слов", show_alert=False)
-
-    # Возвращаемся к главным настройкам
-    # (предполагается что есть обработчик back_to_settings)
-    from app.bot.handlers.quiz.settings import show_settings_callback
-    await show_settings_callback(callback, session)

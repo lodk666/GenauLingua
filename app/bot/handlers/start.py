@@ -2,16 +2,18 @@
 Обработчик команды /start и выбор языка
 """
 
-import asyncio
-from datetime import date, timedelta
 from aiogram import Router, F
 from aiogram.filters import CommandStart
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 from app.bot.states import QuizStates
-from app.bot.keyboards import get_main_menu_keyboard
+from app.bot.utils import delete_messages_fast, ensure_anchor
 from app.database.enums import CEFRLevel
 from app.database.models import User
 from app.locales import get_text
@@ -28,30 +30,6 @@ MODE_DICT = {
     "DE_TO_TR": "🇩🇪 DE → 🇹🇷 TR",
     "TR_TO_DE": "🇹🇷 TR → 🇩🇪 DE",
 }
-
-
-async def delete_messages_fast(bot, chat_id: int, start_id: int, end_id: int):
-    tasks = []
-    for msg_id in range(start_id, end_id):
-        tasks.append(bot.delete_message(chat_id=chat_id, message_id=msg_id))
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-    deleted = sum(1 for r in results if not isinstance(r, Exception))
-    print(f"   🧹 Удалено {deleted}/{len(tasks)} сообщений")
-
-
-async def ensure_anchor(message: Message, session: AsyncSession, user: User, emoji: str = "🤖"):
-    old_anchor_id = user.anchor_message_id
-    try:
-        sent = await message.answer(emoji, reply_markup=get_main_menu_keyboard(user.interface_language or "ru"))
-        new_anchor_id = sent.message_id
-        user.anchor_message_id = new_anchor_id
-        await session.commit()
-        print(f"   ✨ Создан новый якорь {new_anchor_id}")
-        return old_anchor_id, new_anchor_id
-    except Exception as e:
-        print(f"   ❌ Ошибка создания якоря: {e}")
-        return old_anchor_id, None
-
 
 def get_language_selection_keyboard() -> InlineKeyboardMarkup:
     """Клавиатура выбора языка при первом старте"""
