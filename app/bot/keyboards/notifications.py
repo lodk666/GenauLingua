@@ -280,38 +280,3 @@ def get_notifications_settings_keyboard(
     )
 
     return builder.as_markup()
-
-
-def get_quiz_word_count_keyboard(current_count: int, lang: str = "ru") -> InlineKeyboardMarkup:
-    """
-    Выбор количества слов в викторине
-
-    Args:
-        current_count: текущее количество слов
-        lang: язык интерфейса
-
-    Returns:
-        Клавиатура с вариантами: 10, 15, 25
-    """
-    builder = InlineKeyboardBuilder()
-
-    counts = [10, 15, 25]
-
-    for count in counts:
-        emoji = "✅" if count == current_count else "⬜"
-        builder.add(InlineKeyboardButton(
-            text=f"{emoji} {count} слов",
-            callback_data=f"quiz_count:{count}"
-        ))
-
-    builder.adjust(3)
-
-    # Кнопка "Назад"
-    builder.row(
-        InlineKeyboardButton(
-            text="◀️ Назад",
-            callback_data="back_to_settings"
-        )
-    )
-
-    return builder.as_markup()
