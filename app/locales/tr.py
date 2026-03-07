@@ -231,7 +231,7 @@ TEXTS = {
 
     "help_how_to_use_title": "📖 <b>Botu nasıl kullanırsın</b>",
     "help_how_to_use_text": """1️⃣ <b>Seviye ve modu ayarla</b>
-🦾 Ayarlar → A1–B1 seviye, çeviri modu ve dil seç.
+🦾 Ayarlar → A1–B1 seviye, çeviri modu ve arayüz dili seç.
 
 2️⃣ <b>Her gün kelime öğren</b>
 📚 Kelime öğren → 25 kelimelik test.
@@ -243,6 +243,14 @@ Testten sonra hatalı kelimeleri hemen tekrarlayabilirsin.
 4️⃣ <b>İlerlemeni takip et</b>
 📊 İstatistik → kaç kelime öğrenildi, test geçmişi, seri.
 
+5️⃣ <b>Diğerleriyle yarış</b>
+🏆 Sıralamam → aylık ve tüm zamanlar puanların.
+📊 Liderlik Tablosu → tüm katılımcılar arasında ilk 10.
+
+6️⃣ <b>Hatırlatıcıları ayarla</b>
+🦾 Ayarlar → 🔔 Hatırlatıcılar → saat, gün ve zaman dilimi seç.
+Bot pratik yapmayı hatırlatır ve serini gösterir.
+
 ━━━━━━━━━━━━━━━━━
 💡 Kelime <b>öğrenildi</b> sayılır — üst üste 3 doğru cevap verilince.
 🔥 <b>Seri</b> günde en az 1 test çözersen artar.
@@ -253,20 +261,17 @@ Sorular? → t.me/genaulingua_chat""",
     "help_roadmap_text": """🏆 <b>Başarılar</b>
 İlerleme rozetleri — ilk test, 7 gün üst üste, 100 kelime öğrenildi ve daha fazlası.
 
-🥇 <b>Liderlik tablosu</b>
-Tüm kullanıcılar arasında sıralama — kelime, seri ve test sonuçlarına göre.
-
-🎯 <b>Meydan okumalar</b>
-Haftalık görevler — 7 test üst üste, haftada 100 kelime, 3 kez %90+.
-
-🔔 <b>Hatırlatıcılar</b>
-Saat ayarla — bot pratik yapmayı hatırlatır ve serinizi gösterir.
+🗂️ <b>Kelime kategorileri</b>
+Konulara göre kelime öğren — yemek, ulaşım, iş, seyahat ve daha fazlası.
 
 📚 <b>B2–C2 seviyeleri</b>
 Şu an A1–B1 mevcut. B2, C1 ve C2 hazırlanıyor.
 
-🎤 <b>Telaffuz</b>
-Kelime sesi — Almanca kelimelerin nasıl söylendiğini dinle.
+📖 <b>30.000 kelime</b>
+Kelime tabanını 4 dilde çevirilerle 30.000'e genişletme.
+
+🔄 <b>Yeni öğrenme modları</b>
+Kelime öğrenmek için daha fazla format — testlerin ötesinde.
 
 ━━━━━━━━━━━━━━━━━
 💬 Fikir ve öneriler — sohbete yaz:
@@ -288,15 +293,84 @@ Topluluk ne kadar aktif olursa — bot o kadar iyi olur. Çekinme! 🙌""",
     "help_about_title": "ℹ️ <b>Bot hakkında</b>",
     "help_about_text": """🤖 <b>GenauLingua</b> — kişisel Almanca öğrenme asistanın.
 
-✨ <b>Şu an yapabilecekleri:</b>
+✨ <b>Özellikleri:</b>
 • A1–B1 kelime tabanı (3000+ kelime)
 • Akıllı kelime seçimi — SRS algoritması
-• DE→TR, TR→DE, DE→EN, DE→RU modları
+• 4 dil: DE↔RU, DE↔UA, DE↔EN, DE↔TR
 • Testten sonra hataları tekrarla
-• İstatistik ve seri
+• İstatistik, seri ve ilerleme çubuğu
+• Aylık sıralama ve liderlik tablosu
+• Esnek hatırlatıcı bildirimleri
 • Türkçe, İngilizce, Rusça, Ukraynaca arayüz
 
-📅 <b>Güncellendi:</b> Şubat 2026
+📅 <b>Güncellendi:</b> Mart 2026
 
 💬 Güncellemeleri takip et: t.me/genaulingua_chat""",
+
+    # ============================================================================
+    # SIRALAMAM — RATING
+    # ============================================================================
+    "rating_title_monthly": "🏆 <b>Sıralamam — {month} {year}</b>",
+    "rating_not_active": "❌ Sıralama henüz aktif değil.",
+    "rating_not_in_ranking": "📍 Henüz sıralamada değilsin",
+    "rating_start_quiz": "🚀 İlk testini çöz!",
+    "rating_position": "📍 Pozisyon: <b>#{rank}</b> / {total}",
+    "rating_points": "💎 Puan: <b>{score}</b>",
+    "rating_your_month": "⭐ <b>{month} ayın:</b>",
+    "rating_quizzes": "├ Testler: {count}",
+    "rating_words_learned": "├ Öğrenilen kelimeler: {count}",
+    "rating_streak": "├ Seri: {count} gün",
+    "rating_avg_result": "└ Ortalama sonuç: {percent}%",
+    "rating_goal": "🎯 #{rank} ({name}) için: {diff} puan daha",
+    "rating_scoring_title": "💡 <b>Puan nasıl kazanılır:</b>",
+    "rating_scoring_quiz": "• Tamamlanan test → +10",
+    "rating_scoring_reverse": "• Ters mod → +5",
+    "rating_scoring_word": "• Öğrenilen kelime → +2",
+    "rating_scoring_streak": "• Gün serisi → +3",
+    "rating_scoring_bonus": "• %90+ doğruluk → +50 bonus",
+
+    "rating_title_alltime": "🏆 <b>Sıralamam — Tüm Zamanlar</b>",
+    "rating_position_alltime": "📍 Pozisyon: <b>#{rank}</b>",
+    "rating_position_none": "📍 Pozisyon: <b>—</b>",
+    "rating_achievements": "⭐ <b>Başarıların:</b>",
+    "rating_wins": "├ Galibiyet (1. sıra): {count}",
+    "rating_total_words": "└ Öğrenilen kelimeler: {count}",
+    "rating_motivation_start": "🚀 Kelime öğrenmeye başla — ilk adım en önemlisi!",
+    "rating_motivation_continue": "🎯 Devam et — ilk galibiyet yakın!",
+    "rating_motivation_champion": "🔥 Gerçek bir şampiyonsun!",
+    "rating_lifetime_title": "🌟 <b>Lifetime puanlar:</b>",
+    "rating_lifetime_desc": "• Tüm aylardan toplam puanlar\n• 🥇 için +100 · 🥈 için +50 · 🥉 için +25",
+
+    "table_title_monthly": "📊 <b>Liderlik Tablosu — {month} {year}</b>",
+    "table_title_alltime": "📊 <b>Liderlik Tablosu — Tüm Zamanlar</b>",
+    "table_empty": "Henüz katılımcı yok.\nİlk testi sen çöz! 💪",
+    "table_you_in_top": "📍 Sen: <b>#{rank}</b> / {total}",
+    "table_you_not_in_top": "📍 Sen: <b>#{rank}</b> / {total} — {score} puan",
+    "table_you_outside": "📍 Sen: ilk 10 dışında — {score} puan",
+    "table_you_not_ranked": "📍 Henüz sıralamada değilsin",
+    "table_points": "puan",
+    "btn_leaderboard_table": "📊 Liderlik Tablosu",
+    "btn_back_to_rating": "◀️ Sıralamaya geri dön",
+
+    # İSTATİSTİK
+    "stats_header": "📊 <b>İstatistiklerin</b>",
+    "stats_learned_of": "└─ Öğrenildi <b>{learned}</b> / {total}",
+    "stats_details": "🔄 Devam eden: {progress}  ·  🆕 Yeni: {new}  ·  ⚠️ Zor: {difficult}",
+    "stats_achievements_title": "<b>Başarıların</b>",
+    "stats_words_count": "├─ Öğrenilen kelimeler: <b>{count}</b>",
+    "stats_streak_line": "└─ Seri: <b>{days} gün üst üste</b>",
+    "stats_quizzes_header": "<b>Testler ({level})</b>",
+    "stats_quizzes_passed_line": "├─ Tamamlanan: <b>{count}</b>",
+    "stats_quizzes_avg_line": "├─ Ortalama sonuç: <b>{percent}%</b>",
+    "stats_quizzes_best_line": "└─ En iyi sonuç: <b>{percent}%</b>",
+    "stats_quizzes_empty": "└─ Henüz tamamlanan test yok",
+    "stats_recent_header": "📈 <b>Son testler</b>",
+    "stats_overall_header": "🌍 <b>Genel ilerleme</b>",
+    "stats_overall_learned": "└─ Öğrenildi <b>{learned}</b> / {total} kelime",
+    "stats_cta_start": "💪 Kelime öğrenmeye başla — ilk adım en önemlisi!",
+    "stats_cta_begin": "🚀 Harika başlangıç! Devam et!",
+    "stats_cta_halfway": "🔥 Yarı yoldasın! Durma!",
+    "stats_cta_almost": "🏆 Neredeyse hedefe ulaştın! Harikasın!",
+    "stats_explanation": "—————————————————————\nÖğrenildi = üst üste 3 doğru cevap",
+    "stats_btn_rating": "🏆 Sıralamam",
 }

@@ -19,10 +19,14 @@ from app.locales import get_text
 router = Router()
 
 MODE_DICT = {
-    "de_to_ru": "🇩🇪 DE → 🏴 RU",
-    "ru_to_de": "🏴 RU → 🇩🇪 DE",
-    "de_to_uk": "🇩🇪 DE → 🇺🇦 UK",
-    "uk_to_de": "🇺🇦 UK → 🇩🇪 DE",
+    "DE_TO_RU": "🇩🇪 DE → 🏴 RU",
+    "RU_TO_DE": "🏴 RU → 🇩🇪 DE",
+    "DE_TO_UK": "🇩🇪 DE → 🇺🇦 UK",
+    "UK_TO_DE": "🇺🇦 UK → 🇩🇪 DE",
+    "DE_TO_EN": "🇩🇪 DE → 🇬🇧 EN",
+    "EN_TO_DE": "🇬🇧 EN → 🇩🇪 DE",
+    "DE_TO_TR": "🇩🇪 DE → 🇹🇷 TR",
+    "TR_TO_DE": "🇹🇷 TR → 🇩🇪 DE",
 }
 
 

@@ -69,25 +69,36 @@ async def generate_question(
                 distractor_display = f"{d.article} {d.word_de}"
             options.append((d.id, distractor_display))
 
-    elif mode.value == "DE_TO_UK":
-        # DE→UK: показываем украинские переводы как варианты
-        options = [(correct_word.id, correct_word.translation_uk.capitalize())]
-        options.extend([(d.id, d.translation_uk.capitalize()) for d in distractors[:3]])
 
-    elif mode.value == "DE_TO_EN":
-        # DE→EN: показываем английские переводы как варианты
-        options = [(correct_word.id, correct_word.translation_en.capitalize())]
-        options.extend([(d.id, d.translation_en.capitalize()) for d in distractors[:3]])
+    else:
 
-    elif mode.value == "DE_TO_TR":
-        # DE→TR: показываем турецкие переводы как варианты
-        options = [(correct_word.id, correct_word.translation_tr.capitalize())]
-        options.extend([(d.id, d.translation_tr.capitalize()) for d in distractors[:3]])
+        # DE→RU/UK/EN/TR: показываем переводы как варианты
 
-    else:  # DE_TO_RU
-        # DE→RU: показываем русские переводы как варианты
-        options = [(correct_word.id, correct_word.translation_ru.capitalize())]
-        options.extend([(d.id, d.translation_ru.capitalize()) for d in distractors[:3]])
+        def _get_trans(w):
+
+            m = mode.value.upper()
+
+            if m == "DE_TO_UK":
+
+                return w.translation_uk
+
+            elif m == "DE_TO_EN":
+
+                return getattr(w, 'translation_en', None) or w.translation_ru
+
+            elif m == "DE_TO_TR":
+
+                return getattr(w, 'translation_tr', None) or w.translation_ru
+
+            else:
+
+                return w.translation_ru
+
+        trans = _get_trans(correct_word)
+
+        options = [(correct_word.id, (trans or "").capitalize())]
+
+        options.extend([(d.id, (_get_trans(d) or "").capitalize()) for d in distractors[:3]])
 
     random.shuffle(options)
 

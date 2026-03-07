@@ -137,11 +137,15 @@ class Word(Base):
     # Переводы
     translation_ru: Mapped[Optional[str]] = mapped_column(String(255))
     translation_uk: Mapped[Optional[str]] = mapped_column(String(255))
+    translation_en: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    translation_tr: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Примеры использования
     example_de: Mapped[Optional[str]] = mapped_column(Text)
     example_ru: Mapped[Optional[str]] = mapped_column(Text)
     example_uk: Mapped[Optional[str]] = mapped_column(Text)
+    example_en: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    example_tr: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Категории (массив строк)
     categories: Mapped[Optional[List[str]]] = mapped_column(

@@ -4,7 +4,7 @@
 ИСПРАВЛЕНИЯ:
 1. ✅ words_learned теперь считается из UserWord (уникальные выученные слова)
 2. ✅ success_rate теперь средний процент по всем викторинам
-3. ✅ Добавлены комментарии с пометками FIXED
+3. ✅ Универсальные хелперы для всех языков (RU/UK/EN/TR)
 """
 
 import random
@@ -29,6 +29,68 @@ from app.services.quiz_service import (
 
 router = Router()
 
+
+# ============================================================================
+# ХЕЛПЕРЫ ДЛЯ ЯЗЫКОВ — единая точка логики для ВСЕХ режимов
+# ============================================================================
+
+def get_translation_for_mode(word: Word, mode_value: str) -> str:
+    mapping = {
+        "de_to_ru": word.translation_ru,
+        "ru_to_de": word.translation_ru,
+        "de_to_uk": word.translation_uk,
+        "uk_to_de": word.translation_uk,
+        "de_to_en": getattr(word, 'translation_en', None),
+        "en_to_de": getattr(word, 'translation_en', None),
+        "de_to_tr": getattr(word, 'translation_tr', None),
+        "tr_to_de": getattr(word, 'translation_tr', None),
+    }
+    return mapping.get(mode_value.lower()) or word.translation_ru or ""
+
+def get_example_for_mode(word: Word, mode_value: str) -> str:
+    mapping = {
+        "de_to_ru": word.example_ru,
+        "ru_to_de": word.example_ru,
+        "de_to_uk": word.example_uk,
+        "uk_to_de": word.example_uk,
+        "de_to_en": getattr(word, 'example_en', None),
+        "en_to_de": getattr(word, 'example_en', None),
+        "de_to_tr": getattr(word, 'example_tr', None),
+        "tr_to_de": getattr(word, 'example_tr', None),
+    }
+    return mapping.get(mode_value.lower()) or word.example_ru or ""
+
+
+def get_flag_for_mode(mode_value: str) -> str:
+    """Получить флаг языка перевода"""
+    mapping = {
+        "de_to_ru": "🏴",
+        "ru_to_de": "🏴",
+        "de_to_uk": "🇺🇦",
+        "uk_to_de": "🇺🇦",
+        "de_to_en": "🇬🇧",
+        "en_to_de": "🇬🇧",
+        "de_to_tr": "🇹🇷",
+        "tr_to_de": "🇹🇷",
+    }
+    return mapping.get(mode_value.lower(), "🏴")
+
+
+def is_reverse_mode(mode_value: str) -> bool:
+    """Проверка реверс-режима (перевод → немецкий)"""
+    return mode_value.lower() in ("ru_to_de", "uk_to_de", "en_to_de", "tr_to_de")
+
+
+def get_word_display(word: Word) -> str:
+    """Немецкое слово с артиклем"""
+    if word.article and word.article != '-':
+        return f"{word.article} {word.word_de}"
+    return word.word_de
+
+
+# ============================================================================
+# УТИЛИТЫ
+# ============================================================================
 
 async def delete_messages_fast(bot, chat_id: int, start_id: int, end_id: int):
     tasks = []
@@ -88,7 +150,11 @@ def get_results_keyboard(has_errors: bool, lang: str = "ru") -> InlineKeyboardMa
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-@router.message(F.text.in_(["📚 Учить слова", "📚 Вчити слова", "📚 Learn Words", "📚 Kelime Öğren"]))
+# ============================================================================
+# СТАРТ ВИКТОРИНЫ
+# ============================================================================
+
+@router.message(F.text.in_(["📚 Учить слова", "📚 Вчити слова", "📚 Learn words", "📚 Kelime öğren"]))
 async def start_quiz(message: Message, state: FSMContext, session: AsyncSession):
     """Запуск викторины"""
     user_id = message.from_user.id
@@ -142,11 +208,12 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
 
     word = question['correct_word']
     mode = user.translation_mode
+    mode_val = mode.value.lower()
 
-    if mode.value in ("ru_to_de", "uk_to_de"):
-        translation = word.translation_ru if mode.value == "ru_to_de" else word.translation_uk
-        example = word.example_ru if mode.value == "ru_to_de" else word.example_uk
-        flag = "🏴" if mode.value == "ru_to_de" else "🇺🇦"
+    if is_reverse_mode(mode_val):
+        translation = get_translation_for_mode(word, mode_val)
+        example = get_example_for_mode(word, mode_val)
+        flag = get_flag_for_mode(mode_val)
 
         question_text = (
             f"{get_text('quiz_question_number', lang, current=1, total=25)}\n\n"
@@ -155,9 +222,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
             f"{get_text('quiz_question_choose_word', lang)}"
         )
     else:
-        word_display = word.word_de
-        if word.article and word.article != '-':
-            word_display = f"{word.article} {word.word_de}"
+        word_display = get_word_display(word)
 
         question_text = (
             f"{get_text('quiz_question_number', lang, current=1, total=25)}\n\n"
@@ -180,6 +245,10 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
     await message.answer(question_text, reply_markup=get_answer_keyboard(question['options']))
     await state.set_state(QuizStates.answering)
 
+
+# ============================================================================
+# ОБРАБОТКА ОТВЕТА
+# ============================================================================
 
 @router.callback_query(F.data.startswith("answer_"), QuizStates.answering)
 async def process_answer(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
@@ -214,22 +283,21 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
     except Exception as e:
         print(f"⚠️ Ошибка обновления прогресса: {e}")
 
-    word_display = correct_word.word_de
-    if correct_word.article and correct_word.article != '-':
-        word_display = f"{correct_word.article} {correct_word.word_de}"
+    word_display = get_word_display(correct_word)
 
     user = await session.get(User, callback.from_user.id)
     lang = user.interface_language or "ru"
     mode = user.translation_mode
+    mode_val = mode.value.lower()
+
+    translation = get_translation_for_mode(correct_word, mode_val)
+    example = get_example_for_mode(correct_word, mode_val)
+    flag = get_flag_for_mode(mode_val)
 
     if is_correct:
         correct_answers += 1
 
-        if mode.value in ("ru_to_de", "uk_to_de"):
-            translation = correct_word.translation_ru if mode.value == "ru_to_de" else correct_word.translation_uk
-            example = correct_word.example_ru if mode.value == "ru_to_de" else correct_word.example_uk
-            flag = "🏴" if mode.value == "ru_to_de" else "🇺🇦"
-
+        if is_reverse_mode(mode_val):
             response_text = (
                 f"{get_text('quiz_correct', lang)}\n\n"
                 f"{flag} <b>{translation.capitalize()}</b> = 🇩🇪 <b>{word_display}</b>\n\n"
@@ -237,10 +305,6 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
                 f"{flag} {example}"
             )
         else:
-            translation = correct_word.translation_ru if mode.value == "de_to_ru" else correct_word.translation_uk
-            example = correct_word.example_ru if mode.value == "de_to_ru" else correct_word.example_uk
-            flag = "🏴" if mode.value == "de_to_ru" else "🇺🇦"
-
             response_text = (
                 f"{get_text('quiz_correct', lang)}\n\n"
                 f"🇩🇪 <b>{word_display}</b> = {flag} <b>{translation.capitalize()}</b>\n\n"
@@ -250,11 +314,7 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
     else:
         errors.append(correct_word_id)
 
-        if mode.value in ("ru_to_de", "uk_to_de"):
-            translation = correct_word.translation_ru if mode.value == "ru_to_de" else correct_word.translation_uk
-            example = correct_word.example_ru if mode.value == "ru_to_de" else correct_word.example_uk
-            flag = "🏴" if mode.value == "ru_to_de" else "🇺🇦"
-
+        if is_reverse_mode(mode_val):
             response_text = (
                 f"{get_text('quiz_wrong', lang)}\n\n"
                 f"{get_text('quiz_correct_answer', lang)}\n\n"
@@ -263,10 +323,6 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
                 f"{flag} {example}"
             )
         else:
-            translation = correct_word.translation_ru if mode.value == "de_to_ru" else correct_word.translation_uk
-            example = correct_word.example_ru if mode.value == "de_to_ru" else correct_word.example_uk
-            flag = "🏴" if mode.value == "de_to_ru" else "🇺🇦"
-
             response_text = (
                 f"{get_text('quiz_wrong', lang)}\n\n"
                 f"{get_text('quiz_correct_answer', lang)}\n\n"
@@ -284,6 +340,10 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
     await callback.answer()
 
 
+# ============================================================================
+# СЛЕДУЮЩИЙ ВОПРОС
+# ============================================================================
+
 @router.callback_query(F.data == "next_question", QuizStates.answering)
 async def show_next_question(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     """Показ следующего вопроса"""
@@ -295,30 +355,30 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
     correct_answers = data['correct_answers']
     errors = data.get('errors', [])
     used_word_ids = data.get('used_word_ids', [])
-    error_words = data.get('error_words', [])
 
     current_question += 1
     user = await session.get(User, callback.from_user.id)
     lang = user.interface_language or "ru"
+    mode_val = user.translation_mode.value.lower()
 
     if current_question > total_questions:
         # ============================================================================
-        # ВИКТОРИНА ЗАВЕРШЕНА - ОБНОВЛЕНИЕ СТАТИСТИКИ
+        # ВИКТОРИНА ЗАВЕРШЕНА
         # ============================================================================
         session_id = data['session_id']
         user_id = callback.from_user.id
 
-        # 1. Обновляем quizzes_passed
+        # 1. quizzes_passed
         user.quizzes_passed = (user.quizzes_passed or 0) + 1
 
-        # 2. FIXED: Считаем words_learned из UserWord (уникальные выученные слова)
+        # 2. words_learned из UserWord
         learned_count_result = await session.execute(
             select(func.count(UserWord.word_id))
             .where(UserWord.user_id == user_id, UserWord.learned == True)
         )
         user.words_learned = learned_count_result.scalar() or 0
 
-        # 3. FIXED: Считаем success_rate как средний процент по всем викторинам
+        # 3. success_rate
         completed_sessions_result = await session.execute(
             select(QuizSession).where(
                 QuizSession.user_id == user_id,
@@ -327,35 +387,33 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         )
         all_completed_sessions = completed_sessions_result.scalars().all()
 
-        # Добавляем текущую сессию к подсчёту
         total_q = sum(s.total_questions for s in all_completed_sessions) + total_questions
         total_c = sum(s.correct_answers for s in all_completed_sessions) + correct_answers
         user.success_rate = int((total_c / total_q * 100)) if total_q > 0 else 0
 
         await session.commit()
 
-        # 4. Обновляем QuizSession
+        # 4. QuizSession
         quiz_session = await session.get(QuizSession, session_id)
         quiz_session.correct_answers = correct_answers
         quiz_session.completed_at = datetime.utcnow()
-        quiz_session.is_completed = True  # ВАЖНО! Устанавливаем флаг
+        quiz_session.is_completed = True
         await session.commit()
 
-        # 5. Обновляем месячную статистику
+        # 5. Месячная статистика
         try:
             await update_monthly_stats(
                 user_id=user_id,
                 session=session,
                 quiz_session_id=session_id
             )
-            print(f"✅ Месячная статистика обновлена для квиза #{session_id}")
         except Exception as e:
             print(f"⚠️ Ошибка обновления месячной статистики: {e}")
 
-        # 6. Обновляем стрик
+        # 6. Стрик
         await update_user_activity(session, callback.from_user.id)
 
-        # 7. Формируем результаты
+        # 7. Результаты
         result_items = await session.execute(
             select(QuizQuestion, Word)
             .join(Word, QuizQuestion.word_id == Word.id)
@@ -366,18 +424,10 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
 
         details = []
         for item, word in items:
-            wd = word.word_de
-            if word.article and word.article != '-':
-                wd = f"{word.article} {word.word_de}"
+            wd = get_word_display(word)
             icon = "✅" if item.is_correct else "❌"
-
-            # Перевод зависит от режима
-            if user.translation_mode.value in ("de_to_ru", "ru_to_de"):
-                trans = word.translation_ru.capitalize()
-            else:
-                trans = word.translation_uk.capitalize()
-
-            details.append(f"{icon} {wd} — {trans}")
+            trans = get_translation_for_mode(word, mode_val)
+            details.append(f"{icon} {wd} — {trans.capitalize()}")
 
         percentage = (correct_answers / total_questions) * 100
         result_text = (
@@ -406,7 +456,9 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         await state.update_data(saved_errors=saved_errors)
         return
 
-    # Обычная викторина
+    # ============================================================================
+    # ОБЫЧНЫЙ СЛЕДУЮЩИЙ ВОПРОС
+    # ============================================================================
     question = None
     attempts = 0
 
@@ -442,13 +494,10 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
 
     word = question['correct_word']
 
-    # ДОБАВИТЬ ЭТУ СТРОКУ:
-    mode = user.translation_mode
-
-    if mode.value in ("ru_to_de", "uk_to_de"):
-        translation = word.translation_ru if mode.value == "ru_to_de" else word.translation_uk
-        example = word.example_ru if mode.value == "ru_to_de" else word.example_uk
-        flag = "🏴" if mode.value == "ru_to_de" else "🇺🇦"
+    if is_reverse_mode(mode_val):
+        translation = get_translation_for_mode(word, mode_val)
+        example = get_example_for_mode(word, mode_val)
+        flag = get_flag_for_mode(mode_val)
 
         question_text = (
             f"{get_text('quiz_question_number', lang, current=current_question, total=total_questions)}\n\n"
@@ -457,9 +506,7 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
             f"{get_text('quiz_question_choose_word', lang)}"
         )
     else:
-        word_display = word.word_de
-        if word.article and word.article != '-':
-            word_display = f"{word.article} {word.word_de}"
+        word_display = get_word_display(word)
 
         question_text = (
             f"{get_text('quiz_question_number', lang, current=current_question, total=total_questions)}\n\n"
@@ -470,6 +517,10 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
 
     await callback.message.edit_text(question_text, reply_markup=get_answer_keyboard(question['options']))
 
+
+# ============================================================================
+# ПОВТОР ОШИБОК
+# ============================================================================
 
 @router.callback_query(F.data == "repeat_errors")
 async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
@@ -516,23 +567,22 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
             distractors.extend(random.sample(all_words, needed))
 
     mode = user.translation_mode
+    mode_val = mode.value.lower()
 
-    if mode.value in ("ru_to_de", "uk_to_de"):
-        word_display = first_word.word_de
-        if first_word.article and first_word.article != '-':
-            word_display = f"{first_word.article} {first_word.word_de}"
+    if is_reverse_mode(mode_val):
+        # Реверс: показываем немецкие слова как варианты
+        word_display = get_word_display(first_word)
         options = [(first_word.id, word_display)]
         for d in distractors[:3]:
-            dd = d.word_de
-            if d.article and d.article != '-':
-                dd = f"{d.article} {d.word_de}"
+            dd = get_word_display(d)
             options.append((d.id, dd))
-    elif mode.value == "de_to_uk":
-        options = [(first_word.id, first_word.translation_uk.capitalize())]
-        options.extend([(d.id, d.translation_uk.capitalize()) for d in distractors[:3]])
     else:
-        options = [(first_word.id, first_word.translation_ru.capitalize())]
-        options.extend([(d.id, d.translation_ru.capitalize()) for d in distractors[:3]])
+        # Прямой: показываем переводы как варианты
+        trans = get_translation_for_mode(first_word, mode_val)
+        options = [(first_word.id, trans.capitalize())]
+        for d in distractors[:3]:
+            d_trans = get_translation_for_mode(d, mode_val)
+            options.append((d.id, d_trans.capitalize()))
 
     random.shuffle(options)
 
@@ -547,10 +597,10 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
         current_error_index=0
     )
 
-    if mode.value in ("ru_to_de", "uk_to_de"):
-        translation = first_word.translation_ru if mode.value == "ru_to_de" else first_word.translation_uk
-        example = first_word.example_ru if mode.value == "ru_to_de" else first_word.example_uk
-        flag = "🏴" if mode.value == "ru_to_de" else "🇺🇦"
+    if is_reverse_mode(mode_val):
+        translation = get_translation_for_mode(first_word, mode_val)
+        example = get_example_for_mode(first_word, mode_val)
+        flag = get_flag_for_mode(mode_val)
 
         question_text = (
             f"{get_text('quiz_repeat_title', lang)}\n"
@@ -560,9 +610,7 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
             f"{get_text('quiz_question_choose_word', lang)}"
         )
     else:
-        word_display = first_word.word_de
-        if first_word.article and first_word.article != '-':
-            word_display = f"{first_word.article} {first_word.word_de}"
+        word_display = get_word_display(first_word)
 
         question_text = (
             f"{get_text('quiz_repeat_title', lang)}\n"
