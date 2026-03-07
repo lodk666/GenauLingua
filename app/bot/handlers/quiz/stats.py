@@ -9,6 +9,10 @@ from aiogram.filters import Command
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 from app.database.models import User, QuizSession
 from app.bot.keyboards import get_main_menu_keyboard
 from app.locales import get_text
@@ -44,7 +48,7 @@ async def ensure_anchor(message: Message, session: AsyncSession, user: User, emo
         await session.commit()
         return old_anchor_id, new_anchor_id
     except Exception as e:
-        print(f"   ❌ Ошибка создания якоря: {e}")
+        logger.error(f"Ошибка создания якоря: {e}")
         return old_anchor_id, None
 
 

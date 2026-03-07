@@ -3,7 +3,6 @@
 Команды доступны только для администратора
 """
 
-import os
 import csv
 import io
 from aiogram import Router, F
@@ -15,6 +14,10 @@ from datetime import datetime, timedelta, date
 from app.database.models import User, QuizSession, QuizQuestion, UserWord, Word
 from app.services.quiz_service import get_user_progress_stats, get_user_progress_stats_all_levels
 from app.config import settings
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = Router()
 
@@ -1032,7 +1035,7 @@ async def broadcast_message(message: Message, session: AsyncSession):
             await message.bot.send_message(user.id, broadcast_text)
             success += 1
         except Exception as e:
-            print(f"❌ Ошибка отправки пользователю {user.id}: {e}")
+            logger.error(f"Ошибка отправки пользователю {user.id}: {e}")
             failed += 1
 
     await message.answer(
