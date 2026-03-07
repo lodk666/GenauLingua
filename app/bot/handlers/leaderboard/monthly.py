@@ -1,7 +1,6 @@
 """
-Месячный рейтинг
-Отображает топ-10 игроков текущего месяца
-УЛУЧШЕННАЯ ВЕРСИЯ — понятная, красивая, интересная
+Мой рейтинг — вкладка «Месяц»
+Персональная карточка за текущий месяц
 """
 
 import asyncio
@@ -18,28 +17,22 @@ from app.services.monthly_leaderboard_service import (
     get_current_season
 )
 from app.bot.handlers.leaderboard.utils import (
-    format_user_card,
     format_month_name,
     create_progress_bar,
-    get_leaderboard_keyboard_text,
-    get_localized_text
+    get_leaderboard_keyboard_text
 )
 
 router = Router()
 
 
 async def delete_messages_fast(bot, chat_id: int, start_id: int, end_id: int):
-    """Быстрое удаление сообщений между якорями"""
     tasks = []
     for msg_id in range(start_id, end_id):
         tasks.append(bot.delete_message(chat_id=chat_id, message_id=msg_id))
     results = await asyncio.gather(*tasks, return_exceptions=True)
-    deleted = sum(1 for r in results if not isinstance(r, Exception))
-    print(f"   🧹 Удалено {deleted}/{len(tasks)} сообщений")
 
 
 async def ensure_anchor(message: Message, session: AsyncSession, user: User, emoji: str = "🏆"):
-    """Создание нового якоря"""
     old_anchor_id = user.anchor_message_id
     lang = user.interface_language or "ru"
     try:
@@ -47,130 +40,125 @@ async def ensure_anchor(message: Message, session: AsyncSession, user: User, emo
         new_anchor_id = sent.message_id
         user.anchor_message_id = new_anchor_id
         await session.commit()
-        print(f"   ✨ Создан новый якорь {new_anchor_id}")
         return old_anchor_id, new_anchor_id
     except Exception as e:
         print(f"   ❌ Ошибка создания якоря: {e}")
         return old_anchor_id, None
 
 
-def get_leaderboard_keyboard(lang: str, current_tab: str = "monthly") -> InlineKeyboardMarkup:
-    """Клавиатура переключения между вкладками рейтинга"""
+def get_rating_keyboard(lang: str, current_tab: str = "monthly") -> InlineKeyboardMarkup:
+    """Клавиатура Мой рейтинг: вкладки + кнопка таблицы"""
     texts = get_leaderboard_keyboard_text(lang, current_tab)
 
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text=texts['monthly'], callback_data="leaderboard_monthly"),
-                InlineKeyboardButton(text=texts['alltime'], callback_data="leaderboard_alltime")
+                InlineKeyboardButton(text=texts['monthly'], callback_data="rating_monthly"),
+                InlineKeyboardButton(text=texts['alltime'], callback_data="rating_alltime")
+            ],
+            [
+                InlineKeyboardButton(
+                    text="📊 Таблица лидеров" if lang == "ru"
+                    else "📊 Таблиця лідерів" if lang == "uk"
+                    else "📊 Leaderboard" if lang == "en"
+                    else "📊 Liderlik Tablosu",
+                    callback_data="leaderboard_table_monthly"
+                )
             ]
         ]
     )
 
 
-def format_monthly_leaderboard(
-    leaderboard: list,
+def build_monthly_card(
+    user: User,
     user_rank: dict,
     season,
-    user_id: int,
     lang: str
 ) -> str:
     """
-    Форматировать текст месячного рейтинга — УЛУЧШЕННАЯ ВЕРСИЯ
-
-    Args:
-        leaderboard: список топ-10
-        user_rank: данные текущего пользователя
-        season: текущий сезон
-        user_id: ID текущего пользователя
-        lang: язык интерфейса
-
-    Returns:
-        Готовый текст для отправки
+    Персональная карточка за месяц.
+    Все данные берутся из user_rank (напрямую из MonthlyStats),
+    НЕ из leaderboard — работает для любой позиции.
     """
+
     month_name = format_month_name(season.month, lang)
 
-    # Заголовок
-    title_template = get_localized_text("title_monthly", lang)
-    text = f"<b>{title_template.format(month=month_name, year=season.year)}</b>\n\n"
+    # ═══════════════ ЗАГОЛОВОК ═══════════════
+    text = f"🏆 <b>Мой рейтинг — {month_name} {season.year}</b>\n\n"
 
-    # Топ-10 (или пусто)
-    if not leaderboard:
-        text += get_localized_text("no_participants", lang)
-    else:
-        for entry in leaderboard:
-            rank = entry["rank"]
-            is_current_user = (entry["user_id"] == user_id)
+    if not user_rank:
+        text += "📍 Ты ещё не в рейтинге\n"
+        text += "🚀 Пройди первую викторину!\n"
+        return text
 
-            card = format_user_card(entry, rank, is_current_user, lang)
-            text += f"{card}\n"
+    rank = user_rank['rank']
+    score = user_rank['monthly_score']
+    total_users = user_rank.get('total_users', 1)
 
-    # Информация о текущем пользователе
-    if user_rank:
-        rank = user_rank['rank']
-        score = user_rank['monthly_score']
-        total_users = user_rank.get('total_users', 1)
+    # Данные напрямую из MonthlyStats (FIX: не зависит от limit leaderboard)
+    quizzes = user_rank.get('monthly_quizzes', 0)
+    words = user_rank.get('monthly_words', 0)
+    streak = user_rank.get('monthly_streak', 0)
+    avg_pct = user_rank.get('monthly_avg_percent', 0)
 
-        text += "\n" + "━" * 17 + "\n"
+    # ═══════════════ ПОЗИЦИЯ ═══════════════
+    text += f"📍 Позиция: <b>#{rank}</b> из {total_users}\n"
+    text += f"💎 Баллы: <b>{score}</b>\n\n"
 
-        # Позиция
-        position_text = get_localized_text("your_position", lang).format(rank=rank)
-        text += f"{position_text}\n"
+    # ═══════════════ ДЕТАЛИ МЕСЯЦА ═══════════════
+    text += f"⭐ <b>Твой {month_name}:</b>\n"
+    text += f"├ Викторин: {quizzes}\n"
+    text += f"├ Выучено слов: {words}\n"
+    text += f"├ Стрик: {streak} дн.\n"
+    text += f"└ Средний результат: {avg_pct}%\n"
 
-        # Баллы
-        points_text = get_localized_text("points", lang).format(score=score)
-        text += f"{points_text}\n"
-
-        # X из Y участников (вместо Топ X%)
-        text += f"📊 {rank} из {total_users}\n\n"
-
-        # Прогресс-бар до топ-3 (если не в топ-3)
-        if rank > 3 and leaderboard and len(leaderboard) >= 3:
-            top3_score = leaderboard[2]["monthly_score"]  # Баллы 3-го места
-            diff = top3_score - score + 1
-
-            if diff > 0:
-                progress_bar = create_progress_bar(score, top3_score, length=10)
-
-                text += f"🎯 До топ-3:\n"
-                text += f"{progress_bar} ({diff} баллов)\n\n"
-    else:
-        text += "\n"
-        text += get_localized_text("no_participation", lang)
-
-    # Формула начисления баллов — КОРОТКИЙ ВАРИАНТ
-    text += "━" * 17 + "\n"
-
-    if lang in ["ru", "uk"]:
-        text += "💡 <b>Как зарабоют баллы:</b>\n"
-        text += "• Викторина → 10 баллов\n"
-        text += "• Реверс → +5 бонус\n"
-        text += "• Слово выучено → +2 балла\n"
-        text += "• День подряд → +3 балла\n"
-        text += "• 90%+ правильных → +50 бонус\n"
-        text += "• 80%+ правильных → +30 бонус\n"
-    else:
-        text += "💡 <b>How to earn points:</b>\n"
-        text += "• Quiz → 10 points\n"
-        text += "• Reverse → +5 bonus\n"
-        text += "• Word learned → +2 points\n"
-        text += "• Day streak → +3 points\n"
-        text += "• 90%+ correct → +50 bonus\n"
-        text += "• 80%+ correct → +30 bonus\n"
+    # ═══════════════ ПОДСКАЗКА ═══════════════
+    text += "\n━━━━━━━━━━━━━━━━━\n"
+    text += "💡 <b>Как заработать баллы:</b>\n"
+    text += "• Пройденная викторина → +10\n"
+    text += "• Режим «Реверс» → +5\n"
+    text += "• Выученное слово → +2\n"
+    text += "• День подряд → +3\n"
+    text += "• Точность 90%+ → +50 бонус\n"
 
     return text
 
 
 # ============================================================================
-# КОМАНДА /leaderboard И КНОПКА 🏆 РЕЙТИНГ
+# ТОЧКА ВХОДА: кнопка 🏆 Мой рейтинг из статистики
+# ============================================================================
+
+@router.callback_query(F.data == "show_my_rating")
+async def show_my_rating_callback(callback: CallbackQuery, session: AsyncSession):
+    """Кнопка 'Мой рейтинг' из статистики"""
+    await callback.answer()
+
+    user = await session.get(User, callback.from_user.id)
+    lang = user.interface_language if user else "ru"
+    season = await get_current_season(session)
+
+    if not season:
+        await callback.message.edit_text("❌ Рейтинг пока не активен.")
+        return
+
+    user_rank = await get_user_monthly_rank(user.id, session, season_id=season.id)
+    text = build_monthly_card(user, user_rank, season, lang)
+
+    try:
+        await callback.message.edit_text(text, reply_markup=get_rating_keyboard(lang, "monthly"))
+    except Exception:
+        await callback.message.answer(text, reply_markup=get_rating_keyboard(lang, "monthly"))
+
+
+# ============================================================================
+# ТОЧКА ВХОДА: команда /leaderboard или кнопка 🏆 Рейтинг
 # ============================================================================
 
 @router.message(Command("leaderboard"))
 @router.message(F.text.in_(["🏆 Рейтинг", "🏆 Рейтинг"]))
 async def show_leaderboard(message: Message, session: AsyncSession):
-    """Показать месячный рейтинг (команда или кнопка)"""
-    user_id = message.from_user.id
-    user = await session.get(User, user_id)
+    """Кнопка/команда — показывает месячную карточку"""
+    user = await session.get(User, message.from_user.id)
 
     try:
         await message.delete()
@@ -178,112 +166,40 @@ async def show_leaderboard(message: Message, session: AsyncSession):
         pass
 
     lang = user.interface_language if user else "ru"
-
-    # Получаем данные
     season = await get_current_season(session)
 
     if not season:
-        no_season_text = {
-            "ru": "❌ Месячный рейтинг пока не активен.",
-            "uk": "❌ Місячний рейтинг поки не активний.",
-            "en": "❌ Monthly leaderboard is not active yet.",
-            "tr": "❌ Aylık sıralama henüz aktif değil."
-        }
-        await message.answer(no_season_text.get(lang, no_season_text["ru"]))
+        await message.answer("❌ Рейтинг пока не активен.")
         return
 
-    leaderboard = await get_monthly_leaderboard(session, season_id=season.id, limit=10)
     user_rank = await get_user_monthly_rank(user.id, session, season_id=season.id)
+    text = build_monthly_card(user, user_rank, season, lang)
 
-    # Формируем текст
-    text = format_monthly_leaderboard(leaderboard, user_rank, season, user.id, lang)
-
-    # Создаём якорь и очищаем старое
     old_anchor_id, new_anchor_id = await ensure_anchor(message, session, user, emoji="🏆")
-
     if old_anchor_id:
-        current_msg_id = message.message_id
-        await delete_messages_fast(message.bot, message.chat.id, old_anchor_id, current_msg_id)
+        await delete_messages_fast(message.bot, message.chat.id, old_anchor_id, message.message_id)
 
-    # Отправляем рейтинг
-    await message.answer(
-        text,
-        reply_markup=get_leaderboard_keyboard(lang, current_tab="monthly")
-    )
+    await message.answer(text, reply_markup=get_rating_keyboard(lang, "monthly"))
 
 
 # ============================================================================
-# CALLBACK ИЗ СТАТИСТИКИ
+# ПЕРЕКЛЮЧЕНИЕ ВКЛАДКИ: Месяц
 # ============================================================================
 
-@router.callback_query(F.data == "show_my_rating")
-async def show_my_rating_callback(callback: CallbackQuery, session: AsyncSession):
-    """Обработчик кнопки 'Мой рейтинг' из статистики"""
-    await callback.answer()
-
-    user = await session.get(User, callback.from_user.id)
-    lang = user.interface_language if user else "ru"
-
-    # Получаем данные
-    season = await get_current_season(session)
-
-    if not season:
-        no_season_text = {
-            "ru": "❌ Месячный рейтинг пока не активен.",
-            "uk": "❌ Місячний рейтинг поки не активний.",
-            "en": "❌ Monthly leaderboard is not active yet.",
-            "tr": "❌ Aylık sıralama henüz aktif değil."
-        }
-        await callback.message.answer(no_season_text.get(lang, no_season_text["ru"]))
-        return
-
-    leaderboard = await get_monthly_leaderboard(session, season_id=season.id, limit=10)
-    user_rank = await get_user_monthly_rank(user.id, session, season_id=season.id)
-
-    # Формируем текст
-    text = format_monthly_leaderboard(leaderboard, user_rank, season, user.id, lang)
-
-    # Клавиатура с вкладками
-    keyboard = get_leaderboard_keyboard(lang, current_tab="monthly")
-
-    # Редактируем сообщение
-    try:
-        await callback.message.edit_text(text, reply_markup=keyboard)
-    except Exception as e:
-        print(f"⚠️ Не удалось отредактировать: {e}")
-        await callback.message.answer(text, reply_markup=keyboard)
-
-
-# ============================================================================
-# ПЕРЕКЛЮЧЕНИЕ НА МЕСЯЧНЫЙ РЕЙТИНГ
-# ============================================================================
-
-@router.callback_query(F.data == "leaderboard_monthly")
+@router.callback_query(F.data == "rating_monthly")
 async def switch_to_monthly(callback: CallbackQuery, session: AsyncSession):
-    """Переключиться на месячный рейтинг (из вкладок)"""
+    """Вкладка Месяц — edit текущего сообщения"""
     await callback.answer()
 
     user = await session.get(User, callback.from_user.id)
     lang = user.interface_language if user else "ru"
-
-    # Получаем данные
     season = await get_current_season(session)
 
     if not season:
         await callback.message.edit_text("❌ Рейтинг не активен")
         return
 
-    leaderboard = await get_monthly_leaderboard(session, season_id=season.id, limit=10)
     user_rank = await get_user_monthly_rank(user.id, session, season_id=season.id)
+    text = build_monthly_card(user, user_rank, season, lang)
 
-    # Формируем текст
-    text = format_monthly_leaderboard(leaderboard, user_rank, season, user.id, lang)
-
-    # Обновляем сообщение
-    try:
-        await callback.message.edit_text(
-            text,
-            reply_markup=get_leaderboard_keyboard(lang, current_tab="monthly")
-        )
-    except Exception as e:
-        print(f"⚠️ Ошибка: {e}")
+    await callback.message.edit_text(text, reply_markup=get_rating_keyboard(lang, "monthly"))

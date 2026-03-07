@@ -73,15 +73,16 @@ class User(Base):
 
     @property
     def display_name(self) -> str:
-        """Отображаемое имя пользователя"""
-        # Приоритет: first_name + last_name > first_name > username > User ID
+        """Отображаемое имя: приоритет имя+фамилия"""
         if self.first_name:
             name = self.first_name
             if self.last_name:
                 name += f" {self.last_name}"
             return name
+        elif self.last_name:
+            return self.last_name
         elif self.username:
-            return self.username  # БЕЗ @ !
+            return self.username
         else:
             return f"User {self.id}"
 

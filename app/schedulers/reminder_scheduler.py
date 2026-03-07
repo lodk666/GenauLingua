@@ -1,5 +1,5 @@
 """
-Планировщик напоминаний для бота
+Планировщик напоминаний и сезонов для бота
 """
 import logging
 from datetime import datetime
@@ -31,48 +31,27 @@ MOTIVATION_KEYS = [
 async def send_notification_to_user(bot: Bot, user: User) -> bool:
     """
     Отправить напоминание конкретному пользователю
-
-    Args:
-        bot: экземпляр бота
-        user: пользователь из БД
-
-    Returns:
-        True если успешно отправлено, False при ошибке
     """
     lang = user.interface_language or "ru"
-
-    # Имя пользователя
     name = user.first_name or get_text("notif_default_name", lang)
-
-    # Выбираем случайную мотивацию
     motivation_key = random.choice(MOTIVATION_KEYS)
     motivation = get_text(motivation_key, lang)
 
-    # Формируем прогресс
     progress_lines = []
-
-    # Серия (если есть)
     if user.streak_days > 0:
         progress_lines.append(
             get_text("notif_progress_streak", lang, days=user.streak_days)
         )
-
-    # Викторины
     progress_lines.append(
         get_text("notif_progress_quizzes", lang, count=user.quizzes_passed)
     )
-
-    # Слова
     progress_lines.append(
         get_text("notif_progress_words", lang, count=user.words_learned)
     )
-
-    # Точность
     progress_lines.append(
         get_text("notif_progress_accuracy", lang, percent=user.success_rate)
     )
 
-    # Собираем текст
     text = get_text("notif_message_greeting", lang, name=name) + "\n\n"
     text += get_text("notif_message_progress_title", lang) + "\n"
     text += "\n".join(progress_lines) + "\n\n"
@@ -102,7 +81,6 @@ async def check_and_send_notifications(bot: Bot):
     sent_count = 0
 
     async with AsyncSessionLocal() as session:
-        # Получаем всех пользователей с включенными уведомлениями
         result = await session.execute(
             select(User).where(User.notifications_enabled == True)
         )
@@ -112,56 +90,38 @@ async def check_and_send_notifications(bot: Bot):
 
         for user in users:
             try:
-                # Проверка 1: Есть ли timezone
                 if not user.timezone:
-                    logger.warning(f"⚠️ У пользователя {user.id} не настроен timezone")
                     continue
 
-                # Конвертируем UTC в локальное время пользователя
                 try:
                     user_tz = ZoneInfo(user.timezone)
                     now_local = now_utc.replace(tzinfo=ZoneInfo("UTC")).astimezone(user_tz)
-                except Exception as e:
+                except Exception:
                     logger.error(f"❌ Неверный timezone для пользователя {user.id}: {user.timezone}")
                     continue
 
-                # Проверка 2: Сегодня рабочий день?
-                current_weekday = now_local.weekday()  # 0 = Понедельник, 6 = Воскресенье
+                current_weekday = now_local.weekday()
                 if current_weekday not in user.notification_days:
-                    logger.debug(f"⏭️ Сегодня ({current_weekday}) не день напоминания для пользователя {user.id}")
                     continue
 
-                # Проверка 3: Уже отправляли сегодня? (ПЕРВАЯ проверка - экономим CPU)
                 if user.last_notification_sent:
                     last_sent_local = user.last_notification_sent.replace(tzinfo=ZoneInfo("UTC")).astimezone(user_tz)
                     if last_sent_local.date() == now_local.date():
-                        logger.debug(f"⏭️ Пользователю {user.id} уже отправлено напоминание сегодня")
                         continue
 
-                # Проверка 4: Парсинг времени уведомления
                 try:
                     if ':' not in user.notification_time:
-                        logger.warning(f"⚠️ Неверный формат времени для пользователя {user.id}: {user.notification_time}")
                         continue
-
                     time_parts = user.notification_time.split(':')
                     if len(time_parts) != 2:
-                        logger.warning(f"⚠️ Неверный формат времени для пользователя {user.id}: {user.notification_time}")
                         continue
-
                     notification_hour = int(time_parts[0])
                     notification_minute = int(time_parts[1])
-
-                    # Валидация
                     if not (0 <= notification_hour <= 23 and 0 <= notification_minute <= 59):
-                        logger.warning(f"⚠️ Некорректное время для пользователя {user.id}: {user.notification_time}")
                         continue
-
-                except (ValueError, IndexError) as e:
-                    logger.error(f"❌ Ошибка парсинга времени для пользователя {user.id}: {user.notification_time}")
+                except (ValueError, IndexError):
                     continue
 
-                # Проверка 5: Время совпадает? (диапазон ±2 минуты)
                 notification_datetime = now_local.replace(
                     hour=notification_hour,
                     minute=notification_minute,
@@ -173,13 +133,11 @@ async def check_and_send_notifications(bot: Bot):
                 if time_diff_minutes > 2:
                     continue
 
-                logger.info(f"⏰ Отправляю напоминание пользователю {user.id} (локальное время: {now_local.strftime('%H:%M')})")
+                logger.info(f"⏰ Отправляю напоминание пользователю {user.id}")
 
-                # Отправляем напоминание
                 success = await send_notification_to_user(bot, user)
 
                 if success:
-                    # Обновляем время последней отправки
                     user.last_notification_sent = now_utc
                     await session.commit()
                     sent_count += 1
@@ -190,33 +148,52 @@ async def check_and_send_notifications(bot: Bot):
 
     if sent_count > 0:
         logger.info(f"✅ Отправлено {sent_count} напоминаний")
-    else:
-        logger.debug("📭 Нет напоминаний для отправки в эту минуту")
 
 
 def setup_scheduler(bot: Bot) -> AsyncIOScheduler:
     """
     Настроить и запустить планировщик задач
-
-    Args:
-        bot: экземпляр бота
-
-    Returns:
-        настроенный планировщик
     """
     scheduler = AsyncIOScheduler(timezone="UTC")
 
-    # Запускаем проверку каждую минуту
+    # ═══════════════ НАПОМИНАНИЯ ═══════════════
+    # Каждую минуту — проверка и отправка напоминаний
     scheduler.add_job(
         check_and_send_notifications,
         trigger="cron",
-        minute="*",  # Каждую минуту
+        minute="*",
         args=[bot],
         id="check_notifications",
         replace_existing=True
     )
 
+    # ═══════════════ СЕЗОНЫ РЕЙТИНГА ═══════════════
+    from app.schedulers.season_scheduler import (
+        finalize_and_create_new_season,
+        hourly_season_check
+    )
+
+    # 1 числа каждого месяца в 00:05 UTC — завершение старого + создание нового
+    scheduler.add_job(
+        finalize_and_create_new_season,
+        trigger="cron",
+        day=1,
+        hour=0,
+        minute=5,
+        id="finalize_season",
+        replace_existing=True
+    )
+
+    # Каждый час — страховочная проверка (если бот был выключен 1 числа)
+    scheduler.add_job(
+        hourly_season_check,
+        trigger="cron",
+        minute=30,  # каждый час в :30
+        id="hourly_season_check",
+        replace_existing=True
+    )
+
     scheduler.start()
-    logger.info("⏰ Планировщик напоминаний запущен")
+    logger.info("⏰ Планировщик запущен: напоминания + сезоны рейтинга")
 
     return scheduler
