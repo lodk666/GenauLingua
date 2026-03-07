@@ -6,9 +6,12 @@
 import asyncio
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
 from sqlalchemy.ext.asyncio import AsyncSession
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 from app.database.models import User
 from app.database.enums import CEFRLevel, TranslationMode
@@ -24,7 +27,7 @@ async def delete_messages_fast(bot, chat_id: int, start_id: int, end_id: int):
         tasks.append(bot.delete_message(chat_id=chat_id, message_id=msg_id))
     results = await asyncio.gather(*tasks, return_exceptions=True)
     deleted = sum(1 for r in results if not isinstance(r, Exception))
-    print(f"   🧹 Удалено {deleted}/{len(tasks)} сообщений")
+    logger.debug(f"Удалено {deleted}/{len(tasks)} сообщений")
 
 
 async def ensure_anchor(message: Message, session: AsyncSession, user: User, emoji: str = "🤖"):
@@ -35,10 +38,10 @@ async def ensure_anchor(message: Message, session: AsyncSession, user: User, emo
         new_anchor_id = sent.message_id
         user.anchor_message_id = new_anchor_id
         await session.commit()
-        print(f"   ✨ Создан новый якорь {new_anchor_id}")
+        logger.debug(f"Создан новый якорь {new_anchor_id}")
         return old_anchor_id, new_anchor_id
     except Exception as e:
-        print(f"   ❌ Ошибка создания якоря: {e}")
+        logger.error(f"Ошибка создания якоря: {e}")
         return old_anchor_id, None
 
 
@@ -336,7 +339,6 @@ async def change_interface_language(callback: CallbackQuery, session: AsyncSessi
 
 @router.callback_query(F.data.startswith("lang_"))
 async def set_interface_language(callback: CallbackQuery, session: AsyncSession):
-    print(f"🔵 lang_ callback received: {callback.data}")  # ← добавь эту строку
     new_lang = callback.data.split("_")[1]
 
     user = await session.get(User, callback.from_user.id)

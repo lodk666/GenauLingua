@@ -16,6 +16,10 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 from app.database.models import User, QuizSession, QuizQuestion, Word, UserWord
 from app.services.monthly_leaderboard_service import update_monthly_stats
 from app.bot.states import QuizStates
@@ -98,7 +102,7 @@ async def delete_messages_fast(bot, chat_id: int, start_id: int, end_id: int):
         tasks.append(bot.delete_message(chat_id=chat_id, message_id=msg_id))
     results = await asyncio.gather(*tasks, return_exceptions=True)
     deleted = sum(1 for r in results if not isinstance(r, Exception))
-    print(f"   🧹 Удалено {deleted}/{len(tasks)} сообщений")
+    logger.debug(f"Удалено {deleted}/{len(tasks)} сообщений")
 
 
 async def ensure_anchor(message: Message, session: AsyncSession, user: User, emoji: str = "🏠"):
@@ -109,10 +113,10 @@ async def ensure_anchor(message: Message, session: AsyncSession, user: User, emo
         new_anchor_id = sent.message_id
         user.anchor_message_id = new_anchor_id
         await session.commit()
-        print(f"   ✨ Создан новый якорь {new_anchor_id}")
+        logger.debug(f"Создан новый якорь {new_anchor_id}")
         return old_anchor_id, new_anchor_id
     except Exception as e:
-        print(f"   ❌ Ошибка создания якоря: {e}")
+        logger.error(f"Ошибка создания якоря: {e}")
         return old_anchor_id, None
 
 
@@ -188,7 +192,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
             mode=user.translation_mode
         )
     except Exception as e:
-        print(f"❌ Ошибка генерации вопроса: {e}")
+        logger.error(f"Ошибка генерации вопроса: {e}")
         await message.answer(get_text("quiz_error_generation", lang))
         return
 
@@ -286,7 +290,7 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
             session=session
         )
     except Exception as e:
-        print(f"⚠️ Ошибка обновления прогресса: {e}")
+        logger.warning(f"Ошибка обновления прогресса: {e}")
 
     word_display = get_word_display(correct_word)
 
@@ -413,7 +417,7 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
                 quiz_session_id=session_id
             )
         except Exception as e:
-            print(f"⚠️ Ошибка обновления месячной статистики: {e}")
+            logger.warning(f"Ошибка обновления месячной статистики: {e}")
 
         # 6. Стрик
         await update_user_activity(session, callback.from_user.id)
@@ -477,7 +481,7 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
                 mode=user.translation_mode
             )
         except Exception as e:
-            print(f"❌ Ошибка генерации вопроса: {e}")
+            logger.error(f"Ошибка генерации вопроса: {e}")
             question = None
 
         if question:

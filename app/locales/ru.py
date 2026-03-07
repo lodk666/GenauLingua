@@ -386,27 +386,4 @@ t.me/genaulingua_chat""",
     "stats_explanation": "—————————————————————\nСлово выучено = 3 правильных ответа подряд",
     "stats_btn_rating": "🏆 Мой рейтинг",
 
-    # ============================================================================
-    # СТАТИСТИКА (ЛОКАЛИЗАЦИЯ)
-    # ============================================================================
-    "stats_header": "📊 <b>Твоя статистика</b>",
-    "stats_learned_of": "└─ Выучено <b>{learned}</b> из {total}",
-    "stats_details": "🔄 В процессе: {progress}  ·  🆕 Новых: {new}  ·  ⚠️ Сложных: {difficult}",
-    "stats_achievements_title": "<b>Твои достижения</b>",
-    "stats_words_count": "├─ Выучено слов: <b>{count}</b>",
-    "stats_streak_line": "└─ Стрик: <b>{days} дней подряд</b>",
-    "stats_quizzes_header": "<b>Викторины ({level})</b>",
-    "stats_quizzes_passed_line": "├─ Пройдено: <b>{count}</b>",
-    "stats_quizzes_avg_line": "├─ Средний результат: <b>{percent}%</b>",
-    "stats_quizzes_best_line": "└─ Лучший результат: <b>{percent}%</b>",
-    "stats_quizzes_empty": "└─ Пока нет пройденных викторин",
-    "stats_recent_header": "📈 <b>Последние викторины</b>",
-    "stats_overall_header": "🌍 <b>Общий прогресс</b>",
-    "stats_overall_learned": "└─ Выучено <b>{learned}</b> из {total} слов",
-    "stats_cta_start": "💪 Начни учить слова — первый шаг самый важный!",
-    "stats_cta_begin": "🚀 Отличное начало! Продолжай в том же духе!",
-    "stats_cta_halfway": "🔥 Ты на полпути! Не останавливайся!",
-    "stats_cta_almost": "🏆 Почти у цели! Ты молодец!",
-    "stats_explanation": "—————————————————————\nСлово выучено = 3 правильных ответа подряд",
-    "stats_btn_rating": "🏆 Мой рейтинг",
 }

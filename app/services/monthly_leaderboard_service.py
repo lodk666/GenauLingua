@@ -14,6 +14,10 @@ from typing import List, Dict, Optional
 from datetime import datetime, date, timedelta
 import calendar
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 # ============================================================================
 # УПРАВЛЕНИЕ СЕЗОНАМИ
@@ -38,7 +42,7 @@ async def create_new_season(year: int, month: int, session: AsyncSession) -> Mon
         )
     )
     if existing.scalar_one_or_none():
-        print(f"⚠️ Сезон {month}/{year} уже существует")
+        logger.warning(f"Сезон {month}/{year} уже существует")
         return existing.scalar_one_or_none()
 
     start_date = date(year, month, 1)
@@ -63,7 +67,7 @@ async def create_new_season(year: int, month: int, session: AsyncSession) -> Mon
     await session.commit()
     await session.refresh(season)
 
-    print(f"✅ Создан новый сезон: {month}/{year} (id={season.id})")
+    logger.info(f"Создан новый сезон: {month}/{year} (id={season.id})")
     return season
 
 
@@ -416,11 +420,11 @@ async def finalize_season(season_id: int, session: AsyncSession):
     """Подвести итоги месяца"""
     season = await session.get(MonthlySeason, season_id)
     if not season:
-        print(f"❌ Сезон {season_id} не найден")
+        logger.error(f"Сезон {season_id} не найден")
         return
 
     if season.winners_finalized:
-        print(f"⚠️ Сезон {season_id} уже завершён")
+        logger.warning(f"Сезон {season_id} уже завершён")
         return
 
     results = await session.execute(
@@ -430,8 +434,8 @@ async def finalize_season(season_id: int, session: AsyncSession):
     )
     results = results.scalars().all()
 
-    print(f"📊 Подводим итоги сезона {season.month}/{season.year}")
-    print(f"   Участников: {len(results)}")
+    logger.info(f"Подводим итоги сезона {season.month}/{season.year}")
+    logger.info(f"Участников: {len(results)}")
 
     for rank, stat in enumerate(results, 1):
         stat.final_rank = rank
@@ -465,13 +469,13 @@ async def finalize_season(season_id: int, session: AsyncSession):
             user.total_monthly_wins += 1
             await update_win_streak(stat.user_id, season_id, session)
 
-        print(f"   🏆 #{rank} - {user.display_name} - {stat.monthly_score} баллов - {award_type}")
+        logger.info(f"#{rank} - {user.display_name} - {stat.monthly_score} баллов - {award_type}")
 
     season.winners_finalized = True
     season.is_active = False
 
     await session.commit()
-    print(f"✅ Сезон {season.month}/{season.year} завершён!")
+    logger.info(f"Сезон {season.month}/{season.year} завершён")
 
 
 async def update_win_streak(user_id: int, season_id: int, session: AsyncSession):
@@ -511,7 +515,7 @@ async def update_win_streak(user_id: int, season_id: int, session: AsyncSession)
     win_streak.updated_at = datetime.utcnow()
 
     await session.commit()
-    print(f"   🔥 Серия побед: {win_streak.current_streak}")
+    logger.info(f"Серия побед: {win_streak.current_streak}")
 
 
 # ============================================================================

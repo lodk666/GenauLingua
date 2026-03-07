@@ -8,8 +8,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import ARRAY
-from app.database.enums import CEFRLevel, TranslationMode
-import enum
+from app.database.enums import CEFRLevel, TranslationMode, PartOfSpeech
 
 
 class Base(DeclarativeBase):
@@ -106,20 +105,6 @@ class UserWord(Base):
 
     user = relationship("User", backref="learned_items")
     word = relationship("Word", backref="learned_by")
-
-
-class PartOfSpeech(enum.Enum):
-    """Части речи"""
-    NOUN = "noun"
-    VERB = "verb"
-    ADJECTIVE = "adjective"
-    ADVERB = "adverb"
-    PHRASE = "phrase"
-    PRONOUN = "pronoun"
-    PREPOSITION = "preposition"
-    CONJUNCTION = "conjunction"
-    OTHER = "other"
-
 
 class Word(Base):
     __tablename__ = "words"
