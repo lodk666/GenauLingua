@@ -32,7 +32,7 @@ TEXTS = {
     "welcome_help_title": "❓ <b>Help</b>",
     "welcome_help_desc": "Tips, latest updates and feedback.",
 
-    "welcome_your_level": "Your level: <b>{level}</b> · Mode: <b>{mode}</b>",
+    "welcome_your_level": "Your level: <b>{level}</b>\nMode: <b>{mode}</b>",
     "welcome_call_to_action": "Tap 📚 Learn words — let's go!",
 
     "welcome_choose_level": "First, choose your German level:",
@@ -355,7 +355,7 @@ The more active the community — the better the bot gets. Don't be shy! 🙌"""
     # STATISTICS
     "stats_header": "📊 <b>Your statistics</b>",
     "stats_learned_of": "└─ Learned <b>{learned}</b> of {total}",
-    "stats_details": "🔄 In progress: {progress}  ·  🆕 New: {new}  ·  ⚠️ Difficult: {difficult}",
+    "stats_details": "🔄 In progress: {progress}\n🆕 New: {new}\n⚠️ Difficult: {difficult}",
     "stats_achievements_title": "<b>Your achievements</b>",
     "stats_words_count": "├─ Words learned: <b>{count}</b>",
     "stats_streak_line": "└─ Streak: <b>{days} days in a row</b>",
