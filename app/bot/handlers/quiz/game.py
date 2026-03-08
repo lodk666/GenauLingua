@@ -183,7 +183,8 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
         correct_answers=0,
         errors=[],
         correct_word_id=question['correct_word'].id,
-        used_word_ids=[question['correct_word'].id]
+        used_word_ids=[question['correct_word'].id],
+        is_error_repeat=False,
     )
 
     word = question['correct_word']
@@ -331,7 +332,7 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
 
 @router.callback_query(F.data == "next_question", QuizStates.answering)
 async def show_next_question(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
-    """Показ следующего вопроса"""
+    """Показ следующего вопроса — поддерживает обычный режим и повтор ошибок"""
     await callback.answer()
 
     data = await state.get_data()
@@ -340,6 +341,11 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
     correct_answers = data['correct_answers']
     errors = data.get('errors', [])
     used_word_ids = data.get('used_word_ids', [])
+
+    # Определяем режим: обычная викторина или повтор ошибок
+    is_error_repeat = data.get('is_error_repeat', False)
+    error_words = data.get('error_words', [])
+    current_error_index = data.get('current_error_index', 0)
 
     current_question += 1
     user = await session.get(User, callback.from_user.id)
@@ -353,52 +359,56 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         session_id = data['session_id']
         user_id = callback.from_user.id
 
-        # 1. quizzes_passed
-        user.quizzes_passed = (user.quizzes_passed or 0) + 1
-
-        # 2. words_learned из UserWord
-        learned_count_result = await session.execute(
-            select(func.count(UserWord.word_id))
-            .where(UserWord.user_id == user_id, UserWord.learned == True)
-        )
-        user.words_learned = learned_count_result.scalar() or 0
-
-        # 3. success_rate
-        completed_sessions_result = await session.execute(
-            select(QuizSession).where(
-                QuizSession.user_id == user_id,
-                QuizSession.completed_at.isnot(None)
-            )
-        )
-        all_completed_sessions = completed_sessions_result.scalars().all()
-
-        total_q = sum(s.total_questions for s in all_completed_sessions) + total_questions
-        total_c = sum(s.correct_answers for s in all_completed_sessions) + correct_answers
-        user.success_rate = int((total_c / total_q * 100)) if total_q > 0 else 0
-
-        await session.commit()
-
-        # 4. QuizSession
+        # Закрываем QuizSession в любом случае
         quiz_session = await session.get(QuizSession, session_id)
-        quiz_session.correct_answers = correct_answers
-        quiz_session.completed_at = datetime.utcnow()
-        quiz_session.is_completed = True
-        await session.commit()
+        if quiz_session:
+            quiz_session.correct_answers = correct_answers
+            quiz_session.completed_at = datetime.utcnow()
+            quiz_session.is_completed = True
+            await session.commit()
 
-        # 5. Месячная статистика
-        try:
-            await update_monthly_stats(
-                user_id=user_id,
-                session=session,
-                quiz_session_id=session_id
+        if not is_error_repeat:
+            # === ТОЛЬКО ДЛЯ ОБЫЧНОЙ ВИКТОРИНЫ: обновляем статистику ===
+
+            # 1. quizzes_passed
+            user.quizzes_passed = (user.quizzes_passed or 0) + 1
+
+            # 2. words_learned из UserWord
+            learned_count_result = await session.execute(
+                select(func.count(UserWord.word_id))
+                .where(UserWord.user_id == user_id, UserWord.learned == True)
             )
-        except Exception as e:
-            logger.warning(f"Ошибка обновления месячной статистики: {e}")
+            user.words_learned = learned_count_result.scalar() or 0
 
-        # 6. Стрик
-        await update_user_activity(session, callback.from_user.id)
+            # 3. success_rate
+            completed_sessions_result = await session.execute(
+                select(QuizSession).where(
+                    QuizSession.user_id == user_id,
+                    QuizSession.completed_at.isnot(None)
+                )
+            )
+            all_completed_sessions = completed_sessions_result.scalars().all()
 
-        # 7. Результаты
+            total_q = sum(s.total_questions for s in all_completed_sessions)
+            total_c = sum(s.correct_answers for s in all_completed_sessions)
+            user.success_rate = int((total_c / total_q * 100)) if total_q > 0 else 0
+
+            await session.commit()
+
+            # 4. Месячная статистика
+            try:
+                await update_monthly_stats(
+                    user_id=user_id,
+                    session=session,
+                    quiz_session_id=session_id
+                )
+            except Exception as e:
+                logger.warning(f"Ошибка обновления месячной статистики: {e}")
+
+            # 5. Стрик
+            await update_user_activity(session, callback.from_user.id)
+
+        # === Результаты (и для обычной, и для повтора) ===
         result_items = await session.execute(
             select(QuizQuestion, Word)
             .join(Word, QuizQuestion.word_id == Word.id)
@@ -414,77 +424,145 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
             trans = get_translation_for_mode(word, mode_val)
             details.append(f"{icon} {wd} — {trans.capitalize()}")
 
-        percentage = (correct_answers / total_questions) * 100
-        result_text = (
+        percentage = (correct_answers / total_questions * 100) if total_questions > 0 else 0
+
+        if is_error_repeat:
+            result_text = (
+                f"🔄 {get_text('quiz_completed', lang)}\n\n"
+                f"{get_text('quiz_result_correct', lang, correct=correct_answers, total=total_questions)}\n"
+                f"{get_text('quiz_result_percentage', lang, percentage=f'{percentage:.1f}')}\n\n"
+                f"{get_text('quiz_result_details', lang)}\n" + "\n".join(details)
+            )
+        else:
+            result_text = (
                 f"{get_text('quiz_completed', lang)}\n\n"
                 f"{get_text('quiz_result_correct', lang, correct=correct_answers, total=total_questions)}\n"
                 f"{get_text('quiz_result_percentage', lang, percentage=f'{percentage:.1f}')}\n\n"
                 f"{get_text('quiz_result_details', lang)}\n" + "\n".join(details)
-        )
+            )
 
-        if errors:
-            result_text += "\n\n" + get_text('quiz_result_errors', lang, count=len(errors))
+            if errors:
+                result_text += "\n\n" + get_text('quiz_result_errors', lang, count=len(errors))
 
         try:
             await callback.message.delete()
         except:
             pass
 
-        await callback.bot.send_message(
-            chat_id=callback.message.chat.id,
-            text=result_text,
-            reply_markup=get_results_keyboard(has_errors=bool(errors), lang=lang)
+        # Кнопка повтора ошибок — только для обычной викторины
+        if is_error_repeat:
+            await callback.bot.send_message(
+                chat_id=callback.message.chat.id,
+                text=result_text,
+            )
+            await state.clear()
+        else:
+            await callback.bot.send_message(
+                chat_id=callback.message.chat.id,
+                text=result_text,
+                reply_markup=get_results_keyboard(has_errors=bool(errors), lang=lang)
+            )
+            saved_errors = errors.copy()
+            await state.clear()
+            await state.update_data(saved_errors=saved_errors)
+        return
+
+    # ============================================================================
+    # СЛЕДУЮЩИЙ ВОПРОС
+    # ============================================================================
+
+    if is_error_repeat:
+        # === ПОВТОР ОШИБОК — берём конкретное слово из списка ===
+        current_error_index += 1
+
+        if current_error_index >= len(error_words):
+            # Не должно случиться, но на всякий случай
+            logger.warning("error_repeat: current_error_index вышел за пределы error_words")
+            await state.clear()
+            return
+
+        next_word_id = error_words[current_error_index]
+        word = await session.get(Word, next_word_id)
+
+        if not word:
+            await callback.message.answer(get_text("quiz_error_generate", lang))
+            await state.clear()
+            return
+
+        # Генерируем дистракторы для конкретного слова
+        distractors = await get_distractors(word, session)
+        if len(distractors) < 3:
+            from app.services.quiz_service import get_additional_distractors
+            additional = await get_additional_distractors(
+                word, distractors, user.level, session, 3 - len(distractors)
+            )
+            distractors.extend(additional)
+
+        if is_reverse_mode(mode_val):
+            options = [(word.id, get_word_display(word))]
+            for d in distractors[:3]:
+                options.append((d.id, get_word_display(d)))
+        else:
+            trans = get_translation_for_mode(word, mode_val)
+            options = [(word.id, (trans or "").capitalize())]
+            for d in distractors[:3]:
+                d_trans = get_translation_for_mode(d, mode_val)
+                options.append((d.id, (d_trans or "").capitalize()))
+
+        random.shuffle(options)
+
+        await state.update_data(
+            current_question=current_question,
+            correct_word_id=word.id,
+            current_error_index=current_error_index
+        )
+    else:
+        # === ОБЫЧНАЯ ВИКТОРИНА — генерация по SRS ===
+        question = None
+        attempts = 0
+
+        while attempts < 10:
+            try:
+                question = await generate_question(
+                    level=user.level,
+                    session=session,
+                    user_id=callback.from_user.id,
+                    exclude_ids=used_word_ids,
+                    mode=user.translation_mode
+                )
+            except Exception as e:
+                logger.error(f"Ошибка генерации вопроса: {e}")
+                question = None
+
+            if question:
+                break
+            attempts += 1
+
+        if not question:
+            await callback.message.answer(get_text("quiz_error_generate", lang))
+            await state.clear()
+            return
+
+        used_word_ids.append(question['correct_word'].id)
+
+        await state.update_data(
+            current_question=current_question,
+            correct_word_id=question['correct_word'].id,
+            used_word_ids=used_word_ids
         )
 
-        saved_errors = errors.copy()
-        await state.clear()
-        await state.update_data(saved_errors=saved_errors)
-        return
+        word = question['correct_word']
+        options = question['options']
 
-    # ============================================================================
-    # ОБЫЧНЫЙ СЛЕДУЮЩИЙ ВОПРОС
-    # ============================================================================
-    question = None
-    attempts = 0
-
-    while attempts < 10:
-        try:
-            question = await generate_question(
-                level=user.level,
-                session=session,
-                user_id=callback.from_user.id,
-                exclude_ids=used_word_ids,
-                mode=user.translation_mode
-            )
-        except Exception as e:
-            logger.error(f"Ошибка генерации вопроса: {e}")
-            question = None
-
-        if question:
-            break
-        attempts += 1
-
-    if not question:
-        await callback.message.answer(get_text("quiz_error_generate", lang))
-        await state.clear()
-        return
-
-    used_word_ids.append(question['correct_word'].id)
-
-    await state.update_data(
-        current_question=current_question,
-        correct_word_id=question['correct_word'].id,
-        used_word_ids=used_word_ids
-    )
-
-    word = question['correct_word']
-
+    # === ОТОБРАЖЕНИЕ ВОПРОСА (общее для обоих режимов) ===
     if is_reverse_mode(mode_val):
         translation = get_translation_for_mode(word, mode_val)
         example = get_example_for_mode(word, mode_val)
         flag = get_flag_for_mode(mode_val)
 
+        prefix = f"{get_text('quiz_repeat_title', lang)}\n" if is_error_repeat else ""
         question_text = (
+            f"{prefix}"
             f"{get_text('quiz_question_number', lang, current=current_question, total=total_questions)}\n\n"
             f"{flag} <b>{translation.capitalize()}</b>\n\n"
             f"📝 {example}\n\n"
@@ -493,14 +571,16 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
     else:
         word_display = get_word_display(word)
 
+        prefix = f"{get_text('quiz_repeat_title', lang)}\n" if is_error_repeat else ""
         question_text = (
+            f"{prefix}"
             f"{get_text('quiz_question_number', lang, current=current_question, total=total_questions)}\n\n"
             f"🇩🇪 <b>{word_display}</b>\n\n"
             f"📝 {word.example_de}\n\n"
             f"{get_text('quiz_question_choose_translation', lang)}"
         )
 
-    await callback.message.edit_text(question_text, reply_markup=get_answer_keyboard(question['options']))
+    await callback.message.edit_text(question_text, reply_markup=get_answer_keyboard(options))
 
 
 # ============================================================================
@@ -584,7 +664,8 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
         errors=[],
         correct_word_id=first_word_id,
         error_words=errors,
-        current_error_index=0
+        current_error_index=0,
+        is_error_repeat=True,
     )
 
     if is_reverse_mode(mode_val):
