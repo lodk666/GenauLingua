@@ -94,10 +94,10 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
     if not user.interface_language or user.interface_language == "reset":
         language_selection_text = (
             "🇩🇪 <b>GenauLingua</b>\n\n"
-            "Перед початком оберіть мову інтерфейсу.\n"
-            "Перед началом выберите язык интерфейса.\n\n"
-            "💡 <i>Змінити можна буде в налаштуваннях</i>\n"
-            "💡 <i>Изменить можно будет в настройках</i>"
+            "🇺🇦 Оберіть мову інтерфейсу\n"
+            "🏴 Выберите язык интерфейса\n"
+            "🇬🇧 Choose your language\n"
+            "🇹🇷 Arayüz dilini seçin"
         )
 
         await message.answer(
