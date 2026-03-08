@@ -32,7 +32,7 @@ TEXTS = {
     "welcome_help_title": "❓ <b>Yardım</b>",
     "welcome_help_desc": "İpuçları, son güncellemeler ve geri bildirim.",
 
-    "welcome_your_level": "Seviyeniz: <b>{level}</b> · Mod: <b>{mode}</b>",
+    "welcome_your_level": "Seviyeniz: <b>{level}</b>\nMod: <b>{mode}</b>",
     "welcome_call_to_action": "📚 Kelime öğren'e bas — başlayalım!",
 
     "welcome_choose_level": "Önce Almanca seviyeni seç:",
@@ -355,7 +355,7 @@ Topluluk ne kadar aktif olursa — bot o kadar iyi olur. Çekinme! 🙌""",
     # İSTATİSTİK
     "stats_header": "📊 <b>İstatistiklerin</b>",
     "stats_learned_of": "└─ Öğrenildi <b>{learned}</b> / {total}",
-    "stats_details": "🔄 Devam eden: {progress}  ·  🆕 Yeni: {new}  ·  ⚠️ Zor: {difficult}",
+    "stats_details": "🔄 Devam eden: {progress}\n🆕 Yeni: {new}\n⚠️ Zor: {difficult}",
     "stats_achievements_title": "<b>Başarıların</b>",
     "stats_words_count": "├─ Öğrenilen kelimeler: <b>{count}</b>",
     "stats_streak_line": "└─ Seri: <b>{days} gün üst üste</b>",

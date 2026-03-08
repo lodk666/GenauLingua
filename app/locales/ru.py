@@ -32,7 +32,7 @@ TEXTS = {
     "welcome_help_title": "❓ <b>Помощь</b>",
     "welcome_help_desc": "Подсказки, актуальные обновления и обратная связь.",
 
-    "welcome_your_level": "Твой уровень: <b>{level}</b> · Режим: <b>{mode}</b>",
+    "welcome_your_level": "Твой уровень: <b>{level}</b>\nРежим: <b>{mode}</b>",
     "welcome_call_to_action": "Нажми 📚 Учить слова — и начнём!",
 
     "welcome_choose_level": "Для начала выбери свой уровень немецкого:",
@@ -367,7 +367,7 @@ t.me/genaulingua_chat""",
     # ============================================================================
     "stats_header": "📊 <b>Твоя статистика</b>",
     "stats_learned_of": "└─ Выучено <b>{learned}</b> из {total}",
-    "stats_details": "🔄 В процессе: {progress}  ·  🆕 Новых: {new}  ·  ⚠️ Сложных: {difficult}",
+    "stats_details": "🔄 В процессе: {progress}\n🆕 Новых: {new}\n⚠️ Сложных: {difficult}",
     "stats_achievements_title": "<b>Твои достижения</b>",
     "stats_words_count": "├─ Выучено слов: <b>{count}</b>",
     "stats_streak_line": "└─ Стрик: <b>{days} дней подряд</b>",
