@@ -450,21 +450,14 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
             pass
 
         # Кнопка повтора ошибок — только для обычной викторины
-        if is_error_repeat:
-            await callback.bot.send_message(
-                chat_id=callback.message.chat.id,
-                text=result_text,
-            )
-            await state.clear()
-        else:
-            await callback.bot.send_message(
-                chat_id=callback.message.chat.id,
-                text=result_text,
-                reply_markup=get_results_keyboard(has_errors=bool(errors), lang=lang)
-            )
-            saved_errors = errors.copy()
-            await state.clear()
-            await state.update_data(saved_errors=saved_errors)
+        await callback.bot.send_message(
+            chat_id=callback.message.chat.id,
+            text=result_text,
+            reply_markup=get_results_keyboard(has_errors=bool(errors), lang=lang)
+        )
+        saved_errors = errors.copy()
+        await state.clear()
+        await state.update_data(saved_errors=saved_errors)
         return
 
     # ============================================================================
