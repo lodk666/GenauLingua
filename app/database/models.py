@@ -207,6 +207,11 @@ class QuizSession(Base):
 
     is_completed: Mapped[bool] = mapped_column(Boolean, default=False)
 
+    # Аналитика
+    start_source: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    exit_reason: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    exit_at_question: Mapped[int] = mapped_column(Integer, default=0)
+
     started_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow
@@ -248,6 +253,8 @@ class QuizQuestion(Base):
 
     # Время ответа
     answered_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+
+    response_time_seconds: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
