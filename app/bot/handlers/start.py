@@ -38,6 +38,10 @@ def get_language_selection_keyboard() -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(text="🇺🇦 Українська", callback_data="select_lang_uk"),
                 InlineKeyboardButton(text="🏴 Русский", callback_data="select_lang_ru")
+            ],
+            [
+                InlineKeyboardButton(text="🇬🇧 English", callback_data="select_lang_en"),
+                InlineKeyboardButton(text="🇹🇷 Türkçe", callback_data="select_lang_tr")
             ]
         ]
     )
