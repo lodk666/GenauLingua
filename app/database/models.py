@@ -32,9 +32,9 @@ class User(Base):
 
     # Новые поля и настройки
     level: Mapped[CEFRLevel] = mapped_column(SQLEnum(CEFRLevel), default=CEFRLevel.A1)
-    translation_mode: Mapped[TranslationMode] = mapped_column(SQLEnum(TranslationMode),
-                                                              default=TranslationMode.DE_TO_RU)
-    interface_language: Mapped[str] = mapped_column(String(2), default="ru")
+    translation_mode: Mapped[Optional[TranslationMode]] = mapped_column(SQLEnum(TranslationMode),
+                                                                        default=None, nullable=True)
+    interface_language: Mapped[Optional[str]] = mapped_column(String(2), default=None, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     anchor_message_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
 
