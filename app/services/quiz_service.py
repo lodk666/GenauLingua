@@ -370,12 +370,17 @@ async def update_word_progress(
             user_word.correct_streak += 1
             user_word.times_correct += 1
         else:
-            user_word.correct_streak = 0
+            if user_word.correct_streak > 3:
+                user_word.correct_streak = max(2, user_word.correct_streak - 2)
+            elif user_word.correct_streak > 0:
+                user_word.correct_streak = max(0, user_word.correct_streak - 1)
 
-    if user_word.correct_streak >= MIN_ATTEMPTS_FOR_LEARNED:
-        user_word.learned = True
-    else:
-        user_word.learned = False
+        if user_word.correct_streak >= MIN_ATTEMPTS_FOR_LEARNED:
+            user_word.learned = True
+        elif user_word.learned and user_word.correct_streak > 0:
+            pass
+        else:
+            user_word.learned = False
 
     await session.commit()
 
