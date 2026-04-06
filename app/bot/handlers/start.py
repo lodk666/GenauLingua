@@ -163,10 +163,13 @@ async def select_language(callback: CallbackQuery, state: FSMContext, session: A
 
     # Автоматически ставим режим викторины по языку
     from app.database.enums import TranslationMode
-    if lang == "uk":
-        user.translation_mode = TranslationMode.DE_TO_UK
-    else:  # ru
-        user.translation_mode = TranslationMode.DE_TO_RU
+    lang_to_mode = {
+        "ru": TranslationMode.DE_TO_RU,
+        "uk": TranslationMode.DE_TO_UK,
+        "en": TranslationMode.DE_TO_EN,
+        "tr": TranslationMode.DE_TO_TR,
+    }
+    user.translation_mode = lang_to_mode.get(lang, TranslationMode.DE_TO_RU)
 
     await session.commit()
 
