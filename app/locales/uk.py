@@ -17,25 +17,25 @@ TEXTS = {
     # ВІТАННЯ ТА СТАРТ
     # ============================================================================
     "welcome_title": "👋 <b>Привіт, {name}!</b>",
-    "welcome_description": "🇩🇪 <b>GenauLingua</b> — вчи німецьку щодня.\nБот аналізує твої результати і підбирає слова саме для тебе.",
+    "welcome_description": "🇩🇪 <b>GenauLingua</b> — вчи німецьку через гру\n12 000+ слів · 20 тем · 6 рівнів\n\nБот підбирає слова під тебе — чим більше\nграєш, тим розумніший підбір",
     "welcome_separator": "──────────────────",
 
     "welcome_learn_words_title": "📚 <b>Вчити слова</b>",
-    "welcome_learn_words_desc": "Ігрові вікторини з німецьких слів. Чим більше займаєшся — тим точніше підбираються слова.",
+    "welcome_learn_words_desc": "Запуск вікторини",
 
     "welcome_stats_title": "📊 <b>Статистика</b>",
-    "welcome_stats_desc": "Прогрес за рівнями, історія вікторин, порівняння з іншими користувачами.",
+    "welcome_stats_desc": "Твій прогрес",
 
     "welcome_settings_title": "🦾 <b>Налаштування</b>",
-    "welcome_settings_desc": "Рівень (A1–C2), мова інтерфейсу, режим вікторини.",
+    "welcome_settings_desc": "Режим, мова, теми",
 
     "welcome_help_title": "❓ <b>Допомога</b>",
-    "welcome_help_desc": "Підказки, актуальні оновлення та зворотній зв'язок.",
+    "welcome_help_desc": "Підказки та зворотній зв'язок",
 
     "welcome_your_level": "Твій рівень: <b>{level}</b>\nРежим: <b>{mode}</b>",
     "welcome_call_to_action": "Натисни 📚 Вчити слова — і почнемо!",
 
-    "welcome_choose_level": "Для початку обери свій рівень німецької:",
+    "welcome_choose_level": "🎯 <b>З чого почнемо?</b>\n\nОбери свій рівень німецької\n\n• A1–A2 — базова лексика\n• B1–B2 — впевнене спілкування\n• C1–C2 — вільне володіння",
     "choose_level_prompt": "Обери рівень:",
 
     "level_selected": "✅ Рівень <b>{level}</b> обрано.\n\nНатисни 📚 Вчити слова — і почнемо!",
@@ -103,7 +103,6 @@ TEXTS = {
 
     "notif_btn_back": "◀️ Назад до налаштувань",
 
-    # Ключі для покращених сповіщень
     "notif_default_name": "друже",
     "notif_message_greeting": "🔥 <b>Час практики, {name}!</b>",
     "notif_message_progress_title": "📊 <b>Твій прогрес:</b>",
@@ -124,17 +123,16 @@ TEXTS = {
     # ============================================================================
     "settings_title": "🦾 <b>Налаштування</b>",
     "settings_level": "📚 Рівень: <b>{level}</b>",
-    "settings_mode": "🔄 Режим: <b>{mode}</b>",
+    "settings_mode": "🔄 Переклад: <b>{mode}</b>",
     "settings_language": "🌍 Мова інтерфейсу: <b>{language}</b>",
     "settings_choose": "Обери, що хочеш змінити:",
 
-    "settings_btn_change_level": "📚 Змінити рівень",
+    "settings_btn_quiz_mode": "📝 Режим вікторини",
     "settings_btn_change_mode": "🔄 Режим перекладу",
     "settings_btn_change_language": "🌍 Мова інтерфейсу",
     "settings_btn_notifications": "🔔 Нагадування",
 
-    "settings_level_title": "📚 <b>Вибір рівня</b>",
-    "settings_level_description": "Обери свій поточний рівень володіння німецькою мовою:\n\n• <b>A1</b> — Початковий (Привіт, як справи?)\n• <b>A2</b> — Базовий (Прості діалоги)\n• <b>B1</b> — Середній (Повсякденне спілкування)",
+    "settings_quiz_mode_line": "📝 Режим: <b>{mode}</b>",
 
     "settings_mode_title": "🔄 <b>Режим перекладу</b>",
     "settings_mode_description": "Обери напрямок перекладу:",
@@ -154,17 +152,76 @@ TEXTS = {
     "level_not_selected": "Не обрано",
     "user_not_found": "❌ Користувача не знайдено. Використай /start",
 
-    # Назви мов
     "lang_ru": "🏴 Русский",
     "lang_uk": "🇺🇦 Українська",
     "lang_en": "🇬🇧 English",
     "lang_tr": "🇹🇷 Türkçe",
 
-    # Режими перекладу
     "mode_de_to_ru": "🇩🇪 DE → 🏴 RU",
     "mode_ru_to_de": "🏴 RU → 🇩🇪 DE",
     "mode_de_to_uk": "🇩🇪 DE → 🇺🇦 UK",
     "mode_uk_to_de": "🇺🇦 UK → 🇩🇪 DE",
+    "mode_de_to_en": "🇩🇪 DE → 🇬🇧 EN",
+    "mode_en_to_de": "🇬🇧 EN → 🇩🇪 DE",
+    "mode_de_to_tr": "🇩🇪 DE → 🇹🇷 TR",
+    "mode_tr_to_de": "🇹🇷 TR → 🇩🇪 DE",
+
+    # ============================================================================
+    # РЕЖИМ ВІКТОРИНИ (НОВЕ)
+    # ============================================================================
+    "qmode_title": "📝 <b>Режим вікторини</b>",
+    "qmode_current": "Зараз: <b>{mode}</b>",
+    "qmode_choose": "Обери як хочеш вчити слова\nМожеш змінити будь-коли — прогрес зберігається",
+
+    "qmode_btn_level": "📚 За рівнем",
+    "qmode_btn_category": "🗂 Категорія",
+    "qmode_btn_all": "🌍 Топ 10 тисяч",
+    "qmode_btn_difficult": "⚠️ Складні",
+
+    "qmode_level_short": "📚 Рівень {level}",
+    "qmode_category_short": "🗂 {category}",
+    "qmode_all_short": "🌍 Топ 10 тисяч",
+    "qmode_difficult_short": "⚠️ Складні слова",
+
+    "qmode_level_title": "📚 <b>Вибір рівня</b>",
+    "qmode_level_desc": "Від першого «Hallo» до вільних дискусій\nВсі рівні доступні — обирай свій!\n\n• A1–A2 — базова лексика\n• B1–B2 — впевнене спілкування\n• C1–C2 — вільне володіння",
+    "qmode_level_set": "✅ Режим: За рівнем ({level})",
+
+    "qmode_category_title": "🗂 <b>Вибір категорії</b>",
+    "qmode_category_desc": "Від їжі до науки — обери тему, яка тобі потрібна\n\nКожна категорія містить слова всіх рівнів",
+    "qmode_category_set": "✅ Режим: {category}",
+
+    # Назви категорій
+    "cat_arbeit_beruf": "Робота",
+    "cat_bildung_lernen": "Навчання",
+    "cat_einkaufen_geld": "Покупки",
+    "cat_emotionen_charakter": "Емоції",
+    "cat_essen_trinken": "Їжа",
+    "cat_freizeit_sport": "Спорт",
+    "cat_gesundheit_medizin": "Здоров'я",
+    "cat_grammatik": "Граматика",
+    "cat_kleidung_mode": "Одяг",
+    "cat_kommunikation": "Спілкування",
+    "cat_kultur_kunst": "Культура",
+    "cat_mensch_familie": "Сім'я",
+    "cat_natur_wetter": "Природа",
+    "cat_recht_staat": "Право",
+    "cat_reisen_transport": "Подорожі",
+    "cat_technik_digital": "Технології",
+    "cat_wirtschaft": "Економіка",
+    "cat_wissenschaft": "Наука",
+    "cat_wohnen_haus": "Житло",
+    "cat_zeit_alltag": "Побут",
+
+    "qmode_all_set": "✅ Режим: Топ 10 тисяч",
+
+    "qmode_difficult_set": "✅ Режим: Складні слова",
+    "qmode_difficult_few": "У тебе поки тільки {count} складних слів — потрібно мінімум 4\nПройди ще кілька вікторин!",
+    "qmode_difficult_empty": "У тебе поки немає складних слів.\nПройди кілька вікторин!",
+
+    "quiz_btn_change_mode": "⚙️ Режим вікторини",
+    "quiz_btn_report_error": "📝 Помилка перекладу",
+    "quiz_report_coming_soon": "🔜 Ця функція скоро з'явиться!",
 
     # ============================================================================
     # ВІКТОРИНА
@@ -233,10 +290,9 @@ TEXTS = {
     "help_btn_community": "💬 Спільнота",
     "help_btn_about": "ℹ️ Про бота",
 
-    # Як користуватися
     "help_how_to_use_title": "📖 <b>Як користуватися ботом</b>",
     "help_how_to_use_text": """1️⃣ <b>Налаштуй рівень і режим</b>
-🦾 Налаштування → обери рівень A1–B1, режим перекладу та мову інтерфейсу.
+🦾 Налаштування → обери рівень A1–C2, режим перекладу та мову інтерфейсу.
 
 2️⃣ <b>Вчи слова щодня</b>
 📚 Вчити слова → вікторина з 25 слів.
@@ -262,7 +318,6 @@ TEXTS = {
 
 Питання? → t.me/genaulingua_chat""",
 
-    # Скоро в боті
     "help_roadmap_title": "🚀 <b>Скоро в GenauLingua</b>",
     "help_roadmap_text": """🏆 <b>Досягнення</b>
 Беджі за прогрес — перша вікторина, 7 днів поспіль, 100 слів вивчено, вікторина на 100% та інші.
@@ -283,7 +338,6 @@ TEXTS = {
 💬 Ідеї та побажання — пиши в чат:
 t.me/genaulingua_chat""",
 
-    # Спільнота
     "help_community_title": "💬 <b>Спільнота GenauLingua</b>",
     "help_community_text": """👉 <b>t.me/genaulingua_chat</b>
 
@@ -297,12 +351,11 @@ t.me/genaulingua_chat""",
 ━━━━━━━━━━━━━━━━━
 Чим активніша спільнота — тим кращим стає бот. Не соромся! 🙌""",
 
-    # Про бота
     "help_about_title": "ℹ️ <b>Про бота</b>",
     "help_about_text": """🤖 <b>GenauLingua</b> — персональний помічник у вивченні німецької.
 
 ✨ <b>Що вміє:</b>
-• База слів A1–B1 (3000+ слів)
+• База слів A1–C2 (12000+ слів)
 • Розумний підбір слів — SRS алгоритм
 • 4 мови: DE↔RU, DE↔UA, DE↔EN, DE↔TR
 • Повтор помилок після вікторини
@@ -311,12 +364,12 @@ t.me/genaulingua_chat""",
 • Нагадування з гнучким розкладом
 • Інтерфейс російською, українською, англійською та турецькою
 
-📅 <b>Оновлено:</b> Березень 2026
+📅 <b>Оновлено:</b> Квітень 2026
 
 💬 Стеж за оновленнями: t.me/genaulingua_chat""",
 
     # ============================================================================
-    # РЕЙТИНГ — МІЙ РЕЙТИНГ
+    # РЕЙТИНГ
     # ============================================================================
     "rating_title_monthly": "🏆 <b>Мій рейтинг — {month} {year}</b>",
     "rating_not_active": "❌ Рейтинг поки не активний.",
@@ -363,11 +416,11 @@ t.me/genaulingua_chat""",
     # СТАТИСТИКА
     "stats_header": "📊 <b>Твоя статистика</b>",
     "stats_learned_of": "└─ Вивчено <b>{learned}</b> з {total}",
-    "stats_details": "🔄 В процесі: {progress}\n🆕 Нових: {new}\n⚠️ Складних: {difficult}",
+    "stats_details": "⏳ В процесі: {progress}\n🆕 Нових: {new}\n⚠️ Складних: {difficult}",
     "stats_achievements_title": "<b>Твої досягнення</b>",
     "stats_words_count": "├─ Вивчено слів: <b>{count}</b>",
     "stats_streak_line": "└─ Стрік: <b>{days} днів поспіль</b>",
-    "stats_quizzes_header": "<b>Вікторини ({level})</b>",
+    "stats_quizzes_header": "<b>Вікторини · {level}</b>",
     "stats_quizzes_passed_line": "├─ Пройдено: <b>{count}</b>",
     "stats_quizzes_avg_line": "├─ Середній результат: <b>{percent}%</b>",
     "stats_quizzes_best_line": "└─ Найкращий результат: <b>{percent}%</b>",

@@ -17,25 +17,25 @@ TEXTS = {
     # WELCOME & START
     # ============================================================================
     "welcome_title": "👋 <b>Hello, {name}!</b>",
-    "welcome_description": "🇩🇪 <b>GenauLingua</b> — learn German every day.\nThe bot analyzes your results and picks words just for you.",
+    "welcome_description": "🇩🇪 <b>GenauLingua</b> — learn German through play\n12 000+ words · 20 topics · 6 levels\n\nThe bot picks words just for you — the more\nyou play, the smarter the selection",
     "welcome_separator": "──────────────────",
 
     "welcome_learn_words_title": "📚 <b>Learn words</b>",
-    "welcome_learn_words_desc": "Fun quizzes with German words. The more you practice — the smarter the word selection.",
+    "welcome_learn_words_desc": "Start a quiz",
 
     "welcome_stats_title": "📊 <b>Statistics</b>",
-    "welcome_stats_desc": "Progress by level, quiz history, comparison with other users.",
+    "welcome_stats_desc": "Your progress",
 
     "welcome_settings_title": "🦾 <b>Settings</b>",
-    "welcome_settings_desc": "Level (A1–C2), interface language, quiz mode.",
+    "welcome_settings_desc": "Mode, language, topics",
 
     "welcome_help_title": "❓ <b>Help</b>",
-    "welcome_help_desc": "Tips, latest updates and feedback.",
+    "welcome_help_desc": "Tips and feedback",
 
     "welcome_your_level": "Your level: <b>{level}</b>\nMode: <b>{mode}</b>",
     "welcome_call_to_action": "Tap 📚 Learn words — let's go!",
 
-    "welcome_choose_level": "First, choose your German level:",
+    "welcome_choose_level": "🎯 <b>Where do we start?</b>\n\nChoose your German level\n\n• A1–A2 — basic vocabulary\n• B1–B2 — confident communication\n• C1–C2 — near-native fluency",
     "choose_level_prompt": "Choose your level:",
 
     "level_selected": "✅ Level <b>{level}</b> selected.\n\nTap 📚 Learn words — let's go!",
@@ -103,7 +103,6 @@ TEXTS = {
 
     "notif_btn_back": "◀️ Back to settings",
 
-    # Keys for enhanced notifications
     "notif_default_name": "friend",
     "notif_message_greeting": "🔥 <b>Time to practice, {name}!</b>",
     "notif_message_progress_title": "📊 <b>Your progress:</b>",
@@ -124,17 +123,16 @@ TEXTS = {
     # ============================================================================
     "settings_title": "🦾 <b>Settings</b>",
     "settings_level": "📚 Level: <b>{level}</b>",
-    "settings_mode": "🔄 Mode: <b>{mode}</b>",
+    "settings_mode": "🔄 Translation: <b>{mode}</b>",
     "settings_language": "🌍 Interface language: <b>{language}</b>",
     "settings_choose": "Choose what you want to change:",
 
-    "settings_btn_change_level": "📚 Change level",
+    "settings_btn_quiz_mode": "📝 Quiz mode",
     "settings_btn_change_mode": "🔄 Translation mode",
     "settings_btn_change_language": "🌍 Interface language",
     "settings_btn_notifications": "🔔 Notifications",
 
-    "settings_level_title": "📚 <b>Choose level</b>",
-    "settings_level_description": "Choose your current German level:\n\n• <b>A1</b> — Beginner (Hello, how are you?)\n• <b>A2</b> — Elementary (Simple dialogues)\n• <b>B1</b> — Intermediate (Everyday communication)",
+    "settings_quiz_mode_line": "📝 Mode: <b>{mode}</b>",
 
     "settings_mode_title": "🔄 <b>Translation mode</b>",
     "settings_mode_description": "Choose translation direction:",
@@ -146,13 +144,11 @@ TEXTS = {
     "level_not_selected": "Not selected",
     "user_not_found": "❌ User not found. Use /start",
 
-    # Language names
     "lang_ru": "🏴 Русский",
     "lang_uk": "🇺🇦 Українська",
     "lang_en": "🇬🇧 English",
     "lang_tr": "🇹🇷 Türkçe",
 
-    # Translation modes
     "mode_de_to_ru": "🇩🇪 DE → 🏴 RU",
     "mode_ru_to_de": "🏴 RU → 🇩🇪 DE",
     "mode_de_to_uk": "🇩🇪 DE → 🇺🇦 UK",
@@ -161,6 +157,73 @@ TEXTS = {
     "mode_en_to_de": "🇬🇧 EN → 🇩🇪 DE",
     "mode_de_to_tr": "🇩🇪 DE → 🇹🇷 TR",
     "mode_tr_to_de": "🇹🇷 TR → 🇩🇪 DE",
+
+    "settings_mode_hint_de_en": "💡 DE→EN easier — you can guess from context",
+    "settings_mode_hint_en_de": "💡 EN→DE harder — better memorization",
+    "settings_mode_hint_de_ru": "💡 DE→RU easier — you can guess from context",
+    "settings_mode_hint_ru_de": "💡 RU→DE harder — better memorization",
+    "settings_mode_hint_de_uk": "💡 DE→UK easier — you can guess from context",
+    "settings_mode_hint_uk_de": "💡 UK→DE harder — better memorization",
+    "settings_mode_hint_de_tr": "💡 DE→TR easier — you can guess from context",
+    "settings_mode_hint_tr_de": "💡 TR→DE harder — better memorization",
+
+    # ============================================================================
+    # QUIZ MODE (NEW)
+    # ============================================================================
+    "qmode_title": "📝 <b>Quiz mode</b>",
+    "qmode_current": "Current: <b>{mode}</b>",
+    "qmode_choose": "Choose how you want to learn\nYou can switch anytime — your progress is saved",
+
+    "qmode_btn_level": "📚 By level",
+    "qmode_btn_category": "🗂 Category",
+    "qmode_btn_all": "🌍 Top 10 thousand",
+    "qmode_btn_difficult": "⚠️ Difficult",
+
+    "qmode_level_short": "📚 Level {level}",
+    "qmode_category_short": "🗂 {category}",
+    "qmode_all_short": "🌍 Top 10 thousand",
+    "qmode_difficult_short": "⚠️ Difficult words",
+
+    "qmode_level_title": "📚 <b>Choose level</b>",
+    "qmode_level_desc": "From your first «Hallo» to fluent debates\nAll levels available — pick yours!\n\n• A1–A2 — basic vocabulary\n• B1–B2 — confident communication\n• C1–C2 — near-native fluency",
+    "qmode_level_set": "✅ Mode: By level ({level})",
+
+    "qmode_category_title": "🗂 <b>Choose category</b>",
+    "qmode_category_desc": "From food to science — pick the topic you need\n\nEach category includes words from all levels",
+    "qmode_category_set": "✅ Mode: {category}",
+
+    # Category names
+    "cat_arbeit_beruf": "Work",
+    "cat_bildung_lernen": "Education",
+    "cat_einkaufen_geld": "Shopping",
+    "cat_emotionen_charakter": "Emotions",
+    "cat_essen_trinken": "Food",
+    "cat_freizeit_sport": "Sports",
+    "cat_gesundheit_medizin": "Health",
+    "cat_grammatik": "Grammar",
+    "cat_kleidung_mode": "Fashion",
+    "cat_kommunikation": "Communication",
+    "cat_kultur_kunst": "Culture",
+    "cat_mensch_familie": "Family",
+    "cat_natur_wetter": "Nature",
+    "cat_recht_staat": "Law",
+    "cat_reisen_transport": "Travel",
+    "cat_technik_digital": "Technology",
+    "cat_wirtschaft": "Economy",
+    "cat_wissenschaft": "Science",
+    "cat_wohnen_haus": "Housing",
+    "cat_zeit_alltag": "Daily life",
+
+    "qmode_all_set": "✅ Mode: Top 10 thousand",
+
+    "qmode_difficult_set": "✅ Mode: Difficult words",
+    "qmode_difficult_few": "You only have {count} difficult words — need at least 4\
+Take a few more quizzes!",
+    "qmode_difficult_empty": "You don't have difficult words yet.\nTake a few quizzes first!",
+
+    "quiz_btn_change_mode": "⚙️ Quiz mode",
+    "quiz_btn_report_error": "📝 Translation error",
+    "quiz_report_coming_soon": "🔜 This feature is coming soon!",
 
     # ============================================================================
     # QUIZ
@@ -231,7 +294,7 @@ TEXTS = {
 
     "help_how_to_use_title": "📖 <b>How to use the bot</b>",
     "help_how_to_use_text": """1️⃣ <b>Set your level and mode</b>
-🦾 Settings → choose level A1–B1, translation mode and interface language.
+🦾 Settings → choose level A1–C2, translation mode and interface language.
 
 2️⃣ <b>Learn words every day</b>
 📚 Learn words → quiz with 25 words.
@@ -294,7 +357,7 @@ The more active the community — the better the bot gets. Don't be shy! 🙌"""
     "help_about_text": """🤖 <b>GenauLingua</b> — your personal German learning assistant.
 
 ✨ <b>Features:</b>
-• Word base A1–B1 (3000+ words)
+• Word base A1–C2 (12000+ words)
 • Smart word selection — SRS algorithm
 • 4 languages: DE↔RU, DE↔UA, DE↔EN, DE↔TR
 • Repeat mistakes after quiz
@@ -303,7 +366,7 @@ The more active the community — the better the bot gets. Don't be shy! 🙌"""
 • Flexible notification reminders
 • Interface in English, Russian, Ukrainian, Turkish
 
-📅 <b>Updated:</b> March 2026
+📅 <b>Updated:</b> April 2026
 
 💬 Follow updates: t.me/genaulingua_chat""",
 
@@ -352,14 +415,13 @@ The more active the community — the better the bot gets. Don't be shy! 🙌"""
     "btn_leaderboard_table": "📊 Leaderboard",
     "btn_back_to_rating": "◀️ Back to rating",
 
-    # STATISTICS
     "stats_header": "📊 <b>Your statistics</b>",
     "stats_learned_of": "└─ Learned <b>{learned}</b> of {total}",
-    "stats_details": "🔄 In progress: {progress}\n🆕 New: {new}\n⚠️ Difficult: {difficult}",
+    "stats_details": "⏳ In progress: {progress}\n🆕 New: {new}\n⚠️ Difficult: {difficult}",
     "stats_achievements_title": "<b>Your achievements</b>",
     "stats_words_count": "├─ Words learned: <b>{count}</b>",
     "stats_streak_line": "└─ Streak: <b>{days} days in a row</b>",
-    "stats_quizzes_header": "<b>Quizzes ({level})</b>",
+    "stats_quizzes_header": "<b>Quizzes · {level}</b>",
     "stats_quizzes_passed_line": "├─ Completed: <b>{count}</b>",
     "stats_quizzes_avg_line": "├─ Average result: <b>{percent}%</b>",
     "stats_quizzes_best_line": "└─ Best result: <b>{percent}%</b>",

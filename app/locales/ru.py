@@ -17,25 +17,25 @@ TEXTS = {
     # ПРИВЕТСТВИЕ И СТАРТ
     # ============================================================================
     "welcome_title": "👋 <b>Привет, {name}!</b>",
-    "welcome_description": "🇩🇪 <b>GenauLingua</b> — учи немецкий каждый день.\nБот анализирует твои результаты и подбирает слова именно для тебя.",
+    "welcome_description": "🇩🇪 <b>GenauLingua</b> — учи немецкий через игру\n12 000+ слов · 20 тем · 6 уровней\n\nБот подбирает слова под тебя — чем больше\nиграешь, тем умнее подбор",
     "welcome_separator": "──────────────────",
 
     "welcome_learn_words_title": "📚 <b>Учить слова</b>",
-    "welcome_learn_words_desc": "Игровые викторины по немецким словам. Чем больше занимаешься — тем точнее подбираются слова.",
+    "welcome_learn_words_desc": "Запуск викторины",
 
     "welcome_stats_title": "📊 <b>Статистика</b>",
-    "welcome_stats_desc": "Прогресс по уровням, история викторин, сравнение с другими пользователями.",
+    "welcome_stats_desc": "Твой прогресс",
 
     "welcome_settings_title": "🦾 <b>Настройки</b>",
-    "welcome_settings_desc": "Уровень (A1–C2), язык интерфейса, режим викторины.",
+    "welcome_settings_desc": "Режим, язык, темы",
 
     "welcome_help_title": "❓ <b>Помощь</b>",
-    "welcome_help_desc": "Подсказки, актуальные обновления и обратная связь.",
+    "welcome_help_desc": "Подсказки и обратная связь",
 
     "welcome_your_level": "Твой уровень: <b>{level}</b>\nРежим: <b>{mode}</b>",
     "welcome_call_to_action": "Нажми 📚 Учить слова — и начнём!",
 
-    "welcome_choose_level": "Для начала выбери свой уровень немецкого:",
+    "welcome_choose_level": "🎯 <b>С чего начнём?</b>\n\nВыбери свой уровень немецкого\n\n• A1–A2 — базовая лексика\n• B1–B2 — уверенное общение\n• C1–C2 — свободное владение",
     "choose_level_prompt": "Выбери уровень:",
 
     "level_selected": "✅ Уровень <b>{level}</b> выбран.\n\nНажми 📚 Учить слова — и начнём!",
@@ -103,7 +103,6 @@ TEXTS = {
 
     "notif_btn_back": "◀️ Назад в настройки",
 
-    # Ключи для улучшенных уведомлений
     "notif_default_name": "друг",
     "notif_message_greeting": "🔥 <b>Время практики, {name}!</b>",
     "notif_message_progress_title": "📊 <b>Твой прогресс:</b>",
@@ -124,24 +123,23 @@ TEXTS = {
     # ============================================================================
     "settings_title": "🦾 <b>Настройки</b>",
     "settings_level": "📚 Уровень: <b>{level}</b>",
-    "settings_mode": "🔄 Режим: <b>{mode}</b>",
+    "settings_mode": "🔄 Перевод: <b>{mode}</b>",
     "settings_language": "🌍 Язык интерфейса: <b>{language}</b>",
     "settings_choose": "Выбери, что хочешь изменить:",
 
-    "settings_btn_change_level": "📚 Изменить уровень",
+    "settings_btn_quiz_mode": "📝 Режим викторины",
     "settings_btn_change_mode": "🔄 Режим перевода",
     "settings_btn_change_language": "🌍 Язык интерфейса",
     "settings_btn_notifications": "🔔 Напоминания",
 
-    "settings_level_title": "📚 <b>Выбор уровня</b>",
-    "settings_level_description": "Выбери свой текущий уровень владения немецким языком:\n\n• <b>A1</b> — Начальный (Привет, как дела?)\n• <b>A2</b> — Базовый (Простые диалоги)\n• <b>B1</b> — Средний (Повседневное общение)",
+    "settings_quiz_mode_line": "📝 Режим: <b>{mode}</b>",
 
     "settings_mode_title": "🔄 <b>Режим перевода</b>",
     "settings_mode_description": "Выбери направление перевода:",
     "settings_mode_hint_de_ru": "💡 DE→RU легче — можно угадать по логике",
     "settings_mode_hint_ru_de": "💡 RU→DE сложнее — лучше закрепляет слова",
-    "settings_mode_hint_de_uk": "💡 DE→UK легче — можно угадать по логике",
-    "settings_mode_hint_uk_de": "💡 UK→DE сложнее — лучше закрепляет слова",
+    "settings_mode_hint_de_uk": "💡 DE→UK легше — можна вгадати за логікою",
+    "settings_mode_hint_uk_de": "💡 UK→DE складніше — краще закріплює слова",
     "settings_mode_hint_de_en": "💡 DE→EN easier — you can guess from context",
     "settings_mode_hint_en_de": "💡 EN→DE harder — better memorization",
     "settings_mode_hint_de_tr": "💡 DE→TR daha kolay — mantıkla tahmin edebilirsiniz",
@@ -165,6 +163,67 @@ TEXTS = {
     "mode_ru_to_de": "🏴 RU → 🇩🇪 DE",
     "mode_de_to_uk": "🇩🇪 DE → 🇺🇦 UK",
     "mode_uk_to_de": "🇺🇦 UK → 🇩🇪 DE",
+    "mode_de_to_en": "🇩🇪 DE → 🇬🇧 EN",
+    "mode_en_to_de": "🇬🇧 EN → 🇩🇪 DE",
+    "mode_de_to_tr": "🇩🇪 DE → 🇹🇷 TR",
+    "mode_tr_to_de": "🇹🇷 TR → 🇩🇪 DE",
+
+    # ============================================================================
+    # РЕЖИМ ВИКТОРИНЫ (НОВОЕ)
+    # ============================================================================
+    "qmode_title": "📝 <b>Режим викторины</b>",
+    "qmode_current": "Сейчас: <b>{mode}</b>",
+    "qmode_choose": "Выбери как хочешь учить слова\nМожешь изменить в любой момент — прогресс сохраняется",
+
+    "qmode_btn_level": "📚 По уровню",
+    "qmode_btn_category": "🗂 Категория",
+    "qmode_btn_all": "🌍 Топ 10 тысяч",
+    "qmode_btn_difficult": "⚠️ Сложные",
+
+    "qmode_level_short": "📚 Уровень {level}",
+    "qmode_category_short": "🗂 {category}",
+    "qmode_all_short": "🌍 Топ 10 тысяч",
+    "qmode_difficult_short": "⚠️ Сложные слова",
+
+    "qmode_level_title": "📚 <b>Выбор уровня</b>",
+    "qmode_level_desc": "От первого «Hallo» до свободных дискуссий\nВсе уровни доступны — выбирай свой!\n\n• A1–A2 — базовая лексика\n• B1–B2 — уверенное общение\n• C1–C2 — свободное владение",
+    "qmode_level_set": "✅ Режим: По уровню ({level})",
+
+    "qmode_category_title": "🗂 <b>Выбор категории</b>",
+    "qmode_category_desc": "От еды до науки — выбери тему, которая тебе нужна\n\nКаждая категория содержит слова всех уровней",
+    "qmode_category_set": "✅ Режим: {category}",
+
+    # Названия категорий
+    "cat_arbeit_beruf": "Работа",
+    "cat_bildung_lernen": "Учёба",
+    "cat_einkaufen_geld": "Покупки",
+    "cat_emotionen_charakter": "Эмоции",
+    "cat_essen_trinken": "Еда",
+    "cat_freizeit_sport": "Спорт",
+    "cat_gesundheit_medizin": "Здоровье",
+    "cat_grammatik": "Грамматика",
+    "cat_kleidung_mode": "Одежда",
+    "cat_kommunikation": "Общение",
+    "cat_kultur_kunst": "Культура",
+    "cat_mensch_familie": "Семья",
+    "cat_natur_wetter": "Природа",
+    "cat_recht_staat": "Право",
+    "cat_reisen_transport": "Путешествия",
+    "cat_technik_digital": "Технологии",
+    "cat_wirtschaft": "Экономика",
+    "cat_wissenschaft": "Наука",
+    "cat_wohnen_haus": "Жильё",
+    "cat_zeit_alltag": "Быт",
+
+    "qmode_all_set": "✅ Режим: Топ 10 тысяч",
+
+    "qmode_difficult_set": "✅ Режим: Сложные слова",
+    "qmode_difficult_few": "У тебя пока только {count} сложных слов — нужно минимум 4\nПройди ещё несколько викторин!",
+    "qmode_difficult_empty": "У тебя пока нет сложных слов.\nПройди несколько викторин!",
+
+    "quiz_btn_change_mode": "⚙️ Режим викторины",
+    "quiz_btn_report_error": "📝 Ошибка перевода",
+    "quiz_report_coming_soon": "🔜 Эта функция скоро появится!",
 
     # ============================================================================
     # ВИКТОРИНА
@@ -233,10 +292,9 @@ TEXTS = {
     "help_btn_community": "💬 Сообщество",
     "help_btn_about": "ℹ️ О боте",
 
-    # Как пользоваться
     "help_how_to_use_title": "📖 <b>Как пользоваться ботом</b>",
     "help_how_to_use_text": """1️⃣ <b>Настрой уровень и режим</b>
-🦾 Настройки → выбери уровень A1–B1, режим перевода и язык интерфейса.
+🦾 Настройки → выбери уровень A1–C2, режим перевода и язык интерфейса.
 
 2️⃣ <b>Учи слова каждый день</b>
 📚 Учить слова → викторина из 25 слов.
@@ -262,7 +320,6 @@ TEXTS = {
 
 Вопросы? → t.me/genaulingua_chat""",
 
-    # Скоро в боте
     "help_roadmap_title": "🚀 <b>Скоро в GenauLingua</b>",
     "help_roadmap_text": """🏆 <b>Достижения</b>
 Бейджи за прогресс — первая викторина, 7 дней подряд, 100 слов выучено, викторина на 100% и другие.
@@ -283,7 +340,6 @@ TEXTS = {
 💬 Идеи и пожелания — пиши в чат:
 t.me/genaulingua_chat""",
 
-    # Сообщество
     "help_community_title": "💬 <b>Сообщество GenauLingua</b>",
     "help_community_text": """👉 <b>t.me/genaulingua_chat</b>
 
@@ -297,12 +353,11 @@ t.me/genaulingua_chat""",
 ━━━━━━━━━━━━━━━━━
 Чем активнее сообщество — тем лучше становится бот. Не стесняйся! 🙌""",
 
-    # О боте
     "help_about_title": "ℹ️ <b>О боте</b>",
     "help_about_text": """🤖 <b>GenauLingua</b> — персональный помощник в изучении немецкого.
 
 ✨ <b>Что умеет:</b>
-• База слов A1–B1 (3000+ слов)
+• База слов A1–C2 (12000+ слов)
 • Умный подбор слов — SRS алгоритм
 • 4 языка: DE↔RU, DE↔UA, DE↔EN, DE↔TR
 • Повтор ошибок после викторины
@@ -311,12 +366,12 @@ t.me/genaulingua_chat""",
 • Напоминания с гибким расписанием
 • Интерфейс на русском, украинском, английском и турецком
 
-📅 <b>Обновлено:</b> Март 2026
+📅 <b>Обновлено:</b> Апрель 2026
 
 💬 Следи за обновлениями: t.me/genaulingua_chat""",
 
     # ============================================================================
-    # РЕЙТИНГ — МОЙ РЕЙТИНГ
+    # РЕЙТИНГ
     # ============================================================================
     "rating_title_monthly": "🏆 <b>Мой рейтинг — {month} {year}</b>",
     "rating_not_active": "❌ Рейтинг пока не активен.",
@@ -337,7 +392,6 @@ t.me/genaulingua_chat""",
     "rating_scoring_streak": "• День подряд → +3",
     "rating_scoring_bonus": "• Точность 90%+ → +50 бонус",
 
-    # РЕЙТИНГ — ЗА ВСЁ ВРЕМЯ
     "rating_title_alltime": "🏆 <b>Мой рейтинг — За всё время</b>",
     "rating_position_alltime": "📍 Позиция: <b>#{rank}</b>",
     "rating_position_none": "📍 Позиция: <b>—</b>",
@@ -350,7 +404,6 @@ t.me/genaulingua_chat""",
     "rating_lifetime_title": "🌟 <b>Lifetime баллы — это:</b>",
     "rating_lifetime_desc": "• Все баллы за все месяцы\n• +100 за 🥇 · +50 за 🥈 · +25 за 🥉",
 
-    # ТАБЛИЦА ЛИДЕРОВ
     "table_title_monthly": "📊 <b>Таблица лидеров — {month} {year}</b>",
     "table_title_alltime": "📊 <b>Таблица лидеров — За всё время</b>",
     "table_empty": "Пока никто не участвует.\nПройди викторину первым! 💪",
@@ -367,11 +420,11 @@ t.me/genaulingua_chat""",
     # ============================================================================
     "stats_header": "📊 <b>Твоя статистика</b>",
     "stats_learned_of": "└─ Выучено <b>{learned}</b> из {total}",
-    "stats_details": "🔄 В процессе: {progress}\n🆕 Новых: {new}\n⚠️ Сложных: {difficult}",
+    "stats_details": "⏳ В процессе: {progress}\n🆕 Новых: {new}\n⚠️ Сложных: {difficult}",
     "stats_achievements_title": "<b>Твои достижения</b>",
     "stats_words_count": "├─ Выучено слов: <b>{count}</b>",
     "stats_streak_line": "└─ Стрик: <b>{days} дней подряд</b>",
-    "stats_quizzes_header": "<b>Викторины ({level})</b>",
+    "stats_quizzes_header": "<b>Викторины · {level}</b>",
     "stats_quizzes_passed_line": "├─ Пройдено: <b>{count}</b>",
     "stats_quizzes_avg_line": "├─ Средний результат: <b>{percent}%</b>",
     "stats_quizzes_best_line": "└─ Лучший результат: <b>{percent}%</b>",
@@ -385,5 +438,4 @@ t.me/genaulingua_chat""",
     "stats_cta_almost": "🏆 Почти у цели! Ты молодец!",
     "stats_explanation": "—————————————————————\nСлово выучено = 3 правильных ответа подряд",
     "stats_btn_rating": "🏆 Мой рейтинг",
-
 }

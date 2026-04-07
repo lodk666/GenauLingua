@@ -2,7 +2,7 @@ import random
 from datetime import datetime
 from sqlalchemy import select, func, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database.enums import CEFRLevel
+from app.database.enums import CEFRLevel, QuizMode
 from app.database.models import Word, PartOfSpeech, UserWord, User
 from typing import Optional
 
@@ -20,27 +20,72 @@ STRUGGLING_THRESHOLD = 70
 REVIEW_THRESHOLD = 90
 
 
+# ============================================================================
+# ФИЛЬТР СЛОВ ПО РЕЖИМУ ВИКТОРИНЫ
+# ============================================================================
+
+def _apply_quiz_mode_filter(query, user: User):
+    """
+    Применить фильтр по режиму викторины к запросу.
+
+    Режимы:
+    - LEVEL: фильтр по user.level
+    - CATEGORY: фильтр по user.quiz_category (все уровни)
+    - ALL_WORDS: без фильтра (вся база)
+    - DIFFICULT: только сложные слова пользователя (обрабатывается отдельно)
+    """
+    if user.quiz_mode == QuizMode.LEVEL:
+        return query.where(Word.level == user.level)
+    elif user.quiz_mode == QuizMode.CATEGORY:
+        if user.quiz_category:
+            return query.where(Word.category == user.quiz_category)
+        # Fallback если категория не выбрана — по уровню
+        return query.where(Word.level == user.level)
+    elif user.quiz_mode == QuizMode.ALL_WORDS:
+        # Без фильтра — вся база
+        return query
+    elif user.quiz_mode == QuizMode.DIFFICULT:
+        # Обрабатывается в generate_question отдельно
+        return query
+    # Fallback
+    return query.where(Word.level == user.level)
+
+
 async def generate_question(
         level: CEFRLevel,
         session: AsyncSession,
         user_id: int,
         exclude_ids: list[int] = None,
-        mode: str = "DE_TO_RU"
+        mode: str = "DE_TO_RU",
+        user: User = None,
 ) -> dict | None:
+    """
+    Генерация вопроса с учётом режима викторины.
+
+    Если user передан — используется user.quiz_mode для фильтрации.
+    Если user не передан — работает как раньше (по level).
+    """
     if exclude_ids is None:
         exclude_ids = []
 
-    correct_word = await select_word_by_priority(
-        user_id=user_id,
-        level=level,
-        session=session,
-        exclude_ids=exclude_ids
-    )
+    # Определяем режим
+    quiz_mode = user.quiz_mode if user else QuizMode.LEVEL
+
+    if quiz_mode == QuizMode.DIFFICULT:
+        correct_word = await get_difficult_word(user_id, session, exclude_ids)
+    else:
+        correct_word = await select_word_by_priority(
+            user_id=user_id,
+            level=level,
+            session=session,
+            exclude_ids=exclude_ids,
+            user=user
+        )
 
     if not correct_word:
         return None
 
-    distractors = await get_distractors(correct_word, session)
+    distractors = await get_distractors(correct_word, session, user=user)
 
     if len(distractors) < 3:
         additional = await get_additional_distractors(
@@ -48,14 +93,12 @@ async def generate_question(
             current_distractors=distractors,
             level=level,
             session=session,
-            count=3 - len(distractors)
+            count=3 - len(distractors),
+            user=user
         )
         distractors.extend(additional)
 
-    # Формируем варианты ответов в зависимости от режима
-    # Формируем варианты ответов в зависимости от режима
     if mode.value in ("RU_TO_DE", "UK_TO_DE", "EN_TO_DE", "TR_TO_DE"):
-        # RU→DE / UK→DE / EN→DE / TR→DE: показываем немецкие слова как варианты
         options = []
         correct_display = correct_word.word_de
         if correct_word.article and correct_word.article != '-':
@@ -68,36 +111,20 @@ async def generate_question(
             if d.article and d.article != '-':
                 distractor_display = f"{d.article} {d.word_de}"
             options.append((d.id, distractor_display))
-
-
     else:
-
-        # DE→RU/UK/EN/TR: показываем переводы как варианты
-
         def _get_trans(w):
-
             m = mode.value.upper()
-
             if m == "DE_TO_UK":
-
                 return w.translation_uk
-
             elif m == "DE_TO_EN":
-
                 return getattr(w, 'translation_en', None) or w.translation_ru
-
             elif m == "DE_TO_TR":
-
                 return getattr(w, 'translation_tr', None) or w.translation_ru
-
             else:
-
                 return w.translation_ru
 
         trans = _get_trans(correct_word)
-
         options = [(correct_word.id, (trans or "").capitalize())]
-
         options.extend([(d.id, (_get_trans(d) or "").capitalize()) for d in distractors[:3]])
 
     random.shuffle(options)
@@ -114,42 +141,51 @@ async def generate_question(
     }
 
 
+# ============================================================================
+# ВЫБОР СЛОВА ПО ПРИОРИТЕТУ (SRS)
+# ============================================================================
+
 async def select_word_by_priority(
         user_id: int,
         level: CEFRLevel,
         session: AsyncSession,
-        exclude_ids: list[int]
+        exclude_ids: list[int],
+        user: User = None,
 ) -> Optional[Word]:
     rand = random.random()
 
     if rand < STRUGGLING_WORDS_RATIO:
-        word = await get_struggling_words(user_id, level, session, exclude_ids)
+        word = await get_struggling_words(user_id, level, session, exclude_ids, user=user)
         if word:
             return word
 
     if rand < STRUGGLING_WORDS_RATIO + NEW_WORDS_RATIO:
-        word = await get_new_words(user_id, level, session, exclude_ids)
+        word = await get_new_words(user_id, level, session, exclude_ids, user=user)
         if word:
             return word
 
     if rand < STRUGGLING_WORDS_RATIO + NEW_WORDS_RATIO + REVIEW_WORDS_RATIO:
-        word = await get_review_words(user_id, level, session, exclude_ids)
+        word = await get_review_words(user_id, level, session, exclude_ids, user=user)
         if word:
             return word
 
-    word = await get_learned_words(user_id, level, session, exclude_ids)
+    word = await get_learned_words(user_id, level, session, exclude_ids, user=user)
     if word:
         return word
 
-    return await get_any_word(user_id, level, session, exclude_ids)
+    return await get_any_word(user_id, level, session, exclude_ids, user=user)
 
 
-async def get_struggling_words(
+# ============================================================================
+# DIFFICULT MODE — только сложные слова пользователя
+# ============================================================================
+
+async def get_difficult_word(
         user_id: int,
-        level: CEFRLevel,
         session: AsyncSession,
         exclude_ids: list[int]
 ) -> Optional[Word]:
+    """Получить сложное слово для пользователя (режим DIFFICULT)"""
     from datetime import timedelta
     one_hour_ago = datetime.utcnow() - timedelta(hours=1)
 
@@ -160,9 +196,8 @@ async def get_struggling_words(
             UserWord.user_id == user_id
         ))
         .where(
-            Word.level == level,
             UserWord.learned == False,
-            UserWord.times_shown > 0,
+            UserWord.times_shown >= 2,
             (UserWord.times_correct * 100.0 / UserWord.times_shown) < STRUGGLING_THRESHOLD,
             or_(
                 UserWord.last_seen_at.is_(None),
@@ -180,35 +215,16 @@ async def get_struggling_words(
     return random.choice(words) if words else None
 
 
-async def get_new_words(
+# ============================================================================
+# SRS FUNCTIONS — обновлены для поддержки quiz_mode
+# ============================================================================
+
+async def get_struggling_words(
         user_id: int,
         level: CEFRLevel,
         session: AsyncSession,
-        exclude_ids: list[int]
-) -> Optional[Word]:
-    seen_words_query = (
-        select(UserWord.word_id)
-        .where(UserWord.user_id == user_id)
-    )
-    seen_result = await session.execute(seen_words_query)
-    seen_word_ids = [row[0] for row in seen_result.all()]
-
-    query = select(Word).where(
-        Word.level == level,
-        Word.id.not_in(seen_word_ids + exclude_ids)
-    )
-
-    result = await session.execute(query)
-    words = result.scalars().all()
-
-    return random.choice(words) if words else None
-
-
-async def get_review_words(
-        user_id: int,
-        level: CEFRLevel,
-        session: AsyncSession,
-        exclude_ids: list[int]
+        exclude_ids: list[int],
+        user: User = None,
 ) -> Optional[Word]:
     from datetime import timedelta
     one_hour_ago = datetime.utcnow() - timedelta(hours=1)
@@ -220,7 +236,76 @@ async def get_review_words(
             UserWord.user_id == user_id
         ))
         .where(
-            Word.level == level,
+            UserWord.learned == False,
+            UserWord.times_shown > 0,
+            (UserWord.times_correct * 100.0 / UserWord.times_shown) < STRUGGLING_THRESHOLD,
+            or_(
+                UserWord.last_seen_at.is_(None),
+                UserWord.last_seen_at < one_hour_ago
+            )
+        )
+    )
+
+    if user:
+        query = _apply_quiz_mode_filter(query, user)
+    else:
+        query = query.where(Word.level == level)
+
+    if exclude_ids:
+        query = query.where(Word.id.not_in(exclude_ids))
+
+    result = await session.execute(query)
+    words = result.scalars().all()
+
+    return random.choice(words) if words else None
+
+
+async def get_new_words(
+        user_id: int,
+        level: CEFRLevel,
+        session: AsyncSession,
+        exclude_ids: list[int],
+        user: User = None,
+) -> Optional[Word]:
+    seen_words_query = (
+        select(UserWord.word_id)
+        .where(UserWord.user_id == user_id)
+    )
+    seen_result = await session.execute(seen_words_query)
+    seen_word_ids = [row[0] for row in seen_result.all()]
+
+    query = select(Word).where(
+        Word.id.not_in(seen_word_ids + exclude_ids)
+    )
+
+    if user:
+        query = _apply_quiz_mode_filter(query, user)
+    else:
+        query = query.where(Word.level == level)
+
+    result = await session.execute(query)
+    words = result.scalars().all()
+
+    return random.choice(words) if words else None
+
+
+async def get_review_words(
+        user_id: int,
+        level: CEFRLevel,
+        session: AsyncSession,
+        exclude_ids: list[int],
+        user: User = None,
+) -> Optional[Word]:
+    from datetime import timedelta
+    one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+
+    query = (
+        select(Word)
+        .join(UserWord, and_(
+            UserWord.word_id == Word.id,
+            UserWord.user_id == user_id
+        ))
+        .where(
             UserWord.learned == False,
             UserWord.times_shown > 0,
             and_(
@@ -233,6 +318,11 @@ async def get_review_words(
             )
         )
     )
+
+    if user:
+        query = _apply_quiz_mode_filter(query, user)
+    else:
+        query = query.where(Word.level == level)
 
     if exclude_ids:
         query = query.where(Word.id.not_in(exclude_ids))
@@ -247,7 +337,8 @@ async def get_learned_words(
         user_id: int,
         level: CEFRLevel,
         session: AsyncSession,
-        exclude_ids: list[int]
+        exclude_ids: list[int],
+        user: User = None,
 ) -> Optional[Word]:
     query = (
         select(Word)
@@ -256,12 +347,16 @@ async def get_learned_words(
             UserWord.user_id == user_id
         ))
         .where(
-            Word.level == level,
             UserWord.learned == True,
             UserWord.times_shown >= MIN_ATTEMPTS_FOR_LEARNED,
             (UserWord.times_correct * 100.0 / UserWord.times_shown) >= LEARNED_SUCCESS_RATE
         )
     )
+
+    if user:
+        query = _apply_quiz_mode_filter(query, user)
+    else:
+        query = query.where(Word.level == level)
 
     if exclude_ids:
         query = query.where(Word.id.not_in(exclude_ids))
@@ -276,9 +371,15 @@ async def get_any_word(
         user_id: int,
         level: CEFRLevel,
         session: AsyncSession,
-        exclude_ids: list[int]
+        exclude_ids: list[int],
+        user: User = None,
 ) -> Optional[Word]:
-    query = select(Word).where(Word.level == level)
+    query = select(Word)
+
+    if user:
+        query = _apply_quiz_mode_filter(query, user)
+    else:
+        query = query.where(Word.level == level)
 
     if exclude_ids:
         query = query.where(Word.id.not_in(exclude_ids))
@@ -289,12 +390,26 @@ async def get_any_word(
     return random.choice(words) if words else None
 
 
-async def get_distractors(word: Word, session: AsyncSession) -> list[Word]:
+# ============================================================================
+# DISTRACTORS — обновлены для режимов
+# ============================================================================
+
+async def get_distractors(word: Word, session: AsyncSession, user: User = None) -> list[Word]:
+    """
+    Дистракторы подбираются по POS и артиклю.
+    В режимах CATEGORY и ALL_WORDS — не ограничиваем по уровню.
+    """
     query = select(Word).where(
         Word.id != word.id,
-        Word.level == word.level,
         Word.pos == word.pos
     )
+
+    # В режимах LEVEL и DIFFICULT — дистракторы из того же уровня
+    # В режимах CATEGORY и ALL_WORDS — дистракторы из любого уровня
+    if user and user.quiz_mode in (QuizMode.CATEGORY, QuizMode.ALL_WORDS):
+        pass  # Без фильтра по уровню
+    else:
+        query = query.where(Word.level == word.level)
 
     if word.pos == PartOfSpeech.NOUN and word.article:
         query = query.where(Word.article != word.article)
@@ -313,14 +428,19 @@ async def get_additional_distractors(
         current_distractors: list[Word],
         level: CEFRLevel,
         session: AsyncSession,
-        count: int
+        count: int,
+        user: User = None,
 ) -> list[Word]:
     exclude_ids = [correct_word.id] + [d.id for d in current_distractors]
 
     query = select(Word).where(
-        Word.level == level,
         Word.id.not_in(exclude_ids)
     )
+
+    if user and user.quiz_mode in (QuizMode.CATEGORY, QuizMode.ALL_WORDS):
+        pass  # Без фильтра по уровню
+    else:
+        query = query.where(Word.level == level)
 
     result = await session.execute(query)
     words = result.scalars().all()
@@ -330,6 +450,10 @@ async def get_additional_distractors(
 
     return random.sample(words, min(count, len(words)))
 
+
+# ============================================================================
+# PROGRESS (без изменений)
+# ============================================================================
 
 async def update_word_progress(
         user_id: int,

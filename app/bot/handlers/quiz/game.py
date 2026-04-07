@@ -1,10 +1,11 @@
 """
-Игровая логика викторины с поддержкой локализации
+Игровая логика викторины с поддержкой локализации и режимов викторины
 
-ИСПРАВЛЕНИЯ:
-1. ✅ words_learned теперь считается из UserWord (уникальные выученные слова)
-2. ✅ success_rate теперь средний процент по всем викторинам
-3. ✅ Универсальные хелперы для всех языков (RU/UK/EN/TR)
+ИЗМЕНЕНИЯ:
+1. ✅ generate_question теперь получает user для фильтрации по quiz_mode
+2. ✅ QuizSession сохраняет quiz_mode и quiz_category
+3. ✅ 3 кнопки после завершения: Режим викторины, Повторить ошибки, Ошибка перевода (заглушка)
+4. ✅ Режим DIFFICULT: проверка наличия сложных слов перед стартом
 """
 
 import random
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 from app.bot.utils import delete_messages_fast, ensure_anchor
 from app.database.models import User, QuizSession, QuizQuestion, Word, UserWord
+from app.database.enums import QuizMode
 from app.services.monthly_leaderboard_service import update_monthly_stats
 from app.bot.states import QuizStates
 from app.bot.keyboards import get_answer_keyboard, get_main_menu_keyboard
@@ -29,13 +31,14 @@ from app.services.quiz_service import (
     generate_question,
     update_word_progress,
     get_distractors,
+    STRUGGLING_THRESHOLD,
 )
 
 router = Router()
 
 
 # ============================================================================
-# ХЕЛПЕРЫ ДЛЯ ЯЗЫКОВ — единая точка логики для ВСЕХ режимов
+# ХЕЛПЕРЫ ДЛЯ ЯЗЫКОВ
 # ============================================================================
 
 def get_translation_for_mode(word: Word, mode_value: str) -> str:
@@ -66,27 +69,20 @@ def get_example_for_mode(word: Word, mode_value: str) -> str:
 
 
 def get_flag_for_mode(mode_value: str) -> str:
-    """Получить флаг языка перевода"""
     mapping = {
-        "de_to_ru": "🏴",
-        "ru_to_de": "🏴",
-        "de_to_uk": "🇺🇦",
-        "uk_to_de": "🇺🇦",
-        "de_to_en": "🇬🇧",
-        "en_to_de": "🇬🇧",
-        "de_to_tr": "🇹🇷",
-        "tr_to_de": "🇹🇷",
+        "de_to_ru": "🏴", "ru_to_de": "🏴",
+        "de_to_uk": "🇺🇦", "uk_to_de": "🇺🇦",
+        "de_to_en": "🇬🇧", "en_to_de": "🇬🇧",
+        "de_to_tr": "🇹🇷", "tr_to_de": "🇹🇷",
     }
     return mapping.get(mode_value.lower(), "🏴")
 
 
 def is_reverse_mode(mode_value: str) -> bool:
-    """Проверка реверс-режима (перевод → немецкий)"""
     return mode_value.lower() in ("ru_to_de", "uk_to_de", "en_to_de", "tr_to_de")
 
 
 def get_word_display(word: Word) -> str:
-    """Немецкое слово с артиклем"""
     if word.article and word.article != '-':
         return f"{word.article} {word.word_de}"
     return word.word_de
@@ -119,7 +115,10 @@ def get_next_question_keyboard(lang: str = "ru") -> InlineKeyboardMarkup:
 
 
 def get_results_keyboard(has_errors: bool, lang: str = "ru") -> InlineKeyboardMarkup:
+    """3 кнопки после завершения викторины"""
     buttons = []
+
+    # 1. Повторить ошибки (если есть) — ПЕРВАЯ
     if has_errors:
         buttons.append([
             InlineKeyboardButton(
@@ -127,7 +126,36 @@ def get_results_keyboard(has_errors: bool, lang: str = "ru") -> InlineKeyboardMa
                 callback_data="repeat_errors"
             )
         ])
+
+    # 2. Режим викторины (быстрый переход в настройки)
+    buttons.append([
+        InlineKeyboardButton(
+            text=get_text("quiz_btn_change_mode", lang),
+            callback_data="settings_quiz_mode"
+        )
+    ])
+
+    # 3. Ошибка перевода (заглушка)
+    buttons.append([
+        InlineKeyboardButton(
+            text=get_text("quiz_btn_report_error", lang),
+            callback_data="report_translation_error"
+        )
+    ])
+
     return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+# ============================================================================
+# ЗАГЛУШКА: Ошибка перевода
+# ============================================================================
+
+@router.callback_query(F.data == "report_translation_error")
+async def report_translation_error(callback: CallbackQuery, session: AsyncSession):
+    """Заглушка для кнопки 'Ошибка перевода'"""
+    user = await session.get(User, callback.from_user.id)
+    lang = user.interface_language or "ru"
+    await callback.answer(get_text("quiz_report_coming_soon", lang), show_alert=True)
 
 
 # ============================================================================
@@ -147,12 +175,48 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
 
     lang = user.interface_language or "ru"
 
+    # Проверка для режима DIFFICULT: есть ли сложные слова
+    if user.quiz_mode == QuizMode.DIFFICULT:
+        difficult_count = await session.execute(
+            select(func.count(UserWord.word_id))
+            .where(
+                UserWord.user_id == user_id,
+                UserWord.learned == False,
+                UserWord.times_shown >= 2,
+                (UserWord.times_correct * 100.0 / UserWord.times_shown) < STRUGGLING_THRESHOLD
+            )
+        )
+        count = difficult_count.scalar() or 0
+        if count == 0:
+            await message.answer(get_text("qmode_difficult_empty", lang))
+            return
+        if count < 4:  # Минимум 4 слова (1 правильный + 3 дистрактора)
+            await message.answer(get_text("qmode_difficult_few", lang, count=count))
+            return
+
+    # Количество вопросов: для DIFFICULT — сколько есть, для остальных — 25
+    if user.quiz_mode == QuizMode.DIFFICULT:
+        difficult_count_result = await session.execute(
+            select(func.count(UserWord.word_id))
+            .where(
+                UserWord.user_id == user_id,
+                UserWord.learned == False,
+                UserWord.times_shown >= 2,
+                (UserWord.times_correct * 100.0 / UserWord.times_shown) < STRUGGLING_THRESHOLD
+            )
+        )
+        quiz_total = min(difficult_count_result.scalar() or 25, 25)
+    else:
+        quiz_total = 25
+
     quiz_session = QuizSession(
         user_id=user_id,
         level=user.level,
         translation_mode=user.translation_mode,
-        total_questions=25,
+        total_questions=quiz_total,
         correct_answers=0,
+        quiz_mode=user.quiz_mode.value if user.quiz_mode else "level",
+        quiz_category=user.quiz_category,
     )
 
     session.add(quiz_session)
@@ -165,7 +229,8 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
             session=session,
             user_id=user_id,
             exclude_ids=[],
-            mode=user.translation_mode
+            mode=user.translation_mode,
+            user=user,
         )
     except Exception as e:
         logger.error(f"Ошибка генерации вопроса: {e}")
@@ -179,7 +244,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
     await state.update_data(
         session_id=quiz_session.id,
         current_question=1,
-        total_questions=25,
+        total_questions=quiz_total,
         correct_answers=0,
         errors=[],
         correct_word_id=question['correct_word'].id,
@@ -197,7 +262,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
         flag = get_flag_for_mode(mode_val)
 
         question_text = (
-            f"{get_text('quiz_question_number', lang, current=1, total=25)}\n\n"
+            f"{get_text('quiz_question_number', lang, current=1, total=quiz_total)}\n\n"
             f"{flag} <b>{translation.capitalize()}</b>\n\n"
             f"📝 {example}\n\n"
             f"{get_text('quiz_question_choose_word', lang)}"
@@ -206,7 +271,7 @@ async def start_quiz(message: Message, state: FSMContext, session: AsyncSession)
         word_display = get_word_display(word)
 
         question_text = (
-            f"{get_text('quiz_question_number', lang, current=1, total=25)}\n\n"
+            f"{get_text('quiz_question_number', lang, current=1, total=quiz_total)}\n\n"
             f"🇩🇪 <b>{word_display}</b>\n\n"
             f"📝 {word.example_de}\n\n"
             f"{get_text('quiz_question_choose_translation', lang)}"
@@ -332,7 +397,7 @@ async def process_answer(callback: CallbackQuery, state: FSMContext, session: As
 
 @router.callback_query(F.data == "next_question", QuizStates.answering)
 async def show_next_question(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
-    """Показ следующего вопроса — поддерживает обычный режим и повтор ошибок"""
+    """Показ следующего вопроса"""
     await callback.answer()
 
     data = await state.get_data()
@@ -342,7 +407,6 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
     errors = data.get('errors', [])
     used_word_ids = data.get('used_word_ids', [])
 
-    # Определяем режим: обычная викторина или повтор ошибок
     is_error_repeat = data.get('is_error_repeat', False)
     error_words = data.get('error_words', [])
     current_error_index = data.get('current_error_index', 0)
@@ -359,7 +423,6 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         session_id = data['session_id']
         user_id = callback.from_user.id
 
-        # Закрываем QuizSession в любом случае
         quiz_session = await session.get(QuizSession, session_id)
         if quiz_session:
             quiz_session.correct_answers = correct_answers
@@ -369,18 +432,14 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
 
         if not is_error_repeat:
             # === ТОЛЬКО ДЛЯ ОБЫЧНОЙ ВИКТОРИНЫ: обновляем статистику ===
-
-            # 1. quizzes_passed
             user.quizzes_passed = (user.quizzes_passed or 0) + 1
 
-            # 2. words_learned из UserWord
             learned_count_result = await session.execute(
                 select(func.count(UserWord.word_id))
                 .where(UserWord.user_id == user_id, UserWord.learned == True)
             )
             user.words_learned = learned_count_result.scalar() or 0
 
-            # 3. success_rate
             completed_sessions_result = await session.execute(
                 select(QuizSession).where(
                     QuizSession.user_id == user_id,
@@ -395,7 +454,6 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
 
             await session.commit()
 
-            # 4. Месячная статистика
             try:
                 await update_monthly_stats(
                     user_id=user_id,
@@ -405,10 +463,9 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
             except Exception as e:
                 logger.warning(f"Ошибка обновления месячной статистики: {e}")
 
-            # 5. Стрик
             await update_user_activity(session, callback.from_user.id)
 
-        # === Результаты (и для обычной, и для повтора) ===
+        # === Результаты ===
         result_items = await session.execute(
             select(QuizQuestion, Word)
             .join(Word, QuizQuestion.word_id == Word.id)
@@ -449,11 +506,13 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         except:
             pass
 
-        # Кнопка повтора ошибок — только для обычной викторины
+        # Кнопки: всегда полный набор (повтор если есть ошибки)
+        keyboard = get_results_keyboard(has_errors=bool(errors), lang=lang)
+
         await callback.bot.send_message(
             chat_id=callback.message.chat.id,
             text=result_text,
-            reply_markup=get_results_keyboard(has_errors=bool(errors), lang=lang)
+            reply_markup=keyboard
         )
         saved_errors = errors.copy()
         await state.clear()
@@ -465,11 +524,9 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
     # ============================================================================
 
     if is_error_repeat:
-        # === ПОВТОР ОШИБОК — берём конкретное слово из списка ===
         current_error_index += 1
 
         if current_error_index >= len(error_words):
-            # Не должно случиться, но на всякий случай
             logger.warning("error_repeat: current_error_index вышел за пределы error_words")
             await state.clear()
             return
@@ -482,12 +539,11 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
             await state.clear()
             return
 
-        # Генерируем дистракторы для конкретного слова
-        distractors = await get_distractors(word, session)
+        distractors = await get_distractors(word, session, user=user)
         if len(distractors) < 3:
             from app.services.quiz_service import get_additional_distractors
             additional = await get_additional_distractors(
-                word, distractors, user.level, session, 3 - len(distractors)
+                word, distractors, user.level, session, 3 - len(distractors), user=user
             )
             distractors.extend(additional)
 
@@ -510,7 +566,6 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
             current_error_index=current_error_index
         )
     else:
-        # === ОБЫЧНАЯ ВИКТОРИНА — генерация по SRS ===
         question = None
         attempts = 0
 
@@ -521,7 +576,8 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
                     session=session,
                     user_id=callback.from_user.id,
                     exclude_ids=used_word_ids,
-                    mode=user.translation_mode
+                    mode=user.translation_mode,
+                    user=user,
                 )
             except Exception as e:
                 logger.error(f"Ошибка генерации вопроса: {e}")
@@ -547,7 +603,7 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         word = question['correct_word']
         options = question['options']
 
-    # === ОТОБРАЖЕНИЕ ВОПРОСА (общее для обоих режимов) ===
+    # === ОТОБРАЖЕНИЕ ВОПРОСА ===
     if is_reverse_mode(mode_val):
         translation = get_translation_for_mode(word, mode_val)
         example = get_example_for_mode(word, mode_val)
@@ -600,6 +656,8 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
         translation_mode=user.translation_mode,
         total_questions=len(errors),
         correct_answers=0,
+        quiz_mode="error_repeat",
+        quiz_category=None,
     )
 
     session.add(quiz_session)
@@ -614,7 +672,7 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
         await callback.answer()
         return
 
-    distractors = await get_distractors(first_word, session)
+    distractors = await get_distractors(first_word, session, user=user)
 
     if len(distractors) < 3:
         result = await session.execute(
@@ -633,14 +691,12 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
     mode_val = mode.value.lower()
 
     if is_reverse_mode(mode_val):
-        # Реверс: показываем немецкие слова как варианты
         word_display = get_word_display(first_word)
         options = [(first_word.id, word_display)]
         for d in distractors[:3]:
             dd = get_word_display(d)
             options.append((d.id, dd))
     else:
-        # Прямой: показываем переводы как варианты
         trans = get_translation_for_mode(first_word, mode_val)
         options = [(first_word.id, trans.capitalize())]
         for d in distractors[:3]:
