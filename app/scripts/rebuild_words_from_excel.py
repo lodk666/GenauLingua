@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """
-Rebuild words table from Excel files (A1/A2/B1).
+Rebuild words table from Excel files.
 
 Usage (inside docker):
   docker compose run --rm app python app/scripts/rebuild_words_from_excel.py /app/Wordsbase
-  docker compose run --rm app python app/scripts/rebuild_words_from_excel.py "/app/Wordsbase/А1 v3.xlsx"
+  docker compose run --rm app python app/scripts/rebuild_words_from_excel.py "/app/Wordsbase/de_PERFECT_FIXED.xlsx"
+
+Single-file mode (one big file with all levels):
+  docker compose run --rm app python app/scripts/rebuild_words_from_excel.py /app/Wordsbase/de_PERFECT_FIXED.xlsx
 
 Env:
   DATABASE_URL=postgresql+asyncpg://genau_user:genau_pass@postgres:5432/genaulingua_db
@@ -24,7 +27,7 @@ import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -35,124 +38,63 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-# Default path: Wordsbase in project root (not inside app/)
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_WORDSBASE = str(_PROJECT_ROOT / "Wordsbase")
 
 
-# -----------------------------
-# Config / aliases
-# -----------------------------
-
 COLUMN_ALIASES = {
-    # German word
-    "word_de": "word_de",
-    "wort": "word_de",
-    "wort_de": "word_de",
-    "de": "word_de",
-    "deutsch": "word_de",
-    "german": "word_de",
-    "нем": "word_de",
-    "німецька": "word_de",
-    "німецьке": "word_de",
+    "word_de": "word_de", "wort": "word_de", "wort_de": "word_de",
+    "de": "word_de", "deutsch": "word_de", "german": "word_de",
     "слово": "word_de",
-    "слово_de": "word_de",
-    "слово_deutsch": "word_de",
-    "слово_german": "word_de",
 
-    # Article
-    "article": "article",
-    "artikel": "article",
-    "der/die/das": "article",
-    "артикль": "article",
+    "article": "article", "artikel": "article", "der/die/das": "article", "артикль": "article",
 
-    # Part of speech
-    "pos": "pos",
-    "partofspeech": "pos",
-    "part_of_speech": "pos",
-    "wortart": "pos",
-    "часть_речи": "pos",
-    "частина_мови": "pos",
+    "pos": "pos", "partofspeech": "pos", "part_of_speech": "pos", "wortart": "pos",
 
-    # Level
-    "level": "level",
-    "cefr": "level",
-    "cefrlevel": "level",
-    "niveau": "level",
-    "уровень": "level",
-    "рівень": "level",
+    "level": "level", "cefr": "level", "cefrlevel": "level", "niveau": "level",
+
+    # Category (single string)
+    "category": "category", "kategorie": "category", "категория": "category",
+
+    # Frequency rank
+    "frequency_rank": "frequency_rank", "freq": "frequency_rank", "rank": "frequency_rank",
 
     # Translations
-    "translation_ru": "translation_ru",
-    "ru": "translation_ru",
-    "russian": "translation_ru",
-    "перевод_ru": "translation_ru",
-    "перевод": "translation_ru",
-    "переклад_ru": "translation_ru",
+    "translation_ru": "translation_ru", "ru": "translation_ru", "russian": "translation_ru",
+    "перевод_ru": "translation_ru", "перевод": "translation_ru",
 
-    "translation_uk": "translation_uk",
-    "uk": "translation_uk",
-    "ua": "translation_uk",
-    "ukrainian": "translation_uk",
-    "перевод_uk": "translation_uk",
-    "переклад": "translation_uk",
-    "переклад_uk": "translation_uk",
+    "translation_uk": "translation_uk", "uk": "translation_uk", "ua": "translation_uk",
+    "ukrainian": "translation_uk", "переклад": "translation_uk",
 
-    # English
-    "translation_en": "translation_en",
-    "en": "translation_en",
-    "english": "translation_en",
+    "translation_en": "translation_en", "en": "translation_en", "english": "translation_en",
 
-    # Turkish
-    "translation_tr": "translation_tr",
-    "translation_tk": "translation_tr",  # alias if someone used tk
-    "tr": "translation_tr",
-    "tk": "translation_tr",
-    "turkish": "translation_tr",
-    "türkisch": "translation_tr",
+    # Turkish: support both tk and tr
+    "translation_tr": "translation_tr", "translation_tk": "translation_tr",
+    "tr": "translation_tr", "tk": "translation_tr", "turkish": "translation_tr",
 
     # Examples
-    "example_de": "example_de",
-    "beispiel": "example_de",
-    "пример_de": "example_de",
-    "приклад_de": "example_de",
-
+    "example_de": "example_de", "beispiel": "example_de",
     "example_ru": "example_ru",
-    "пример_ru": "example_ru",
-
-    "example_uk": "example_uk",
-    "приклад_uk": "example_uk",
-    "приклад": "example_uk",
-
+    "example_uk": "example_uk", "приклад": "example_uk",
     "example_en": "example_en",
-    "example_tk": "example_tr",  # alias if someone used tk
-    "example_tr": "example_tr",
+    "example_tr": "example_tr", "example_tk": "example_tr",
 
-    # Categories
-    "categories": "categories",
-    "category": "categories",
-    "kategorie": "categories",
-    "категории": "categories",
-    "категорії": "categories",
+    # Old categories field (array) - map to category
+    "categories": "category",
 }
 
 
 POS_MAP = {
     "noun": "NOUN", "nomen": "NOUN", "substantiv": "NOUN", "n": "NOUN",
-    "сущ": "NOUN", "іменник": "NOUN", "noun.": "NOUN",
-    "verb": "VERB", "v": "VERB", "дієслово": "VERB", "глагол": "VERB", "verb.": "VERB",
+    "verb": "VERB", "v": "VERB",
     "adj": "ADJECTIVE", "adjective": "ADJECTIVE", "adjektiv": "ADJECTIVE", "a": "ADJECTIVE",
-    "прилагательное": "ADJECTIVE", "прикметник": "ADJECTIVE", "adj.": "ADJECTIVE",
     "adv": "ADVERB", "adverb": "ADVERB", "adverbium": "ADVERB",
-    "наречие": "ADVERB", "прислівник": "ADVERB", "adv.": "ADVERB",
-    "pron": "PRONOUN", "pronoun": "PRONOUN", "местоимение": "PRONOUN", "займенник": "PRONOUN",
+    "pron": "PRONOUN", "pronoun": "PRONOUN",
     "prep": "PREPOSITION", "preposition": "PREPOSITION", "präposition": "PREPOSITION",
-    "предлог": "PREPOSITION", "прийменник": "PREPOSITION",
-    "conj": "CONJUNCTION", "conjunction": "CONJUNCTION", "союз": "CONJUNCTION", "сполучник": "CONJUNCTION",
-    "phrase": "PHRASE", "фраза": "PHRASE", "вираз": "PHRASE",
+    "conj": "CONJUNCTION", "conjunction": "CONJUNCTION",
+    "phrase": "PHRASE",
     "other": "OTHER",
 }
-
 
 LEVEL_RE = re.compile(r"(A1|A2|B1|B2|C1|C2)", re.IGNORECASE)
 
@@ -163,6 +105,8 @@ class WordRow:
     article: str | None
     pos: str
     level: str
+    category: str | None
+    frequency_rank: int | None
     translation_ru: str | None
     translation_uk: str | None
     translation_en: str | None
@@ -172,13 +116,21 @@ class WordRow:
     example_uk: str | None
     example_en: str | None
     example_tr: str | None
-    categories: list[str]
 
 
 def _s(v: Any) -> str:
     if v is None:
         return ""
     return str(v).strip()
+
+
+def _int_or_none(v: Any) -> int | None:
+    if v is None:
+        return None
+    try:
+        return int(float(str(v).strip()))
+    except (ValueError, TypeError):
+        return None
 
 
 def _normalize_header_cell(v: Any) -> str:
@@ -194,15 +146,6 @@ def _detect_level_from_filename(path: Path) -> str | None:
     if not m:
         return None
     return m.group(1).upper()
-
-
-def _parse_categories(raw: Any) -> list[str]:
-    t = _s(raw)
-    if not t:
-        return []
-    sep = ";" if ";" in t else ","
-    items = [x.strip() for x in t.split(sep)]
-    return [x for x in items if x]
 
 
 def _map_pos(raw: Any) -> str:
@@ -288,11 +231,20 @@ def read_xlsx_rows(xlsx_path: Path, forced_level: str | None = None) -> list[Wor
             val = _s(r[header_map[key]]) if key in header_map else ""
             return val or None
 
+        # Category: single string
+        category = get_field("category") if "category" in header_map else None
+
+        # Frequency rank: integer
+        freq_raw = r[header_map["frequency_rank"]] if "frequency_rank" in header_map else None
+        frequency_rank = _int_or_none(freq_raw)
+
         out.append(WordRow(
             word_de=word_de,
             article=article,
             pos=pos,
             level=level,
+            category=category,
+            frequency_rank=frequency_rank,
             translation_ru=get_field("translation_ru"),
             translation_uk=get_field("translation_uk"),
             translation_en=get_field("translation_en"),
@@ -302,7 +254,6 @@ def read_xlsx_rows(xlsx_path: Path, forced_level: str | None = None) -> list[Wor
             example_uk=get_field("example_uk"),
             example_en=get_field("example_en"),
             example_tr=get_field("example_tr"),
-            categories=_parse_categories(r[header_map["categories"]]) if "categories" in header_map else [],
         ))
 
     return out
@@ -331,6 +282,7 @@ async def import_words(session: AsyncSession, rows: list[WordRow], chunk_size: i
     insert_sql = text("""
         INSERT INTO words
           (word_de, article, pos, level,
+           category, frequency_rank,
            translation_ru, translation_uk, translation_en, translation_tr,
            example_de, example_ru, example_uk, example_en, example_tr,
            categories, times_shown, times_correct, created_at)
@@ -338,6 +290,7 @@ async def import_words(session: AsyncSession, rows: list[WordRow], chunk_size: i
           (:word_de, :article,
            CAST(:pos AS partofspeech),
            CAST(:level AS cefrlevel),
+           :category, :frequency_rank,
            :translation_ru, :translation_uk, :translation_en, :translation_tr,
            :example_de, :example_ru, :example_uk, :example_en, :example_tr,
            :categories, 0, 0, NOW())
@@ -345,6 +298,8 @@ async def import_words(session: AsyncSession, rows: list[WordRow], chunk_size: i
         DO UPDATE SET
           article = EXCLUDED.article,
           pos = EXCLUDED.pos,
+          category = EXCLUDED.category,
+          frequency_rank = EXCLUDED.frequency_rank,
           translation_ru = EXCLUDED.translation_ru,
           translation_uk = EXCLUDED.translation_uk,
           translation_en = EXCLUDED.translation_en,
@@ -366,6 +321,8 @@ async def import_words(session: AsyncSession, rows: list[WordRow], chunk_size: i
             article=w.article,
             pos=w.pos,
             level=w.level,
+            category=w.category,
+            frequency_rank=w.frequency_rank,
             translation_ru=w.translation_ru,
             translation_uk=w.translation_uk,
             translation_en=w.translation_en,
@@ -375,7 +332,8 @@ async def import_words(session: AsyncSession, rows: list[WordRow], chunk_size: i
             example_uk=w.example_uk,
             example_en=w.example_en,
             example_tr=w.example_tr,
-            categories=w.categories,
+            # Legacy categories field: put category in array for backward compat
+            categories=[w.category] if w.category else [],
         ))
 
         if len(buf) >= chunk_size:
@@ -425,7 +383,22 @@ async def async_main() -> None:
             print(f"✅ {xlsx.name}: {inserted} rows")
             grand_total += inserted
 
-        print(f"🏁 Done. Total rows processed: {grand_total}")
+        # Print summary
+        result = await session.execute(text("SELECT level, COUNT(*) FROM words GROUP BY level ORDER BY level"))
+        print("\n📊 Summary by level:")
+        for level, count in result.all():
+            print(f"  {level}: {count}")
+
+        result = await session.execute(text(
+            "SELECT category, COUNT(*) FROM words WHERE category IS NOT NULL "
+            "GROUP BY category ORDER BY category"
+        ))
+        print("\n📊 Summary by category:")
+        for cat, count in result.all():
+            print(f"  {cat}: {count}")
+
+        result = await session.execute(text("SELECT COUNT(*) FROM words"))
+        print(f"\n🏁 Done. Total words in DB: {result.scalar()}")
 
 
 def main() -> None:
