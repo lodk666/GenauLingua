@@ -226,7 +226,7 @@ TEXTS = {
     "report_btn_send": "📨 Send",
     "report_no_words": "No words to report",
     "report_none_selected": "Select at least one word",
-    "report_sent": "✅ Sent {count} reports — thank you!",
+    "report_sent": "✅ Sent {count} reports — thank you!\nIf confirmed — you'll get +1 point",
     "report_daily_limit": "⚠️ Daily report limit reached (max 20)",
     "report_all_reported": "✅ All words from this quiz already reported",
     "report_already_sent": "✔️ Already reported",
@@ -404,6 +404,7 @@ The more active the community — the better the bot gets. Don't be shy! 🙌"""
     "rating_scoring_word": "• Word learned → +2",
     "rating_scoring_streak": "• Day streak → +3",
     "rating_scoring_bonus": "• 90%+ accuracy → +50 bonus",
+    "rating_scoring_report": "• Confirmed report → +1",
 
     "rating_title_alltime": "🏆 <b>My rating — All Time</b>",
     "rating_position_alltime": "📍 Position: <b>#{rank}</b>",

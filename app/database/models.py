@@ -342,6 +342,9 @@ class MonthlyStats(Base):
     total_correct: Mapped[int] = mapped_column(Integer, default=0)
     total_questions: Mapped[int] = mapped_column(Integer, default=0)
 
+    # Бонус за подтверждённые репорты
+    report_bonus: Mapped[int] = mapped_column(Integer, default=0)
+
     # Финальный ранг (заполняется в конце месяца)
     final_rank: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
@@ -369,6 +372,9 @@ class MonthlyStats(Base):
             score += 30
         elif self.monthly_avg_percent >= 70:
             score += 15
+
+        # Бонус за подтверждённые репорты
+        score += self.report_bonus
 
         return score
 
