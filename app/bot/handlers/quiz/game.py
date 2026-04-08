@@ -423,6 +423,7 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         if not is_error_repeat:
             # === ТОЛЬКО ДЛЯ ОБЫЧНОЙ ВИКТОРИНЫ: обновляем статистику ===
             user.quizzes_passed = (user.quizzes_passed or 0) + 1
+            user.last_quiz_date = date.today()
 
             learned_count_result = await session.execute(
                 select(func.count(UserWord.word_id))

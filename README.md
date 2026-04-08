@@ -120,9 +120,9 @@ python app/scripts/check_leaderboard.py
 Send localized update to all users:
 
 ```bash
-python app/scripts/broadcast_update.py --dry-run   # preview
-python app/scripts/broadcast_update.py --test <id>  # test single user
-python app/scripts/broadcast_update.py              # send to all
+python app/scripts/broadcast_april.py --dry-run   # preview
+python app/scripts/broadcast_april.py --test <id>  # test single user
+python app/scripts/broadcast_april.py              # send to all
 ```
 
 ## Logs

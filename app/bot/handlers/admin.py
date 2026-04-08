@@ -63,10 +63,14 @@ async def _get_main_stats(session: AsyncSession) -> str:
     total_users_result = await session.execute(select(func.count()).select_from(User))
     total_users = total_users_result.scalar()
 
+    # Активные сегодня — по last_active_date ИЛИ quiz_sessions (fallback)
     active_24h_result = await session.execute(
         select(func.count(distinct(User.id)))
         .select_from(User)
-        .where(User.last_active_date >= date.today())
+        .where(or_(
+            User.last_active_date >= date.today(),
+            User.last_quiz_date >= date.today()
+        ))
     )
     active_24h = active_24h_result.scalar()
 
@@ -74,7 +78,10 @@ async def _get_main_stats(session: AsyncSession) -> str:
     active_7d_result = await session.execute(
         select(func.count(distinct(User.id)))
         .select_from(User)
-        .where(User.last_active_date >= week_ago)
+        .where(or_(
+            User.last_active_date >= week_ago,
+            User.last_quiz_date >= week_ago
+        ))
     )
     active_7d = active_7d_result.scalar()
 
@@ -161,16 +168,25 @@ async def admin_analytics(callback: CallbackQuery, session: AsyncSession):
     total_users_result = await session.execute(select(func.count()).select_from(User))
     total_users = total_users_result.scalar() or 1
 
+    # Day 1 retention: юзеры зарегались до вчера И вернулись на следующий день
+    yesterday = date.today() - timedelta(days=1)
+    users_before_yesterday_result = await session.execute(
+        select(func.count()).select_from(User)
+        .where(User.created_at <= datetime.combine(yesterday, datetime.min.time()))
+    )
+    users_before_yesterday = users_before_yesterday_result.scalar() or 1
+
     day1_retention_result = await session.execute(
         select(func.count(distinct(User.id)))
         .select_from(User)
         .join(QuizSession, User.id == QuizSession.user_id)
         .where(
+            User.created_at <= datetime.combine(yesterday, datetime.min.time()),
             func.date(QuizSession.completed_at) > func.date(User.created_at)
         )
     )
     day1_returned = day1_retention_result.scalar() or 0
-    day1_retention = (day1_returned / total_users * 100) if total_users > 0 else 0
+    day1_retention = (day1_returned / users_before_yesterday * 100) if users_before_yesterday > 0 else 0
 
     week_ago = date.today() - timedelta(days=7)
     users_week_ago_result = await session.execute(
@@ -183,7 +199,13 @@ async def admin_analytics(callback: CallbackQuery, session: AsyncSession):
         .select_from(User)
         .where(
             User.created_at <= datetime.combine(week_ago, datetime.min.time()),
-            User.last_quiz_date >= week_ago
+            or_(
+                User.last_quiz_date >= week_ago,
+                User.id.in_(
+                    select(distinct(QuizSession.user_id))
+                    .where(QuizSession.completed_at >= datetime.combine(week_ago, datetime.min.time()))
+                )
+            )
         )
     )
     day7_active = day7_active_result.scalar() or 0
@@ -309,7 +331,13 @@ async def admin_cohorts(callback: CallbackQuery, session: AsyncSession):
         .select_from(User)
         .where(
             User.created_at >= datetime.combine(current_month, datetime.min.time()),
-            User.last_quiz_date.isnot(None)
+            or_(
+                User.last_quiz_date.isnot(None),
+                User.id.in_(
+                    select(distinct(QuizSession.user_id))
+                    .where(QuizSession.completed_at.isnot(None))
+                )
+            )
         )
     )
     current_month_active = current_month_active_result.scalar() or 0
@@ -330,7 +358,13 @@ async def admin_cohorts(callback: CallbackQuery, session: AsyncSession):
         .where(
             User.created_at >= datetime.combine(prev_month, datetime.min.time()),
             User.created_at < datetime.combine(current_month, datetime.min.time()),
-            User.last_quiz_date.isnot(None)
+            or_(
+                User.last_quiz_date.isnot(None),
+                User.id.in_(
+                    select(distinct(QuizSession.user_id))
+                    .where(QuizSession.completed_at.isnot(None))
+                )
+            )
         )
     )
     prev_month_active = prev_month_active_result.scalar() or 0
@@ -411,65 +445,79 @@ async def admin_churn(callback: CallbackQuery, session: AsyncSession):
     three_days_ago = today - timedelta(days=3)
     month_ago = today - timedelta(days=30)
 
-    high_risk_result = await session.execute(
-        select(User.first_name, User.username, User.last_quiz_date)
-        .select_from(User)
-        .where(
-            User.last_quiz_date.isnot(None),
-            User.last_quiz_date < week_ago
+    # Высокий риск: играли, но не заходили 7+ дней
+    # Используем subquery для получения реальной последней даты из quiz_sessions
+    last_quiz_subq = (
+        select(
+            QuizSession.user_id,
+            func.max(func.date(QuizSession.completed_at)).label('real_last_quiz')
         )
-        .order_by(User.last_quiz_date.asc())
+        .where(QuizSession.completed_at.isnot(None))
+        .group_by(QuizSession.user_id)
+    ).subquery()
+
+    high_risk_result = await session.execute(
+        select(User.first_name, User.username, last_quiz_subq.c.real_last_quiz)
+        .join(last_quiz_subq, User.id == last_quiz_subq.c.user_id)
+        .where(last_quiz_subq.c.real_last_quiz < week_ago)
+        .order_by(last_quiz_subq.c.real_last_quiz.asc())
         .limit(10)
     )
     high_risk = high_risk_result.all()
 
     high_risk_count_result = await session.execute(
         select(func.count())
-        .select_from(User)
-        .where(
-            User.last_quiz_date.isnot(None),
-            User.last_quiz_date < week_ago
-        )
+        .select_from(last_quiz_subq)
+        .where(last_quiz_subq.c.real_last_quiz < week_ago)
     )
     high_risk_count = high_risk_count_result.scalar() or 0
 
     medium_risk_count_result = await session.execute(
         select(func.count())
-        .select_from(User)
+        .select_from(last_quiz_subq)
         .where(
-            User.last_quiz_date.isnot(None),
-            User.last_quiz_date >= week_ago,
-            User.last_quiz_date < three_days_ago
+            last_quiz_subq.c.real_last_quiz >= week_ago,
+            last_quiz_subq.c.real_last_quiz < three_days_ago
         )
     )
     medium_risk_count = medium_risk_count_result.scalar() or 0
 
+    # Churn rate: из тех кто играл 30+ дней назад — сколько не вернулись
     players_month_ago_result = await session.execute(
         select(func.count())
         .select_from(User)
         .where(
             User.created_at <= datetime.combine(month_ago, datetime.min.time()),
-            User.last_quiz_date.isnot(None)
+            User.id.in_(
+                select(distinct(QuizSession.user_id))
+                .where(QuizSession.completed_at.isnot(None))
+            )
         )
     )
     players_month_ago = players_month_ago_result.scalar() or 0
 
     churned_result = await session.execute(
         select(func.count())
-        .select_from(User)
+        .select_from(last_quiz_subq)
+        .join(User, User.id == last_quiz_subq.c.user_id)
         .where(
             User.created_at <= datetime.combine(month_ago, datetime.min.time()),
-            User.last_quiz_date.isnot(None),
-            User.last_quiz_date < month_ago
+            last_quiz_subq.c.real_last_quiz < month_ago
         )
     )
     churned = churned_result.scalar() or 0
     churn_rate = (churned / players_month_ago * 100) if players_month_ago > 0 else 0
 
+    # "Никогда не играли" — юзеры без единой завершённой викторины
     never_played_result = await session.execute(
         select(func.count())
         .select_from(User)
-        .where(User.last_quiz_date.is_(None))
+        .where(
+            ~User.id.in_(
+                select(distinct(QuizSession.user_id))
+                .where(QuizSession.completed_at.isnot(None))
+            )
+        )
     )
     never_played = never_played_result.scalar() or 0
 
@@ -642,14 +690,17 @@ async def admin_top_users_callback(callback: CallbackQuery, session: AsyncSessio
 
     result = await session.execute(
         select(User)
-        .where(User.last_quiz_date.isnot(None))
+        .where(User.quizzes_passed > 0)
         .order_by(User.quizzes_passed.desc(), User.words_learned.desc())
         .limit(15)
     )
     users = result.scalars().all()
 
-    text = "👥 <b>ТОП-15 ПО ВИКТОРИНАМ</b>\n"
-    text += "<i>Сортировка: кол-во викторин → выучено слов</i>\n\n"
+    if not users:
+        text = "👥 <b>ТОП-15 ПО ВИКТОРИНАМ</b>\n\nПока никто не проходил викторины."
+    else:
+        text = "👥 <b>ТОП-15 ПО ВИКТОРИНАМ</b>\n"
+        text += "<i>Сортировка: кол-во викторин → выучено слов</i>\n\n"
 
     for i, user in enumerate(users, 1):
         name = _display_name(user)
@@ -996,7 +1047,7 @@ async def admin_users(message: Message, session: AsyncSession):
 
     result = await session.execute(
         select(User)
-        .where(User.last_quiz_date.isnot(None))
+        .where(User.quizzes_passed > 0)
         .order_by(User.quizzes_passed.desc(), User.words_learned.desc())
         .limit(20)
     )
