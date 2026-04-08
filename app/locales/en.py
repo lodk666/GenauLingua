@@ -217,8 +217,7 @@ TEXTS = {
     "qmode_all_set": "✅ Mode: Top 10 thousand",
 
     "qmode_difficult_set": "✅ Mode: Difficult words",
-    "qmode_difficult_few": "You only have {count} difficult words — need at least 4\
-Take a few more quizzes!",
+    "qmode_difficult_few": "You only have {count} difficult words — need at least 4\nTake a few more quizzes!",
     "qmode_difficult_empty": "You don't have difficult words yet.\nTake a few quizzes first!",
 
     "quiz_btn_change_mode": "⚙️ Quiz mode",
@@ -296,27 +295,34 @@ Take a few more quizzes!",
     "help_how_to_use_text": """1️⃣ <b>Set your level and mode</b>
 🦾 Settings → choose level A1–C2, translation mode and interface language.
 
-2️⃣ <b>Learn words every day</b>
+2️⃣ <b>Choose quiz mode</b>
+🦾 Settings → 📝 Quiz mode:
+• By level — words from your level
+• By category — 20 topics: food, work, travel...
+• Top 10 thousand — entire word base
+• Difficult — words you often get wrong
+
+3️⃣ <b>Learn words every day</b>
 📚 Learn words → quiz with 25 words.
 The bot remembers your mistakes and shows difficult words more often.
 
-3️⃣ <b>Repeat your mistakes</b>
+4️⃣ <b>Repeat your mistakes</b>
 After the quiz you can immediately repeat the words you got wrong.
 
-4️⃣ <b>Track your progress</b>
+5️⃣ <b>Track your progress</b>
 📊 Statistics → how many learned, quiz history, streak.
 
-5️⃣ <b>Compete with others</b>
+6️⃣ <b>Compete with others</b>
 🏆 My rating → your monthly and all-time points.
 📊 Leaderboard → top-10 among all participants.
 
-6️⃣ <b>Set up reminders</b>
+7️⃣ <b>Set up reminders</b>
 🦾 Settings → 🔔 Notifications → choose time, days and timezone.
-The bot will remind you to practice and show your current streak.
 
 ━━━━━━━━━━━━━━━━━
 💡 A word is <b>learned</b> when you answer correctly 3 times in a row.
 🔥 <b>Streak</b> grows if you complete at least 1 quiz per day.
+📝 Found a translation error? Tap the button after the quiz.
 
 Questions? → t.me/genaulingua_chat""",
 
@@ -324,17 +330,14 @@ Questions? → t.me/genaulingua_chat""",
     "help_roadmap_text": """🏆 <b>Achievements</b>
 Badges for progress — first quiz, 7 days in a row, 100 words learned, 100% quiz and more.
 
-🗂️ <b>Word categories</b>
-Learn words by topic — food, transport, work, travel and more.
+🎓 <b>Exam preparation</b>
+Preparation modes for Goethe/ÖSD exams A2–B2. Practice vocabulary that appears on exams.
 
-📚 <b>Levels B2–C2</b>
-Currently A1–B1 available. B2, C1 and C2 are in progress.
+📖 <b>Reading practice</b>
+Read and analyze German texts with translations, new words and exercises.
 
-📖 <b>30,000 words</b>
-Expanding the word base to 30,000 with translations in all 4 languages.
-
-🔄 <b>New learning modes</b>
-More formats for learning words — beyond quizzes.
+📝 <b>Grammar</b>
+Interactive grammar exercises — articles, cases, tenses, word order.
 
 ━━━━━━━━━━━━━━━━━
 💬 Ideas and suggestions — write in chat:
@@ -357,10 +360,13 @@ The more active the community — the better the bot gets. Don't be shy! 🙌"""
     "help_about_text": """🤖 <b>GenauLingua</b> — your personal German learning assistant.
 
 ✨ <b>Features:</b>
-• Word base A1–C2 (12000+ words)
+• Word base A1–C2 (12,000+ words)
+• 20 thematic categories
+• 4 quiz modes: by level, by category, top 10K, difficult words
 • Smart word selection — SRS algorithm
 • 4 languages: DE↔RU, DE↔UA, DE↔EN, DE↔TR
 • Repeat mistakes after quiz
+• Report translation errors directly from quiz
 • Statistics, streak and progress bar
 • Monthly rating and leaderboard
 • Flexible notification reminders
