@@ -883,12 +883,14 @@ async def admin_report_approve(callback: CallbackQuery, session: AsyncSession):
         stat = stat_result.scalar_one_or_none()
 
         if stat:
-            stat.monthly_score += REPORT_REWARD_POINTS
+            stat.report_bonus += REPORT_REWARD_POINTS
+            stat.monthly_score = stat.calculate_monthly_score()
         else:
             # Создаём запись если её нет (юзер репортил но не играл в этом месяце)
             stat = MonthlyStats(
                 user_id=report.user_id,
                 season_id=season.id,
+                report_bonus=REPORT_REWARD_POINTS,
                 monthly_score=REPORT_REWARD_POINTS
             )
             session.add(stat)
