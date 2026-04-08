@@ -295,27 +295,34 @@ TEXTS = {
     "help_how_to_use_text": """1️⃣ <b>Seviye ve modu ayarla</b>
 🦾 Ayarlar → A1–C2 seviye, çeviri modu ve arayüz dili seç.
 
-2️⃣ <b>Her gün kelime öğren</b>
+2️⃣ <b>Test modunu seç</b>
+🦾 Ayarlar → 📝 Test modu:
+• Seviyeye göre — seviyenin kelimeleri
+• Kategoriye göre — 20 konu: yemek, iş, seyahat...
+• Top 10 bin — tüm kelime tabanı
+• Zor — sık yanlış yaptığın kelimeler
+
+3️⃣ <b>Her gün kelime öğren</b>
 📚 Kelime öğren → 25 kelimelik test.
 Bot hatalarını hatırlar ve zor kelimeleri daha sık gösterir.
 
-3️⃣ <b>Hatalarını tekrarla</b>
+4️⃣ <b>Hatalarını tekrarla</b>
 Testten sonra hatalı kelimeleri hemen tekrarlayabilirsin.
 
-4️⃣ <b>İlerlemeni takip et</b>
+5️⃣ <b>İlerlemeni takip et</b>
 📊 İstatistik → kaç kelime öğrenildi, test geçmişi, seri.
 
-5️⃣ <b>Diğerleriyle yarış</b>
+6️⃣ <b>Diğerleriyle yarış</b>
 🏆 Sıralamam → aylık ve tüm zamanlar puanların.
 📊 Liderlik Tablosu → tüm katılımcılar arasında ilk 10.
 
-6️⃣ <b>Hatırlatıcıları ayarla</b>
+7️⃣ <b>Hatırlatıcıları ayarla</b>
 🦾 Ayarlar → 🔔 Hatırlatıcılar → saat, gün ve zaman dilimi seç.
-Bot pratik yapmayı hatırlatır ve serini gösterir.
 
 ━━━━━━━━━━━━━━━━━
 💡 Kelime <b>öğrenildi</b> sayılır — üst üste 3 doğru cevap verilince.
 🔥 <b>Seri</b> günde en az 1 test çözersen artar.
+📝 Çeviri hatası buldun? Testten sonra butona bas.
 
 Sorular? → t.me/genaulingua_chat""",
 
@@ -323,17 +330,14 @@ Sorular? → t.me/genaulingua_chat""",
     "help_roadmap_text": """🏆 <b>Başarılar</b>
 İlerleme rozetleri — ilk test, 7 gün üst üste, 100 kelime öğrenildi ve daha fazlası.
 
-🗂️ <b>Kelime kategorileri</b>
-Konulara göre kelime öğren — yemek, ulaşım, iş, seyahat ve daha fazlası.
+🎓 <b>Sınav hazırlığı</b>
+Goethe/ÖSD sınavları A2–B2 için hazırlık modları. Sınavlarda çıkan kelimeleri çalış.
 
-📚 <b>B2–C2 seviyeleri</b>
-Şu an A1–B1 mevcut. B2, C1 ve C2 hazırlanıyor.
+📖 <b>Metin çalışması</b>
+Almanca metinleri oku ve çözümle — çeviriler, yeni kelimeler ve alıştırmalar.
 
-📖 <b>30.000 kelime</b>
-Kelime tabanını 4 dilde çevirilerle 30.000'e genişletme.
-
-🔄 <b>Yeni öğrenme modları</b>
-Kelime öğrenmek için daha fazla format — testlerin ötesinde.
+📝 <b>Dilbilgisi</b>
+İnteraktif dilbilgisi alıştırmaları — artikeller, haller, zamanlar, kelime sırası.
 
 ━━━━━━━━━━━━━━━━━
 💬 Fikir ve öneriler — sohbete yaz:
@@ -356,10 +360,13 @@ Topluluk ne kadar aktif olursa — bot o kadar iyi olur. Çekinme! 🙌""",
     "help_about_text": """🤖 <b>GenauLingua</b> — kişisel Almanca öğrenme asistanın.
 
 ✨ <b>Özellikleri:</b>
-• A1–C2 kelime tabanı (12000+ kelime)
+• A1–C2 kelime tabanı (12 000+ kelime)
+• 20 tematik kategori
+• 4 test modu: seviyeye göre, kategoriye göre, top 10K, zor kelimeler
 • Akıllı kelime seçimi — SRS algoritması
 • 4 dil: DE↔RU, DE↔UA, DE↔EN, DE↔TR
 • Testten sonra hataları tekrarla
+• Çeviri hatasını doğrudan testten bildir
 • İstatistik, seri ve ilerleme çubuğu
 • Aylık sıralama ve liderlik tablosu
 • Esnek hatırlatıcı bildirimleri
