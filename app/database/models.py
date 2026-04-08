@@ -8,7 +8,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import ARRAY
-from app.database.enums import CEFRLevel, TranslationMode, PartOfSpeech
+from app.database.enums import CEFRLevel, TranslationMode, PartOfSpeech, QuizMode, WordCategory
 
 
 class Base(DeclarativeBase):
@@ -30,13 +30,20 @@ class User(Base):
     quizzes_passed: Mapped[int] = mapped_column(Integer, default=0)
     success_rate: Mapped[int] = mapped_column(Integer, default=0)
 
-    # Новые поля и настройки
+    # Уровень и настройки
     level: Mapped[CEFRLevel] = mapped_column(SQLEnum(CEFRLevel), default=CEFRLevel.A1)
-    translation_mode: Mapped[TranslationMode] = mapped_column(SQLEnum(TranslationMode),
-                                                              default=TranslationMode.DE_TO_RU)
-    interface_language: Mapped[str] = mapped_column(String(2), default="ru")
+    translation_mode: Mapped[Optional[TranslationMode]] = mapped_column(SQLEnum(TranslationMode),
+                                                                        default=None, nullable=True)
+    interface_language: Mapped[Optional[str]] = mapped_column(String(2), default=None, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     anchor_message_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+
+    # === РЕЖИМ ВИКТОРИНЫ (НОВОЕ) ===
+    quiz_mode: Mapped[QuizMode] = mapped_column(
+        SQLEnum(QuizMode, values_callable=lambda e: [m.value for m in e]),
+        default=QuizMode.LEVEL, nullable=False
+    )
+    quiz_category: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, default=None)
 
     # === ЯЗЫКИ И ЛОКАЛИЗАЦИЯ ===
     telegram_language: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
@@ -85,6 +92,20 @@ class User(Base):
         else:
             return f"User {self.id}"
 
+    @property
+    def quiz_mode_display(self) -> str:
+        """Отображение текущего режима для дебага"""
+        if self.quiz_mode == QuizMode.LEVEL:
+            return f"Level ({self.level.value})"
+        elif self.quiz_mode == QuizMode.CATEGORY:
+            return f"Category ({self.quiz_category})"
+        elif self.quiz_mode == QuizMode.ALL_WORDS:
+            return "All words"
+        elif self.quiz_mode == QuizMode.DIFFICULT:
+            return "Difficult"
+        return "Unknown"
+
+
 class UserWord(Base):
     __tablename__ = "user_words"
 
@@ -106,6 +127,7 @@ class UserWord(Base):
     user = relationship("User", backref="learned_items")
     word = relationship("Word", backref="learned_by")
 
+
 class Word(Base):
     __tablename__ = "words"
 
@@ -118,6 +140,12 @@ class Word(Base):
     # Часть речи и уровень
     pos: Mapped[PartOfSpeech] = mapped_column(SQLEnum(PartOfSpeech))
     level: Mapped[CEFRLevel] = mapped_column(SQLEnum(CEFRLevel), index=True)
+
+    # Категория (НОВОЕ — одна строка вместо массива)
+    category: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+
+    # Частота (НОВОЕ — для Топ 10К)
+    frequency_rank: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
 
     # Переводы
     translation_ru: Mapped[Optional[str]] = mapped_column(String(255))
@@ -132,7 +160,7 @@ class Word(Base):
     example_en: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     example_tr: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    # Категории (массив строк)
+    # Старое поле categories — оставляем для обратной совместимости
     categories: Mapped[Optional[List[str]]] = mapped_column(
         ARRAY(String),
         default=list
@@ -200,6 +228,10 @@ class QuizSession(Base):
     translation_mode: Mapped[TranslationMode] = mapped_column(
         SQLEnum(TranslationMode)
     )
+
+    # Режим викторины (НОВОЕ)
+    quiz_mode: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    quiz_category: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
     # Статистика сессии
     total_questions: Mapped[int] = mapped_column(Integer, default=0)
@@ -310,6 +342,9 @@ class MonthlyStats(Base):
     total_correct: Mapped[int] = mapped_column(Integer, default=0)
     total_questions: Mapped[int] = mapped_column(Integer, default=0)
 
+    # Бонус за подтверждённые репорты
+    report_bonus: Mapped[int] = mapped_column(Integer, default=0)
+
     # Финальный ранг (заполняется в конце месяца)
     final_rank: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
@@ -337,6 +372,9 @@ class MonthlyStats(Base):
             score += 30
         elif self.monthly_avg_percent >= 70:
             score += 15
+
+        # Бонус за подтверждённые репорты
+        score += self.report_bonus
 
         return score
 
@@ -413,3 +451,31 @@ class MonthlyAward(Base):
     # Relationships
     user: Mapped["User"] = relationship(backref="monthly_awards")
     season: Mapped["MonthlySeason"] = relationship(back_populates="awards")
+
+
+# ============================================================================
+# РЕПОРТЫ ОШИБОК ПЕРЕВОДА
+# ============================================================================
+
+class TranslationReport(Base):
+    """Репорт ошибки перевода от пользователя"""
+    __tablename__ = "translation_reports"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    word_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("words.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    quiz_session_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("quiz_sessions.id", ondelete="SET NULL"), nullable=True
+    )
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="pending"
+    )  # pending / reviewed / fixed / rejected
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    user: Mapped["User"] = relationship(backref="translation_reports")
+    word: Mapped["Word"] = relationship(backref="translation_reports")

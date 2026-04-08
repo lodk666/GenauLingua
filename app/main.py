@@ -33,6 +33,7 @@ from app.bot.handlers.quiz.game import router as game_router
 from app.bot.handlers.quiz.settings import router as settings_router
 from app.bot.handlers.quiz.stats import router as stats_router
 from app.bot.handlers.quiz.help import router as help_router
+from app.bot.handlers.quiz.report import router as report_router
 
 from app.database.session import AsyncSessionLocal
 from app.core.logging import setup_logging
@@ -66,6 +67,9 @@ async def main():
     dp.include_router(alltime_router)
     dp.include_router(table_router)
 
+    # Репорт ПЕРЕД game (чтобы перехватить report_translation_error)
+    dp.include_router(report_router)
+
     # Потом всё остальное
     dp.include_router(start_router)
     dp.include_router(game_router)
@@ -89,6 +93,7 @@ async def main():
     logger.info("   ✅ leaderboard/monthly.py")
     logger.info("   ✅ leaderboard/alltime.py")
     logger.info("   ✅ leaderboard/leaderboard_table.py")
+    logger.info("   ✅ quiz/report.py")
     logger.info("   ✅ start.py")
     logger.info("   ✅ quiz/game.py")
     logger.info("   ✅ quiz/settings.py")

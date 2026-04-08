@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 from app.bot.states import QuizStates
 from app.bot.utils import delete_messages_fast, ensure_anchor
-from app.database.enums import CEFRLevel
+from app.database.enums import CEFRLevel, QuizMode
 from app.database.models import User
 from app.locales import get_text
 
@@ -48,18 +48,18 @@ def get_language_selection_keyboard() -> InlineKeyboardMarkup:
 
 
 def get_level_keyboard(lang: str) -> InlineKeyboardMarkup:
-    """Клавиатура выбора уровня с поддержкой locked уровней"""
+    """Клавиатура выбора уровня — все уровни разблокированы"""
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="A1", callback_data="level_a1"),
-                InlineKeyboardButton(text="A2", callback_data="level_a2"),
-                InlineKeyboardButton(text="B1", callback_data="level_b1")
+                InlineKeyboardButton(text="A1", callback_data="start_level_A1"),
+                InlineKeyboardButton(text="A2", callback_data="start_level_A2"),
+                InlineKeyboardButton(text="B1", callback_data="start_level_B1")
             ],
             [
-                InlineKeyboardButton(text="B2 🔒", callback_data="level_locked"),
-                InlineKeyboardButton(text="C1 🔒", callback_data="level_locked"),
-                InlineKeyboardButton(text="C2 🔒", callback_data="level_locked")
+                InlineKeyboardButton(text="B2", callback_data="start_level_B2"),
+                InlineKeyboardButton(text="C1", callback_data="start_level_C1"),
+                InlineKeyboardButton(text="C2", callback_data="start_level_C2")
             ]
         ]
     )
@@ -126,7 +126,7 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
     )
 
     if user.level:
-        mode = MODE_DICT.get(user.translation_mode.value, user.translation_mode.value)
+        mode = MODE_DICT.get(user.translation_mode.value, user.translation_mode.value) if user.translation_mode else ""
         welcome_text += get_text('welcome_your_level', lang, level=user.level.value, mode=mode) + "\n\n"
         welcome_text += get_text('welcome_call_to_action', lang)
 
@@ -140,9 +140,8 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
     else:
         welcome_text += get_text('welcome_choose_level', lang)
 
-        await message.answer(welcome_text)
         await message.answer(
-            get_text('choose_level_prompt', lang),
+            welcome_text,
             reply_markup=get_level_keyboard(lang)
         )
 
@@ -163,10 +162,13 @@ async def select_language(callback: CallbackQuery, state: FSMContext, session: A
 
     # Автоматически ставим режим викторины по языку
     from app.database.enums import TranslationMode
-    if lang == "uk":
-        user.translation_mode = TranslationMode.DE_TO_UK
-    else:  # ru
-        user.translation_mode = TranslationMode.DE_TO_RU
+    lang_to_mode = {
+        "ru": TranslationMode.DE_TO_RU,
+        "uk": TranslationMode.DE_TO_UK,
+        "en": TranslationMode.DE_TO_EN,
+        "tr": TranslationMode.DE_TO_TR,
+    }
+    user.translation_mode = lang_to_mode.get(lang, TranslationMode.DE_TO_RU)
 
     await session.commit()
 
@@ -193,12 +195,7 @@ async def select_language(callback: CallbackQuery, state: FSMContext, session: A
 
     await callback.bot.send_message(
         chat_id=callback.message.chat.id,
-        text=welcome_text
-    )
-
-    await callback.bot.send_message(
-        chat_id=callback.message.chat.id,
-        text=get_text('choose_level_prompt', lang),
+        text=welcome_text,
         reply_markup=get_level_keyboard(lang)
     )
 
@@ -207,24 +204,19 @@ async def select_language(callback: CallbackQuery, state: FSMContext, session: A
 
 
 # ============================================================================
-# ВЫБОР УРОВНЯ
+# ВЫБОР УРОВНЯ (при /start для новых юзеров)
 # ============================================================================
 
-@router.callback_query(F.data.startswith("level_"))
+@router.callback_query(F.data.startswith("start_level_"))
 async def select_level(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
-    """Обработчик выбора уровня"""
-    level = callback.data.split("_")[1]
-
-    # Заглушка для locked уровней
-    if level == "locked":
-        user = await session.get(User, callback.from_user.id)
-        lang = user.interface_language or "ru"
-        await callback.answer(get_text("level_locked", lang), show_alert=True)
-        return
+    """Обработчик выбора уровня при первом старте"""
+    level_str = callback.data.replace("start_level_", "")
 
     user_id = callback.from_user.id
     user = await session.get(User, user_id)
-    user.level = CEFRLevel(level.upper())
+
+    user.level = CEFRLevel(level_str)
+    user.quiz_mode = QuizMode.LEVEL
     await session.commit()
 
     lang = user.interface_language or "ru"
@@ -239,7 +231,7 @@ async def select_level(callback: CallbackQuery, state: FSMContext, session: Asyn
 
     await callback.bot.send_message(
         chat_id=callback.message.chat.id,
-        text=get_text("level_selected", lang, level=level.upper())
+        text=get_text("level_selected", lang, level=level_str)
     )
 
     await state.clear()

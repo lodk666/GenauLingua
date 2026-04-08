@@ -78,6 +78,7 @@ def build_monthly_card(user: User, user_rank: dict, season, lang: str) -> str:
     text += get_text("rating_scoring_word", lang) + "\n"
     text += get_text("rating_scoring_streak", lang) + "\n"
     text += get_text("rating_scoring_bonus", lang) + "\n"
+    text += get_text("rating_scoring_report", lang) + "\n"
 
     return text
 

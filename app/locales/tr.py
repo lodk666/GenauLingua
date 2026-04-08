@@ -17,25 +17,25 @@ TEXTS = {
     # KARŞILAMA VE BAŞLANGIÇ
     # ============================================================================
     "welcome_title": "👋 <b>Merhaba, {name}!</b>",
-    "welcome_description": "🇩🇪 <b>GenauLingua</b> — her gün Almanca öğren.\nBot sonuçlarını analiz eder ve sana özel kelimeler seçer.",
+    "welcome_description": "🇩🇪 <b>GenauLingua</b> — oyunla Almanca öğren\n12 000+ kelime · 20 konu · 6 seviye\n\nBot sana özel kelimeler seçer — ne kadar çok\noynarsan, seçim o kadar akıllı olur",
     "welcome_separator": "──────────────────",
 
     "welcome_learn_words_title": "📚 <b>Kelime öğren</b>",
-    "welcome_learn_words_desc": "Almanca kelimelerle eğlenceli testler. Ne kadar çok pratik yaparsan — kelime seçimi o kadar akıllı olur.",
+    "welcome_learn_words_desc": "Test başlat",
 
     "welcome_stats_title": "📊 <b>İstatistik</b>",
-    "welcome_stats_desc": "Seviyeye göre ilerleme, test geçmişi, diğer kullanıcılarla karşılaştırma.",
+    "welcome_stats_desc": "İlerlemen",
 
     "welcome_settings_title": "🦾 <b>Ayarlar</b>",
-    "welcome_settings_desc": "Seviye (A1–C2), arayüz dili, test modu.",
+    "welcome_settings_desc": "Mod, dil, konular",
 
     "welcome_help_title": "❓ <b>Yardım</b>",
-    "welcome_help_desc": "İpuçları, son güncellemeler ve geri bildirim.",
+    "welcome_help_desc": "İpuçları ve geri bildirim",
 
     "welcome_your_level": "Seviyeniz: <b>{level}</b>\nMod: <b>{mode}</b>",
     "welcome_call_to_action": "📚 Kelime öğren'e bas — başlayalım!",
 
-    "welcome_choose_level": "Önce Almanca seviyeni seç:",
+    "welcome_choose_level": "🎯 <b>Nereden başlayalım?</b>\n\nAlmanca seviyeni seç\n\n• A1–A2 — temel kelimeler\n• B1–B2 — güvenli iletişim\n• C1–C2 — ana dil seviyesi",
     "choose_level_prompt": "Seviye seç:",
 
     "level_selected": "✅ <b>{level}</b> seviyesi seçildi.\n\n📚 Kelime öğren'e bas — başlayalım!",
@@ -103,7 +103,6 @@ TEXTS = {
 
     "notif_btn_back": "◀️ Ayarlara geri dön",
 
-    # Gelişmiş bildirimler için anahtarlar
     "notif_default_name": "arkadaş",
     "notif_message_greeting": "🔥 <b>Çalışma zamanı, {name}!</b>",
     "notif_message_progress_title": "📊 <b>İlerlemeniz:</b>",
@@ -124,17 +123,16 @@ TEXTS = {
     # ============================================================================
     "settings_title": "🦾 <b>Ayarlar</b>",
     "settings_level": "📚 Seviye: <b>{level}</b>",
-    "settings_mode": "🔄 Mod: <b>{mode}</b>",
+    "settings_mode": "🔄 Çeviri: <b>{mode}</b>",
     "settings_language": "🌍 Arayüz dili: <b>{language}</b>",
     "settings_choose": "Ne değiştirmek istediğini seç:",
 
-    "settings_btn_change_level": "📚 Seviye değiştir",
+    "settings_btn_quiz_mode": "📝 Test modu",
     "settings_btn_change_mode": "🔄 Çeviri modu",
     "settings_btn_change_language": "🌍 Arayüz dili",
     "settings_btn_notifications": "🔔 Hatırlatıcılar",
 
-    "settings_level_title": "📚 <b>Seviye seç</b>",
-    "settings_level_description": "Mevcut Almanca seviyeni seç:\n\n• <b>A1</b> — Başlangıç (Merhaba, nasılsın?)\n• <b>A2</b> — Temel (Basit diyaloglar)\n• <b>B1</b> — Orta (Günlük iletişim)",
+    "settings_quiz_mode_line": "📝 Mod: <b>{mode}</b>",
 
     "settings_mode_title": "🔄 <b>Çeviri modu</b>",
     "settings_mode_description": "Çeviri yönünü seç:",
@@ -146,13 +144,11 @@ TEXTS = {
     "level_not_selected": "Seçilmedi",
     "user_not_found": "❌ Kullanıcı bulunamadı. /start kullan",
 
-    # Dil adları
     "lang_ru": "🏴 Русский",
     "lang_uk": "🇺🇦 Українська",
     "lang_en": "🇬🇧 English",
     "lang_tr": "🇹🇷 Türkçe",
 
-    # Çeviri modları
     "mode_de_to_ru": "🇩🇪 DE → 🏴 RU",
     "mode_ru_to_de": "🏴 RU → 🇩🇪 DE",
     "mode_de_to_uk": "🇩🇪 DE → 🇺🇦 UK",
@@ -161,6 +157,79 @@ TEXTS = {
     "mode_en_to_de": "🇬🇧 EN → 🇩🇪 DE",
     "mode_de_to_tr": "🇩🇪 DE → 🇹🇷 TR",
     "mode_tr_to_de": "🇹🇷 TR → 🇩🇪 DE",
+
+    "settings_mode_hint_de_tr": "💡 DE→TR daha kolay — mantıkla tahmin edebilirsiniz",
+    "settings_mode_hint_tr_de": "💡 TR→DE daha zor — kelimeleri daha iyi pekiştirir",
+    "settings_mode_hint_de_ru": "💡 DE→RU daha kolay — mantıkla tahmin edebilirsiniz",
+    "settings_mode_hint_ru_de": "💡 RU→DE daha zor — kelimeleri daha iyi pekiştirir",
+    "settings_mode_hint_de_uk": "💡 DE→UK daha kolay — mantıkla tahmin edebilirsiniz",
+    "settings_mode_hint_uk_de": "💡 UK→DE daha zor — kelimeleri daha iyi pekiştirir",
+    "settings_mode_hint_de_en": "💡 DE→EN daha kolay — mantıkla tahmin edebilirsiniz",
+    "settings_mode_hint_en_de": "💡 EN→DE daha zor — kelimeleri daha iyi pekiştirir",
+
+    # ============================================================================
+    # TEST MODU (YENİ)
+    # ============================================================================
+    "qmode_title": "📝 <b>Test modu</b>",
+    "qmode_current": "Şu an: <b>{mode}</b>",
+    "qmode_choose": "Nasıl öğrenmek istediğini seç\nİstediğin zaman değiştirebilirsin — ilerlemen kaybolmaz",
+
+    "qmode_btn_level": "📚 Seviyeye göre",
+    "qmode_btn_category": "🗂 Kategori",
+    "qmode_btn_all": "🌍 Top 10 bin",
+    "qmode_btn_difficult": "⚠️ Zor",
+
+    "qmode_level_short": "📚 Seviye {level}",
+    "qmode_category_short": "🗂 {category}",
+    "qmode_all_short": "🌍 Top 10 bin",
+    "qmode_difficult_short": "⚠️ Zor kelimeler",
+
+    "qmode_level_title": "📚 <b>Seviye seç</b>",
+    "qmode_level_desc": "İlk «Hallo»dan akıcı tartışmalara\nTüm seviyeler açık — birini seç!\n\n• A1–A2 — temel kelimeler\n• B1–B2 — güvenli iletişim\n• C1–C2 — ana dil seviyesi",
+    "qmode_level_set": "✅ Mod: Seviyeye göre ({level})",
+
+    "qmode_category_title": "🗂 <b>Kategori seç</b>",
+    "qmode_category_desc": "Yemekten bilime — ihtiyacın olan konuyu seç\n\nHer kategoride tüm seviyelerin kelimeleri var",
+    "qmode_category_set": "✅ Mod: {category}",
+
+    # Kategori adları
+    "cat_arbeit_beruf": "İş",
+    "cat_bildung_lernen": "Eğitim",
+    "cat_einkaufen_geld": "Alışveriş",
+    "cat_emotionen_charakter": "Duygular",
+    "cat_essen_trinken": "Yemek",
+    "cat_freizeit_sport": "Spor",
+    "cat_gesundheit_medizin": "Sağlık",
+    "cat_grammatik": "Dilbilgisi",
+    "cat_kleidung_mode": "Moda",
+    "cat_kommunikation": "İletişim",
+    "cat_kultur_kunst": "Kültür",
+    "cat_mensch_familie": "Aile",
+    "cat_natur_wetter": "Doğa",
+    "cat_recht_staat": "Hukuk",
+    "cat_reisen_transport": "Seyahat",
+    "cat_technik_digital": "Teknoloji",
+    "cat_wirtschaft": "Ekonomi",
+    "cat_wissenschaft": "Bilim",
+    "cat_wohnen_haus": "Konut",
+    "cat_zeit_alltag": "Günlük",
+
+    "qmode_all_set": "✅ Mod: Top 10 bin",
+
+    "qmode_difficult_set": "✅ Mod: Zor kelimeler",
+    "qmode_difficult_few": "Henüz sadece {count} zor kelimeniz var — en az 4 gerekli\nBirkaç test daha çöz!",
+    "qmode_difficult_empty": "Henüz zor kelimelerin yok.\nÖnce birkaç test çöz!",
+
+    "quiz_btn_change_mode": "⚙️ Test modu",
+    "quiz_btn_report_error": "📝 Çeviri hatası",
+    "report_btn_confirm": "✅ Onayla ({count})",
+    "report_btn_send": "📨 Gönder",
+    "report_no_words": "Raporlanacak kelime yok",
+    "report_none_selected": "En az bir kelime seç",
+    "report_sent": "✅ {count} rapor gönderildi — teşekkürler!\nOnaylanırsa — +1 puan kazanırsın",
+    "report_daily_limit": "⚠️ Bugünkü rapor limiti doldu (maks. 20)",
+    "report_all_reported": "✅ Bu testdeki tüm kelimeler zaten raporlandı",
+    "report_already_sent": "✔️ Zaten raporlandı",
 
     # ============================================================================
     # TEST
@@ -231,29 +300,36 @@ TEXTS = {
 
     "help_how_to_use_title": "📖 <b>Botu nasıl kullanırsın</b>",
     "help_how_to_use_text": """1️⃣ <b>Seviye ve modu ayarla</b>
-🦾 Ayarlar → A1–B1 seviye, çeviri modu ve arayüz dili seç.
+🦾 Ayarlar → A1–C2 seviye, çeviri modu ve arayüz dili seç.
 
-2️⃣ <b>Her gün kelime öğren</b>
+2️⃣ <b>Test modunu seç</b>
+🦾 Ayarlar → 📝 Test modu:
+• Seviyeye göre — seviyenin kelimeleri
+• Kategoriye göre — 20 konu: yemek, iş, seyahat...
+• Top 10 bin — tüm kelime tabanı
+• Zor — sık yanlış yaptığın kelimeler
+
+3️⃣ <b>Her gün kelime öğren</b>
 📚 Kelime öğren → 25 kelimelik test.
 Bot hatalarını hatırlar ve zor kelimeleri daha sık gösterir.
 
-3️⃣ <b>Hatalarını tekrarla</b>
+4️⃣ <b>Hatalarını tekrarla</b>
 Testten sonra hatalı kelimeleri hemen tekrarlayabilirsin.
 
-4️⃣ <b>İlerlemeni takip et</b>
+5️⃣ <b>İlerlemeni takip et</b>
 📊 İstatistik → kaç kelime öğrenildi, test geçmişi, seri.
 
-5️⃣ <b>Diğerleriyle yarış</b>
+6️⃣ <b>Diğerleriyle yarış</b>
 🏆 Sıralamam → aylık ve tüm zamanlar puanların.
 📊 Liderlik Tablosu → tüm katılımcılar arasında ilk 10.
 
-6️⃣ <b>Hatırlatıcıları ayarla</b>
+7️⃣ <b>Hatırlatıcıları ayarla</b>
 🦾 Ayarlar → 🔔 Hatırlatıcılar → saat, gün ve zaman dilimi seç.
-Bot pratik yapmayı hatırlatır ve serini gösterir.
 
 ━━━━━━━━━━━━━━━━━
 💡 Kelime <b>öğrenildi</b> sayılır — üst üste 3 doğru cevap verilince.
 🔥 <b>Seri</b> günde en az 1 test çözersen artar.
+📝 Çeviri hatası buldun? Testten sonra butona bas.
 
 Sorular? → t.me/genaulingua_chat""",
 
@@ -261,17 +337,14 @@ Sorular? → t.me/genaulingua_chat""",
     "help_roadmap_text": """🏆 <b>Başarılar</b>
 İlerleme rozetleri — ilk test, 7 gün üst üste, 100 kelime öğrenildi ve daha fazlası.
 
-🗂️ <b>Kelime kategorileri</b>
-Konulara göre kelime öğren — yemek, ulaşım, iş, seyahat ve daha fazlası.
+🎓 <b>Sınav hazırlığı</b>
+Goethe/ÖSD sınavları A2–B2 için hazırlık modları. Sınavlarda çıkan kelimeleri çalış.
 
-📚 <b>B2–C2 seviyeleri</b>
-Şu an A1–B1 mevcut. B2, C1 ve C2 hazırlanıyor.
+📖 <b>Metin çalışması</b>
+Almanca metinleri oku ve çözümle — çeviriler, yeni kelimeler ve alıştırmalar.
 
-📖 <b>30.000 kelime</b>
-Kelime tabanını 4 dilde çevirilerle 30.000'e genişletme.
-
-🔄 <b>Yeni öğrenme modları</b>
-Kelime öğrenmek için daha fazla format — testlerin ötesinde.
+📝 <b>Dilbilgisi</b>
+İnteraktif dilbilgisi alıştırmaları — artikeller, haller, zamanlar, kelime sırası.
 
 ━━━━━━━━━━━━━━━━━
 💬 Fikir ve öneriler — sohbete yaz:
@@ -294,21 +367,24 @@ Topluluk ne kadar aktif olursa — bot o kadar iyi olur. Çekinme! 🙌""",
     "help_about_text": """🤖 <b>GenauLingua</b> — kişisel Almanca öğrenme asistanın.
 
 ✨ <b>Özellikleri:</b>
-• A1–B1 kelime tabanı (3000+ kelime)
+• A1–C2 kelime tabanı (12 000+ kelime)
+• 20 tematik kategori
+• 4 test modu: seviyeye göre, kategoriye göre, top 10K, zor kelimeler
 • Akıllı kelime seçimi — SRS algoritması
 • 4 dil: DE↔RU, DE↔UA, DE↔EN, DE↔TR
 • Testten sonra hataları tekrarla
+• Çeviri hatasını doğrudan testten bildir
 • İstatistik, seri ve ilerleme çubuğu
 • Aylık sıralama ve liderlik tablosu
 • Esnek hatırlatıcı bildirimleri
 • Türkçe, İngilizce, Rusça, Ukraynaca arayüz
 
-📅 <b>Güncellendi:</b> Mart 2026
+📅 <b>Güncellendi:</b> Nisan 2026
 
 💬 Güncellemeleri takip et: t.me/genaulingua_chat""",
 
     # ============================================================================
-    # SIRALAMAM — RATING
+    # SIRALAMAM
     # ============================================================================
     "rating_title_monthly": "🏆 <b>Sıralamam — {month} {year}</b>",
     "rating_not_active": "❌ Sıralama henüz aktif değil.",
@@ -328,6 +404,7 @@ Topluluk ne kadar aktif olursa — bot o kadar iyi olur. Çekinme! 🙌""",
     "rating_scoring_word": "• Öğrenilen kelime → +2",
     "rating_scoring_streak": "• Gün serisi → +3",
     "rating_scoring_bonus": "• %90+ doğruluk → +50 bonus",
+    "rating_scoring_report": "• Onaylanan rapor → +1",
 
     "rating_title_alltime": "🏆 <b>Sıralamam — Tüm Zamanlar</b>",
     "rating_position_alltime": "📍 Pozisyon: <b>#{rank}</b>",
@@ -352,14 +429,13 @@ Topluluk ne kadar aktif olursa — bot o kadar iyi olur. Çekinme! 🙌""",
     "btn_leaderboard_table": "📊 Liderlik Tablosu",
     "btn_back_to_rating": "◀️ Sıralamaya geri dön",
 
-    # İSTATİSTİK
     "stats_header": "📊 <b>İstatistiklerin</b>",
     "stats_learned_of": "└─ Öğrenildi <b>{learned}</b> / {total}",
-    "stats_details": "🔄 Devam eden: {progress}\n🆕 Yeni: {new}\n⚠️ Zor: {difficult}",
+    "stats_details": "⏳ Devam eden: {progress}\n🆕 Yeni: {new}\n⚠️ Zor: {difficult}",
     "stats_achievements_title": "<b>Başarıların</b>",
     "stats_words_count": "├─ Öğrenilen kelimeler: <b>{count}</b>",
     "stats_streak_line": "└─ Seri: <b>{days} gün üst üste</b>",
-    "stats_quizzes_header": "<b>Testler ({level})</b>",
+    "stats_quizzes_header": "<b>Testler · {level}</b>",
     "stats_quizzes_passed_line": "├─ Tamamlanan: <b>{count}</b>",
     "stats_quizzes_avg_line": "├─ Ortalama sonuç: <b>{percent}%</b>",
     "stats_quizzes_best_line": "└─ En iyi sonuç: <b>{percent}%</b>",
