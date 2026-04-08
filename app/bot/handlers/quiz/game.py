@@ -7,6 +7,7 @@
 3. ✅ 3 кнопки после завершения: Режим викторины, Повторить ошибки, Ошибка перевода
 4. ✅ Режим DIFFICULT: проверка наличия сложных слов перед стартом
 5. ✅ Репорт ошибок: state data (report_session_id, report_word_ids) после завершения
+6. ✅ FIX: report_word_ids сохраняется от основной викторины даже после error_repeat
 """
 
 import random
@@ -505,15 +506,30 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
         )
 
         # === STATE DATA для повтора ошибок и репорта ===
+        # FIX: после error_repeat сохраняем report_word_ids от ОСНОВНОЙ викторины
         saved_errors = errors.copy()
-        report_word_ids = [w.id for _, w in items]
+
+        # Сохраняем старые report данные перед clear (нужны после error_repeat)
+        old_report_word_ids = data.get('report_word_ids', [])
+        old_report_session_id = data.get('report_session_id')
 
         await state.clear()
-        await state.update_data(
-            saved_errors=saved_errors,
-            report_session_id=session_id,
-            report_word_ids=report_word_ids,
-        )
+
+        if is_error_repeat:
+            # После повтора ошибок — восстанавливаем report данные от основной викторины
+            await state.update_data(
+                saved_errors=saved_errors,
+                report_session_id=old_report_session_id,
+                report_word_ids=old_report_word_ids,
+            )
+        else:
+            # После основной викторины — сохраняем все слова для репорта
+            report_word_ids = [w.id for _, w in items]
+            await state.update_data(
+                saved_errors=saved_errors,
+                report_session_id=session_id,
+                report_word_ids=report_word_ids,
+            )
         return
 
     # ============================================================================
@@ -702,6 +718,10 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
 
     random.shuffle(options)
 
+    # Сохраняем report данные от основной викторины перед обновлением state
+    old_report_word_ids = data.get('report_word_ids', [])
+    old_report_session_id = data.get('report_session_id')
+
     await state.update_data(
         session_id=quiz_session.id,
         current_question=1,
@@ -712,6 +732,9 @@ async def repeat_errors(callback: CallbackQuery, state: FSMContext, session: Asy
         error_words=errors,
         current_error_index=0,
         is_error_repeat=True,
+        # Сохраняем report данные от основной викторины
+        report_word_ids=old_report_word_ids,
+        report_session_id=old_report_session_id,
     )
 
     if is_reverse_mode(mode_val):
