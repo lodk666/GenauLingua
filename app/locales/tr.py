@@ -227,6 +227,9 @@ TEXTS = {
     "report_no_words": "Raporlanacak kelime yok",
     "report_none_selected": "En az bir kelime seç",
     "report_sent": "✅ {count} rapor gönderildi — teşekkürler!",
+    "report_daily_limit": "⚠️ Bugünkü rapor limiti doldu (maks. 20)",
+    "report_all_reported": "✅ Bu testdeki tüm kelimeler zaten raporlandı",
+    "report_already_sent": "✔️ Zaten raporlandı",
 
     # ============================================================================
     # TEST
