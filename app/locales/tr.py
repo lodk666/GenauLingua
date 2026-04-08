@@ -222,7 +222,11 @@ TEXTS = {
 
     "quiz_btn_change_mode": "⚙️ Test modu",
     "quiz_btn_report_error": "📝 Çeviri hatası",
-    "quiz_report_coming_soon": "🔜 Bu özellik yakında gelecek!",
+    "report_btn_confirm": "✅ Onayla ({count})",
+    "report_btn_send": "📨 Gönder",
+    "report_no_words": "Raporlanacak kelime yok",
+    "report_none_selected": "En az bir kelime seç",
+    "report_sent": "✅ {count} rapor gönderildi — teşekkürler!",
 
     # ============================================================================
     # TEST
