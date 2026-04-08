@@ -725,16 +725,14 @@ async def admin_detailed_callback(callback: CallbackQuery, session: AsyncSession
 # РЕПОРТЫ ПЕРЕВОДОВ
 # ============================================================================
 
-@router.callback_query(F.data == "admin:reports")
-async def admin_reports(callback: CallbackQuery, session: AsyncSession):
-    """Топ зарепорченных слов"""
-    if not is_admin(callback.from_user.id):
-        await callback.answer("❌ Доступ запрещён")
-        return
+REPORT_REWARD_POINTS = 1  # баллов за подтверждённый репорт
 
-    await callback.answer()
 
-    # Топ-15 слов по количеству уникальных репортов
+async def _build_reports_text_and_keyboard(session: AsyncSession) -> tuple:
+    """Собрать текст и клавиатуру для страницы репортов"""
+    from app.database.models import MonthlyStats
+
+    # Топ-10 слов по количеству pending репортов
     reports_result = await session.execute(
         select(
             Word.id,
@@ -750,7 +748,7 @@ async def admin_reports(callback: CallbackQuery, session: AsyncSession):
         .group_by(Word.id, Word.word_de, Word.article, Word.level,
                   Word.translation_ru, Word.translation_uk)
         .order_by(desc(func.count(TranslationReport.id)))
-        .limit(15)
+        .limit(10)
     )
     top_words = reports_result.all()
 
@@ -779,31 +777,191 @@ async def admin_reports(callback: CallbackQuery, session: AsyncSession):
     )
     unique_users = unique_users_result.scalar() or 0
 
+    # Сколько баллов выдано за всё время
+    fixed_count_result = await session.execute(
+        select(func.count()).select_from(TranslationReport)
+        .where(TranslationReport.status == 'fixed')
+    )
+    fixed_count = fixed_count_result.scalar() or 0
+
     text = "📝 <b>РЕПОРТЫ ПЕРЕВОДОВ</b>\n\n"
 
     text += "📊 <b>Статистика:</b>\n"
     text += f"├─ Всего репортов: <b>{total_reports}</b>\n"
     text += f"├─ Ожидают проверки: <b>{pending}</b>\n"
     text += f"├─ Уникальных слов: <b>{unique_words}</b>\n"
-    text += f"└─ Юзеров отправили: <b>{unique_users}</b>\n\n"
+    text += f"├─ Юзеров отправили: <b>{unique_users}</b>\n"
+    text += f"└─ Подтверждено (fixed): <b>{fixed_count}</b>\n\n"
+
+    buttons = []
 
     if top_words:
-        text += "🔥 <b>Топ-15 по жалобам:</b>\n"
-        text += "<i>Сортировка: кол-во жалоб</i>\n\n"
+        text += "🔥 <b>Pending — по жалобам:</b>\n\n"
         for i, (wid, word_de, article, level, trans_ru, trans_uk, count) in enumerate(top_words, 1):
             full_word = f"{article} {word_de}" if article and article != "-" else word_de
             trans = trans_ru or trans_uk or "—"
             emoji = "🔴" if count >= 5 else "🟡" if count >= 3 else "⚪"
-            text += f"{emoji} <b>{full_word}</b> ({level.value}) — {trans}\n"
-            text += f"   └ {count} жалоб | ID: {wid}\n"
+            text += f"{emoji} <b>{full_word}</b> ({level.value})\n"
+            text += f"   {trans} | {count} жалоб\n\n"
+
+            # Кнопки ✅ / ❌ для каждого слова
+            buttons.append([
+                InlineKeyboardButton(
+                    text=f"✅ {full_word}",
+                    callback_data=f"admin:report_approve_{wid}"
+                ),
+                InlineKeyboardButton(
+                    text=f"❌",
+                    callback_data=f"admin:report_reject_{wid}"
+                )
+            ])
+
+        text += f"💡 <i>✅ = подтвердить (юзеры получат +{REPORT_REWARD_POINTS} балл)\n"
+        text += f"❌ = отклонить (баллы не начисляются)</i>\n"
     else:
-        text += "✅ Нет pending репортов"
+        text += "✅ Нет pending репортов\n"
 
-    back_btn = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="◀️ Назад", callback_data="admin:back")]
-    ])
+    buttons.append([InlineKeyboardButton(text="◀️ Назад", callback_data="admin:back")])
+    keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
 
-    await callback.message.edit_text(text, reply_markup=back_btn)
+    return text, keyboard
+
+
+@router.callback_query(F.data == "admin:reports")
+async def admin_reports(callback: CallbackQuery, session: AsyncSession):
+    """Показать репорты с кнопками подтверждения"""
+    if not is_admin(callback.from_user.id):
+        await callback.answer("❌ Доступ запрещён")
+        return
+
+    await callback.answer()
+
+    text, keyboard = await _build_reports_text_and_keyboard(session)
+    await callback.message.edit_text(text, reply_markup=keyboard)
+
+
+@router.callback_query(F.data.startswith("admin:report_approve_"))
+async def admin_report_approve(callback: CallbackQuery, session: AsyncSession):
+    """Подтвердить репорт → статус fixed, +1 балл каждому юзеру"""
+    if not is_admin(callback.from_user.id):
+        await callback.answer("❌ Доступ запрещён")
+        return
+
+    word_id = int(callback.data.replace("admin:report_approve_", ""))
+
+    from app.database.models import MonthlyStats
+    from app.services.monthly_leaderboard_service import get_or_create_current_season
+
+    # Находим всех юзеров с pending репортами на это слово
+    reports_result = await session.execute(
+        select(TranslationReport)
+        .where(
+            TranslationReport.word_id == word_id,
+            TranslationReport.status == 'pending'
+        )
+    )
+    reports = reports_result.scalars().all()
+
+    if not reports:
+        await callback.answer("Нет pending репортов для этого слова", show_alert=True)
+        return
+
+    # Получаем текущий сезон
+    season = await get_or_create_current_season(session)
+
+    rewarded_users = 0
+    for report in reports:
+        report.status = 'fixed'
+
+        # Начисляем баллы в monthly_stats
+        stat_result = await session.execute(
+            select(MonthlyStats).where(
+                MonthlyStats.user_id == report.user_id,
+                MonthlyStats.season_id == season.id
+            )
+        )
+        stat = stat_result.scalar_one_or_none()
+
+        if stat:
+            stat.monthly_score += REPORT_REWARD_POINTS
+        else:
+            # Создаём запись если её нет (юзер репортил но не играл в этом месяце)
+            stat = MonthlyStats(
+                user_id=report.user_id,
+                season_id=season.id,
+                monthly_score=REPORT_REWARD_POINTS
+            )
+            session.add(stat)
+
+        rewarded_users += 1
+
+    await session.commit()
+
+    # Получаем слово для лога
+    word = await session.get(Word, word_id)
+    word_display = f"{word.article} {word.word_de}" if word and word.article and word.article != "-" else (word.word_de if word else str(word_id))
+
+    logger.info(f"Admin approved report for word '{word_display}' (id={word_id}), rewarded {rewarded_users} users with +{REPORT_REWARD_POINTS}")
+
+    await callback.answer(
+        f"✅ {word_display} — подтверждено\n{rewarded_users} юзеров получили +{REPORT_REWARD_POINTS} балл",
+        show_alert=True
+    )
+
+    # Обновляем страницу репортов
+    text, keyboard = await _build_reports_text_and_keyboard(session)
+    try:
+        await callback.message.edit_text(text, reply_markup=keyboard)
+    except Exception:
+        pass
+
+
+@router.callback_query(F.data.startswith("admin:report_reject_"))
+async def admin_report_reject(callback: CallbackQuery, session: AsyncSession):
+    """Отклонить репорт → статус rejected, баллы не начисляются"""
+    if not is_admin(callback.from_user.id):
+        await callback.answer("❌ Доступ запрещён")
+        return
+
+    word_id = int(callback.data.replace("admin:report_reject_", ""))
+
+    # Находим все pending репорты на это слово
+    reports_result = await session.execute(
+        select(TranslationReport)
+        .where(
+            TranslationReport.word_id == word_id,
+            TranslationReport.status == 'pending'
+        )
+    )
+    reports = reports_result.scalars().all()
+
+    if not reports:
+        await callback.answer("Нет pending репортов для этого слова", show_alert=True)
+        return
+
+    rejected_count = 0
+    for report in reports:
+        report.status = 'rejected'
+        rejected_count += 1
+
+    await session.commit()
+
+    word = await session.get(Word, word_id)
+    word_display = f"{word.article} {word.word_de}" if word and word.article and word.article != "-" else (word.word_de if word else str(word_id))
+
+    logger.info(f"Admin rejected report for word '{word_display}' (id={word_id}), {rejected_count} reports")
+
+    await callback.answer(
+        f"❌ {word_display} — отклонено ({rejected_count} репортов)",
+        show_alert=True
+    )
+
+    # Обновляем страницу репортов
+    text, keyboard = await _build_reports_text_and_keyboard(session)
+    try:
+        await callback.message.edit_text(text, reply_markup=keyboard)
+    except Exception:
+        pass
 
 
 # ============================================================================
