@@ -222,7 +222,11 @@ TEXTS = {
 
     "quiz_btn_change_mode": "⚙️ Quiz mode",
     "quiz_btn_report_error": "📝 Translation error",
-    "quiz_report_coming_soon": "🔜 This feature is coming soon!",
+    "report_btn_confirm": "✅ Confirm ({count})",
+    "report_btn_send": "📨 Send",
+    "report_no_words": "No words to report",
+    "report_none_selected": "Select at least one word",
+    "report_sent": "✅ Sent {count} reports — thank you!",
 
     # ============================================================================
     # QUIZ

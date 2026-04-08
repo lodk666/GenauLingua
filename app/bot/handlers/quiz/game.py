@@ -4,8 +4,9 @@
 ИЗМЕНЕНИЯ:
 1. ✅ generate_question теперь получает user для фильтрации по quiz_mode
 2. ✅ QuizSession сохраняет quiz_mode и quiz_category
-3. ✅ 3 кнопки после завершения: Режим викторины, Повторить ошибки, Ошибка перевода (заглушка)
+3. ✅ 3 кнопки после завершения: Режим викторины, Повторить ошибки, Ошибка перевода
 4. ✅ Режим DIFFICULT: проверка наличия сложных слов перед стартом
+5. ✅ Репорт ошибок: state data (report_session_id, report_word_ids) после завершения
 """
 
 import random
@@ -135,7 +136,7 @@ def get_results_keyboard(has_errors: bool, lang: str = "ru") -> InlineKeyboardMa
         )
     ])
 
-    # 3. Ошибка перевода (заглушка)
+    # 3. Ошибка перевода → report.py
     buttons.append([
         InlineKeyboardButton(
             text=get_text("quiz_btn_report_error", lang),
@@ -144,18 +145,6 @@ def get_results_keyboard(has_errors: bool, lang: str = "ru") -> InlineKeyboardMa
     ])
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
-
-
-# ============================================================================
-# ЗАГЛУШКА: Ошибка перевода
-# ============================================================================
-
-@router.callback_query(F.data == "report_translation_error")
-async def report_translation_error(callback: CallbackQuery, session: AsyncSession):
-    """Заглушка для кнопки 'Ошибка перевода'"""
-    user = await session.get(User, callback.from_user.id)
-    lang = user.interface_language or "ru"
-    await callback.answer(get_text("quiz_report_coming_soon", lang), show_alert=True)
 
 
 # ============================================================================
@@ -514,9 +503,17 @@ async def show_next_question(callback: CallbackQuery, state: FSMContext, session
             text=result_text,
             reply_markup=keyboard
         )
+
+        # === STATE DATA для повтора ошибок и репорта ===
         saved_errors = errors.copy()
+        report_word_ids = [w.id for _, w in items]
+
         await state.clear()
-        await state.update_data(saved_errors=saved_errors)
+        await state.update_data(
+            saved_errors=saved_errors,
+            report_session_id=session_id,
+            report_word_ids=report_word_ids,
+        )
         return
 
     # ============================================================================

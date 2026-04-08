@@ -445,3 +445,31 @@ class MonthlyAward(Base):
     # Relationships
     user: Mapped["User"] = relationship(backref="monthly_awards")
     season: Mapped["MonthlySeason"] = relationship(back_populates="awards")
+
+
+# ============================================================================
+# РЕПОРТЫ ОШИБОК ПЕРЕВОДА
+# ============================================================================
+
+class TranslationReport(Base):
+    """Репорт ошибки перевода от пользователя"""
+    __tablename__ = "translation_reports"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    word_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("words.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    quiz_session_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("quiz_sessions.id", ondelete="SET NULL"), nullable=True
+    )
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="pending"
+    )  # pending / reviewed / fixed / rejected
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    user: Mapped["User"] = relationship(backref="translation_reports")
+    word: Mapped["Word"] = relationship(backref="translation_reports")
