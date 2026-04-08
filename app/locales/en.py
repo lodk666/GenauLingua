@@ -227,6 +227,9 @@ TEXTS = {
     "report_no_words": "No words to report",
     "report_none_selected": "Select at least one word",
     "report_sent": "✅ Sent {count} reports — thank you!",
+    "report_daily_limit": "⚠️ Daily report limit reached (max 20)",
+    "report_all_reported": "✅ All words from this quiz already reported",
+    "report_already_sent": "✔️ Already reported",
 
     # ============================================================================
     # QUIZ

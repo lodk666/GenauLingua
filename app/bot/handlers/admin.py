@@ -1,12 +1,6 @@
 """
 Админ-панель для GenauLingua Bot (v2 — исправлено)
 Команды доступны только для администратора
-
-Фиксы:
-- Имена вместо "@без username"
-- Churn исключает юзеров без единой викторины
-- Пояснения метрик в UI
-- start_source трекинг (отдельный фикс в game.py)
 """
 
 import csv
@@ -17,7 +11,7 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKe
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, distinct, case, desc, or_
 from datetime import datetime, timedelta, date
-from app.database.models import User, QuizSession, QuizQuestion, UserWord, Word
+from app.database.models import User, QuizSession, QuizQuestion, UserWord, Word, TranslationReport
 from app.services.quiz_service import get_user_progress_stats, get_user_progress_stats_all_levels
 from app.config import settings
 
@@ -56,6 +50,9 @@ def get_admin_keyboard() -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton(text="👤 Топ юзеры", callback_data="admin:top_users"),
             InlineKeyboardButton(text="📊 Детали", callback_data="admin:detailed")
+        ],
+        [
+            InlineKeyboardButton(text="📝 Репорты", callback_data="admin:reports")
         ]
     ])
     return keyboard
@@ -66,7 +63,6 @@ async def _get_main_stats(session: AsyncSession) -> str:
     total_users_result = await session.execute(select(func.count()).select_from(User))
     total_users = total_users_result.scalar()
 
-    # Активные за 24ч — по last_active_date
     active_24h_result = await session.execute(
         select(func.count(distinct(User.id)))
         .select_from(User)
@@ -74,7 +70,6 @@ async def _get_main_stats(session: AsyncSession) -> str:
     )
     active_24h = active_24h_result.scalar()
 
-    # Активные за 7 дней
     week_ago = date.today() - timedelta(days=7)
     active_7d_result = await session.execute(
         select(func.count(distinct(User.id)))
@@ -83,7 +78,6 @@ async def _get_main_stats(session: AsyncSession) -> str:
     )
     active_7d = active_7d_result.scalar()
 
-    # Всего завершённых викторин
     total_quizzes_result = await session.execute(
         select(func.count())
         .select_from(QuizSession)
@@ -91,7 +85,6 @@ async def _get_main_stats(session: AsyncSession) -> str:
     )
     total_quizzes = total_quizzes_result.scalar()
 
-    # Викторины за 24ч
     day_ago = datetime.utcnow() - timedelta(hours=24)
     quizzes_24h_result = await session.execute(
         select(func.count())
@@ -103,7 +96,6 @@ async def _get_main_stats(session: AsyncSession) -> str:
     )
     quizzes_24h = quizzes_24h_result.scalar()
 
-    # Викторины из уведомлений
     notif_sessions_result = await session.execute(
         select(func.count())
         .select_from(QuizSession)
@@ -111,7 +103,6 @@ async def _get_main_stats(session: AsyncSession) -> str:
     )
     notif_sessions = notif_sessions_result.scalar() or 0
 
-    # Юзеры хотя бы с 1 викториной
     active_ever_result = await session.execute(
         select(func.count(distinct(QuizSession.user_id)))
         .select_from(QuizSession)
@@ -170,7 +161,6 @@ async def admin_analytics(callback: CallbackQuery, session: AsyncSession):
     total_users_result = await session.execute(select(func.count()).select_from(User))
     total_users = total_users_result.scalar() or 1
 
-    # Day 1 retention — вернулись хотя бы на следующий день
     day1_retention_result = await session.execute(
         select(func.count(distinct(User.id)))
         .select_from(User)
@@ -182,7 +172,6 @@ async def admin_analytics(callback: CallbackQuery, session: AsyncSession):
     day1_returned = day1_retention_result.scalar() or 0
     day1_retention = (day1_returned / total_users * 100) if total_users > 0 else 0
 
-    # Day 7 retention
     week_ago = date.today() - timedelta(days=7)
     users_week_ago_result = await session.execute(
         select(func.count()).select_from(User).where(User.created_at <= datetime.combine(week_ago, datetime.min.time()))
@@ -200,7 +189,6 @@ async def admin_analytics(callback: CallbackQuery, session: AsyncSession):
     day7_active = day7_active_result.scalar() or 0
     day7_retention = (day7_active / users_week_ago * 100) if users_week_ago > 0 else 0
 
-    # Викторины по источникам
     sources_result = await session.execute(
         select(QuizSession.start_source, func.count())
         .select_from(QuizSession)
@@ -210,7 +198,6 @@ async def admin_analytics(callback: CallbackQuery, session: AsyncSession):
     sources = sources_result.all()
     total_source_quizzes = sum(count for _, count in sources)
 
-    # Скорость ответа
     speed_dist_result = await session.execute(
         select(
             func.count(case((QuizQuestion.response_time_seconds <= 2, 1))).label('fast'),
@@ -224,7 +211,6 @@ async def admin_analytics(callback: CallbackQuery, session: AsyncSession):
     speed_dist = speed_dist_result.first()
     total_answers = sum(speed_dist) if speed_dist else 0
 
-    # Точки выхода
     exit_points_result = await session.execute(
         select(
             func.count(case((QuizSession.exit_at_question <= 5, 1))).label('q1_5'),
@@ -237,7 +223,6 @@ async def admin_analytics(callback: CallbackQuery, session: AsyncSession):
     )
     exit_points = exit_points_result.first()
 
-    # Самые сложные слова по времени
     difficult_words_result = await session.execute(
         select(
             Word.word_de,
@@ -253,7 +238,6 @@ async def admin_analytics(callback: CallbackQuery, session: AsyncSession):
     )
     difficult_words = difficult_words_result.all()
 
-    # Формируем текст
     text = "📈 <b>АНАЛИТИКА</b>\n\n"
 
     text += "🔥 <b>Retention (удержание):</b>\n"
@@ -315,13 +299,11 @@ async def admin_cohorts(callback: CallbackQuery, session: AsyncSession):
     current_month = date.today().replace(day=1)
     prev_month = (current_month - timedelta(days=1)).replace(day=1)
 
-    # Текущий месяц: зарегистрированы
     current_month_users_result = await session.execute(
         select(func.count()).select_from(User).where(User.created_at >= datetime.combine(current_month, datetime.min.time()))
     )
     current_month_users = current_month_users_result.scalar() or 0
 
-    # Текущий месяц: хотя бы 1 викторина
     current_month_active_result = await session.execute(
         select(func.count(distinct(User.id)))
         .select_from(User)
@@ -332,7 +314,6 @@ async def admin_cohorts(callback: CallbackQuery, session: AsyncSession):
     )
     current_month_active = current_month_active_result.scalar() or 0
 
-    # Прошлый месяц
     prev_month_users_result = await session.execute(
         select(func.count())
         .select_from(User)
@@ -354,7 +335,6 @@ async def admin_cohorts(callback: CallbackQuery, session: AsyncSession):
     )
     prev_month_active = prev_month_active_result.scalar() or 0
 
-    # По уровням
     levels_stats_result = await session.execute(
         select(
             User.level,
@@ -367,7 +347,6 @@ async def admin_cohorts(callback: CallbackQuery, session: AsyncSession):
     )
     levels_stats = levels_stats_result.all()
 
-    # По языкам
     langs_result = await session.execute(
         select(User.interface_language, func.count())
         .select_from(User)
@@ -384,7 +363,6 @@ async def admin_cohorts(callback: CallbackQuery, session: AsyncSession):
         None: '❓ Не выбран'
     }
 
-    # Формируем текст
     text = "👥 <b>КОГОРТЫ ПОЛЬЗОВАТЕЛЕЙ</b>\n\n"
 
     text += "📅 <b>По месяцам регистрации:</b>\n"
@@ -433,8 +411,6 @@ async def admin_churn(callback: CallbackQuery, session: AsyncSession):
     three_days_ago = today - timedelta(days=3)
     month_ago = today - timedelta(days=30)
 
-    # Высокий риск: последняя викторина > 7 дней назад
-    # ТОЛЬКО юзеры, которые хотя бы раз играли
     high_risk_result = await session.execute(
         select(User.first_name, User.username, User.last_quiz_date)
         .select_from(User)
@@ -457,7 +433,6 @@ async def admin_churn(callback: CallbackQuery, session: AsyncSession):
     )
     high_risk_count = high_risk_count_result.scalar() or 0
 
-    # Средний риск: 3-7 дней
     medium_risk_count_result = await session.execute(
         select(func.count())
         .select_from(User)
@@ -469,13 +444,12 @@ async def admin_churn(callback: CallbackQuery, session: AsyncSession):
     )
     medium_risk_count = medium_risk_count_result.scalar() or 0
 
-    # Churn rate — ТОЛЬКО среди тех кто хотя бы раз играл
     players_month_ago_result = await session.execute(
         select(func.count())
         .select_from(User)
         .where(
             User.created_at <= datetime.combine(month_ago, datetime.min.time()),
-            User.last_quiz_date.isnot(None)  # хотя бы раз играл
+            User.last_quiz_date.isnot(None)
         )
     )
     players_month_ago = players_month_ago_result.scalar() or 0
@@ -485,14 +459,13 @@ async def admin_churn(callback: CallbackQuery, session: AsyncSession):
         .select_from(User)
         .where(
             User.created_at <= datetime.combine(month_ago, datetime.min.time()),
-            User.last_quiz_date.isnot(None),  # хотя бы раз играл
-            User.last_quiz_date < month_ago    # но давно не заходил
+            User.last_quiz_date.isnot(None),
+            User.last_quiz_date < month_ago
         )
     )
     churned = churned_result.scalar() or 0
     churn_rate = (churned / players_month_ago * 100) if players_month_ago > 0 else 0
 
-    # Никогда не играли
     never_played_result = await session.execute(
         select(func.count())
         .select_from(User)
@@ -500,7 +473,6 @@ async def admin_churn(callback: CallbackQuery, session: AsyncSession):
     )
     never_played = never_played_result.scalar() or 0
 
-    # Формируем текст
     text = "⚠️ <b>ОТТОК ПОЛЬЗОВАТЕЛЕЙ</b>\n\n"
 
     text += f"🔴 <b>Высокий риск: {high_risk_count}</b>\n"
@@ -670,7 +642,7 @@ async def admin_top_users_callback(callback: CallbackQuery, session: AsyncSessio
 
     result = await session.execute(
         select(User)
-        .where(User.last_quiz_date.isnot(None))  # только игравшие
+        .where(User.last_quiz_date.isnot(None))
         .order_by(User.quizzes_passed.desc(), User.words_learned.desc())
         .limit(15)
     )
@@ -710,7 +682,6 @@ async def admin_detailed_callback(callback: CallbackQuery, session: AsyncSession
 
     await callback.answer()
 
-    # Самые сложные слова по % правильных
     difficult_words_result = await session.execute(
         select(Word.word_de, Word.article, Word.translation_ru, Word.times_shown, Word.times_correct)
         .select_from(Word)
@@ -720,7 +691,6 @@ async def admin_detailed_callback(callback: CallbackQuery, session: AsyncSession
     )
     difficult_words = difficult_words_result.all()
 
-    # Самые популярные слова
     popular_words_result = await session.execute(
         select(Word.word_de, Word.article, Word.times_shown)
         .select_from(Word)
@@ -743,6 +713,91 @@ async def admin_detailed_callback(callback: CallbackQuery, session: AsyncSession
     for i, (word_de, article, shown) in enumerate(popular_words, 1):
         full_word = f"{article} {word_de}" if article and article != "-" else word_de
         text += f"{i}. <b>{full_word}</b> — {shown} раз\n"
+
+    back_btn = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="◀️ Назад", callback_data="admin:back")]
+    ])
+
+    await callback.message.edit_text(text, reply_markup=back_btn)
+
+
+# ============================================================================
+# РЕПОРТЫ ПЕРЕВОДОВ
+# ============================================================================
+
+@router.callback_query(F.data == "admin:reports")
+async def admin_reports(callback: CallbackQuery, session: AsyncSession):
+    """Топ зарепорченных слов"""
+    if not is_admin(callback.from_user.id):
+        await callback.answer("❌ Доступ запрещён")
+        return
+
+    await callback.answer()
+
+    # Топ-15 слов по количеству уникальных репортов
+    reports_result = await session.execute(
+        select(
+            Word.id,
+            Word.word_de,
+            Word.article,
+            Word.level,
+            Word.translation_ru,
+            Word.translation_uk,
+            func.count(TranslationReport.id).label('report_count')
+        )
+        .join(TranslationReport, Word.id == TranslationReport.word_id)
+        .where(TranslationReport.status == 'pending')
+        .group_by(Word.id, Word.word_de, Word.article, Word.level,
+                  Word.translation_ru, Word.translation_uk)
+        .order_by(desc(func.count(TranslationReport.id)))
+        .limit(15)
+    )
+    top_words = reports_result.all()
+
+    # Общая статистика
+    total_reports_result = await session.execute(
+        select(func.count()).select_from(TranslationReport)
+    )
+    total_reports = total_reports_result.scalar() or 0
+
+    pending_result = await session.execute(
+        select(func.count()).select_from(TranslationReport)
+        .where(TranslationReport.status == 'pending')
+    )
+    pending = pending_result.scalar() or 0
+
+    unique_words_result = await session.execute(
+        select(func.count(distinct(TranslationReport.word_id)))
+        .select_from(TranslationReport)
+        .where(TranslationReport.status == 'pending')
+    )
+    unique_words = unique_words_result.scalar() or 0
+
+    unique_users_result = await session.execute(
+        select(func.count(distinct(TranslationReport.user_id)))
+        .select_from(TranslationReport)
+    )
+    unique_users = unique_users_result.scalar() or 0
+
+    text = "📝 <b>РЕПОРТЫ ПЕРЕВОДОВ</b>\n\n"
+
+    text += "📊 <b>Статистика:</b>\n"
+    text += f"├─ Всего репортов: <b>{total_reports}</b>\n"
+    text += f"├─ Ожидают проверки: <b>{pending}</b>\n"
+    text += f"├─ Уникальных слов: <b>{unique_words}</b>\n"
+    text += f"└─ Юзеров отправили: <b>{unique_users}</b>\n\n"
+
+    if top_words:
+        text += "🔥 <b>Топ-15 по жалобам:</b>\n"
+        text += "<i>Сортировка: кол-во жалоб</i>\n\n"
+        for i, (wid, word_de, article, level, trans_ru, trans_uk, count) in enumerate(top_words, 1):
+            full_word = f"{article} {word_de}" if article and article != "-" else word_de
+            trans = trans_ru or trans_uk or "—"
+            emoji = "🔴" if count >= 5 else "🟡" if count >= 3 else "⚪"
+            text += f"{emoji} <b>{full_word}</b> ({level.value}) — {trans}\n"
+            text += f"   └ {count} жалоб | ID: {wid}\n"
+    else:
+        text += "✅ Нет pending репортов"
 
     back_btn = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="◀️ Назад", callback_data="admin:back")]
@@ -905,7 +960,6 @@ async def admin_user_details(message: Message, session: AsyncSession):
 
     last_sessions = completed_sessions[:5]
 
-    # Средняя скорость ответа
     user_avg_response_result = await session.execute(
         select(func.avg(QuizQuestion.response_time_seconds))
         .select_from(QuizQuestion)
@@ -917,7 +971,6 @@ async def admin_user_details(message: Message, session: AsyncSession):
     )
     user_avg_response = user_avg_response_result.scalar() or 0
 
-    # Источники
     sources_result = await session.execute(
         select(QuizSession.start_source, func.count())
         .select_from(QuizSession)
