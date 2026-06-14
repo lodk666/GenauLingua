@@ -2,7 +2,7 @@
 
 **Telegram bot for learning German vocabulary** — from A1 to C2, with adaptive spaced repetition, statistics, and gamification.
 
-[@GenauLinguaBot](https://t.me/GenauLinguaBot)
+https://t.me/GenauLingua_bot
 
 ---
 
