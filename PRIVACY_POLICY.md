@@ -1,6 +1,6 @@
 # Privacy Policy for GenauLingua Bot
 
-**Last updated: February 18, 2026**
+**Last updated: June 2026**
 
 ## Introduction
 
@@ -14,14 +14,16 @@ When you use GenauLingua, we automatically collect and store:
 - **Telegram User ID** (unique identifier)
 - **Username** (if public)
 - **First name** (from your Telegram profile)
-- **Interface language preference** (Russian or Ukrainian)
+- **Interface language preference** (Russian, Ukrainian, English, or Turkish)
 
 ### Learning Data
-- **Selected difficulty level** (A1, A2, B1)
-- **Translation mode preference** (DE↔RU or DE↔UK)
+- **Selected difficulty level** (A1–C2)
+- **Translation mode preference** (DE↔RU, DE↔UK, DE↔EN, or DE↔TR)
+- **Quiz mode** (by level, by category, all words, or difficult words)
 - **Quiz statistics**: answers, correct/incorrect counts, completion dates
 - **Learning progress**: words seen, words learned, streak days
 - **Last activity date**
+- **Notification preferences**: time, days, timezone
 
 ## How We Use Your Data
 
@@ -30,12 +32,13 @@ Your data is used exclusively to:
 1. **Provide the service**: Track your learning progress and personalize quiz content
 2. **Improve learning experience**: Use SRS (Spaced Repetition System) algorithm to show words based on your performance
 3. **Display statistics**: Show your progress, streaks, and quiz history
-4. **Maintain service**: Ensure the bot functions correctly
+4. **Send reminders**: Deliver notifications at your preferred time (if enabled)
+5. **Maintain service**: Ensure the bot functions correctly
 
 ## Data Storage
 
 - All data is stored securely in a **PostgreSQL database**
-- Data is stored on servers in the European Union
+- Data is stored on servers in the European Union (Hetzner, Germany)
 - We implement industry-standard security measures to protect your data
 - **No data is shared with third parties**
 
@@ -89,7 +92,7 @@ We may update this Privacy Policy occasionally. Changes will be posted here with
 
 We implement security measures including:
 - Encrypted database connections
-- Secure server access controls  
+- Secure server access controls
 - Regular security updates
 - No storage of sensitive personal information
 
@@ -116,6 +119,6 @@ For EU users, we process data based on:
 
 ---
 
-**GenauLingua Bot**  
-Educational Language Learning Service  
+**GenauLingua Bot**
+Educational Language Learning Service
 Not affiliated with Telegram or any educational institution.

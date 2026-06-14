@@ -2,12 +2,11 @@
 
 ## Purpose
 
-This folder contains maintenance scripts for rebuilding the `words` table
-from Excel datasets (A1 / A2 / B1).
+This folder contains maintenance scripts for rebuilding the `words` table from Excel datasets.
 
 The main script:
 
-rebuild_words_from_excel.py
+    rebuild_words_from_excel.py
 
 This script is used to:
 - Fully reset the `words` table
@@ -17,119 +16,67 @@ This script is used to:
 
 ---
 
-# Current Dataset
+## Current Dataset
 
-Imported levels:
-- A1
-- A2
-- B1
-
-Total words: 3081
-
-Languages supported:
-- German (word_de)
-- Russian (translation_ru, example_ru)
-- Ukrainian (translation_uk, example_uk)
+- **Total words:** 12,805
+- **Levels:** A1, A2, B1, B2, C1, C2
+- **Categories:** 21 thematic categories
+- **Languages:** DE, RU, UK, EN, TR
+- **Source file:** `de_PERFECT_FIXED.xlsx`
 
 ---
 
-# Expected Excel Structure
+## Expected Excel Structure
 
-Each Excel file must contain the following columns:
-
-| Column Name        | Description                          |
-|-------------------|--------------------------------------|
-| word_de            | German word                          |
-| article            | der/die/das or "-"                   |
-| pos                | Part of Speech (see enum below)      |
-| level              | CEFR level (A1/A2/B1)                |
-| translation_ru     | Russian translation                  |
-| translation_uk     | Ukrainian translation                |
-| example_de         | German example sentence              |
-| example_ru         | Russian example sentence             |
-| example_uk         | Ukrainian example sentence           |
-
----
-
-# POS Enum (Database)
-
-Allowed values:
-
-- NOUN
-- VERB
-- ADJECTIVE
-- ADVERB
-- PRONOUN
-- PREPOSITION
-- CONJUNCTION
-- PHRASE
-- OTHER
-
-If a new POS is added:
-1. Update DB enum
-2. Update script mapping
-3. Rebuild database
+| Column           | Description                          |
+|------------------|--------------------------------------|
+| word_de          | German word                          |
+| article          | der/die/das or "-"                   |
+| pos              | Part of Speech (NOUN, VERB, etc.)    |
+| level            | CEFR level (A1–C2)                   |
+| category         | Thematic category                    |
+| frequency_rank   | Frequency rank (optional)            |
+| translation_ru   | Russian translation                  |
+| translation_uk   | Ukrainian translation                |
+| translation_en   | English translation                  |
+| translation_tr   | Turkish translation                  |
+| example_de       | German example sentence              |
+| example_ru       | Russian example sentence             |
+| example_uk       | Ukrainian example sentence           |
+| example_en       | English example sentence             |
+| example_tr       | Turkish example sentence             |
 
 ---
 
-# Database Schema (words table)
-
-Main fields:
-
-- id (PK)
-- word_de
-- article
-- pos (enum)
-- level (enum)
-- translation_ru
-- translation_uk
-- example_de
-- example_ru
-- example_uk
-- times_shown
-- times_correct
-- created_at
-
----
-
-# How To Rebuild Words Database
+## How To Rebuild Words Database
 
 1) Start database:
-   docker compose up -d
 
-2) Run script:
-   python app/scripts/rebuild_words_from_excel.py
+       docker compose up -d
 
-3) Verify:
+2) Run script (single file):
 
-Total:
-SELECT COUNT(*) FROM words;
+       docker compose run --rm app python app/scripts/rebuild_words_from_excel.py /app/Wordsbase/de_PERFECT_FIXED.xlsx
 
-By level:
-SELECT level, COUNT(*) FROM words GROUP BY level ORDER BY level;
+3) Run script (directory with multiple files):
 
-Check empty translations:
-SELECT COUNT(*) FROM words WHERE translation_uk IS NULL OR translation_uk='';
-SELECT COUNT(*) FROM words WHERE example_uk IS NULL OR example_uk='';
+       docker compose run --rm app python app/scripts/rebuild_words_from_excel.py /app/Wordsbase
+
+4) Import without truncating existing data:
+
+       docker compose run --rm app python app/scripts/rebuild_words_from_excel.py /app/Wordsbase --no-truncate
+
+5) Verify:
+
+       SELECT COUNT(*) FROM words;
+       SELECT level, COUNT(*) FROM words GROUP BY level ORDER BY level;
+       SELECT category, COUNT(*) FROM words GROUP BY category ORDER BY category;
 
 ---
 
-# Important
+## Important
 
 - Excel files are local only (not committed to Git).
-- Rebuild script TRUNCATES user progress.
-- Use with caution in production.
+- Default mode TRUNCATES user progress. Use `--no-truncate` to preserve it.
 - Always verify counts after import.
-
----
-
-# Future Extension
-
-If adding a new language (e.g. English):
-
-1. Add new DB columns (translation_en, example_en)
-2. Update script payload mapping
-3. Update quiz logic
-4. Rebuild database
-5. Verify data integrity
 

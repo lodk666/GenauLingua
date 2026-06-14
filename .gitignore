@@ -102,3 +102,7 @@ app/scripts/*.xlsx
 app/scripts/*
 !app/scripts/README.md
 !app/scripts/rebuild_words_from_excel.py
+
+# One-time scripts
+send_active.py
+db_dump.sql
