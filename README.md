@@ -127,7 +127,7 @@ alembic/                 # Versioned database migrations
 ## Getting Started
 
 ```bash
-git clone https://github.com/lodk666/GenauLingua.git
+git clone https://github.com/Kanaki-K/GenauLingua.git
 cd GenauLingua
 
 cp .env.example .env      # fill in BOT_TOKEN, ADMIN_USER, DB credentials
