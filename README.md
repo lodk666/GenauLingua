@@ -27,9 +27,9 @@ an admin analytics dashboard, and containerized deployment.
 
 | Metric | Value |
 |---|---|
-| Registered users | ~200 |
-| Users who completed ≥1 quiz | 55% |
-| Total quizzes completed | 1,400+ |
+| Registered users | 204 |
+| Users who completed ≥1 quiz | 116 (57%) |
+| Total quizzes completed | 1,570 |
 | Word database | 12,805 words (A1–C2) |
 | Interface languages | 🇷🇺 RU · 🇺🇦 UK · 🇬🇧 EN · 🇹🇷 TR |
 | Uptime | Deployed on Hetzner (EU) via Docker |
